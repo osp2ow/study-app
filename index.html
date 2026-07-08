@@ -80,6 +80,13 @@ body {
   margin-bottom: 20px;
 }
 
+.streak-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
 .app-header h1 {
   font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
   font-size: 22px;
@@ -5747,6 +5754,281 @@ const VOCAB_KR = [
     "example": "조건을 전제해요.",
     "examplePronunciation": "조꺼늘 전제해요.",
     "exampleMeaningJp": "条件を前提とします。"
+  },
+  {
+    "id": "w-101",
+    "word": "오전",
+    "pronunciation": "오전",
+    "meaningJp": "午前",
+    "level": "1급",
+    "tag": "일상",
+    "example": "오전에 만나요.",
+    "examplePronunciation": "오저네 만나요.",
+    "exampleMeaningJp": "午前に会いましょう。"
+  },
+  {
+    "id": "w-102",
+    "word": "오후",
+    "pronunciation": "오후",
+    "meaningJp": "午後",
+    "level": "1급",
+    "tag": "일상",
+    "example": "오후에 비가 와요.",
+    "examplePronunciation": "오후에 비가 와요.",
+    "exampleMeaningJp": "午後に雨が降ります。"
+  },
+  {
+    "id": "w-103",
+    "word": "휴대폰",
+    "pronunciation": "휴대폰",
+    "meaningJp": "携帯電話",
+    "level": "1급",
+    "tag": "일상",
+    "example": "휴대폰을 잃어버렸어요.",
+    "examplePronunciation": "휴대포늘 이러버려써요.",
+    "exampleMeaningJp": "携帯電話をなくしました。"
+  },
+  {
+    "id": "w-104",
+    "word": "인터넷",
+    "pronunciation": "인터넷",
+    "meaningJp": "インターネット",
+    "level": "1급",
+    "tag": "일상",
+    "example": "인터넷이 안 돼요.",
+    "examplePronunciation": "인터네시 안 돼요.",
+    "exampleMeaningJp": "インターネットがつながりません。"
+  },
+  {
+    "id": "w-105",
+    "word": "회의",
+    "pronunciation": "회이",
+    "meaningJp": "会議",
+    "level": "2급",
+    "tag": "일상",
+    "example": "회의가 곧 시작해요.",
+    "examplePronunciation": "회이가 곧 시자캐요.",
+    "exampleMeaningJp": "会議がもうすぐ始まります。"
+  },
+  {
+    "id": "w-106",
+    "word": "약속",
+    "pronunciation": "약쏙",
+    "meaningJp": "約束",
+    "level": "1급",
+    "tag": "일상",
+    "example": "내일 약속이 있어요.",
+    "examplePronunciation": "내일 약쏘기 이써요.",
+    "exampleMeaningJp": "明日約束があります。"
+  },
+  {
+    "id": "w-107",
+    "word": "버스",
+    "pronunciation": "버스",
+    "meaningJp": "バス",
+    "level": "1급",
+    "tag": "여행",
+    "example": "버스를 타요.",
+    "examplePronunciation": "버스를 타요.",
+    "exampleMeaningJp": "バスに乗ります。"
+  },
+  {
+    "id": "w-108",
+    "word": "지하철",
+    "pronunciation": "지하철",
+    "meaningJp": "地下鉄",
+    "level": "1급",
+    "tag": "여행",
+    "example": "지하철로 가요.",
+    "examplePronunciation": "지하철로 가요.",
+    "exampleMeaningJp": "地下鉄で行きます。"
+  },
+  {
+    "id": "w-109",
+    "word": "택시",
+    "pronunciation": "택시",
+    "meaningJp": "タクシー",
+    "level": "1급",
+    "tag": "여행",
+    "example": "택시를 불러요.",
+    "examplePronunciation": "택시를 불러요.",
+    "exampleMeaningJp": "タクシーを呼びます。"
+  },
+  {
+    "id": "w-110",
+    "word": "편의점",
+    "pronunciation": "펴니점",
+    "meaningJp": "コンビニ",
+    "level": "1급",
+    "tag": "일상",
+    "example": "편의점에서 삽니다.",
+    "examplePronunciation": "펴니저메서 삼니다.",
+    "exampleMeaningJp": "コンビニで買います。"
+  },
+  {
+    "id": "w-111",
+    "word": "병원",
+    "pronunciation": "병원",
+    "meaningJp": "病院",
+    "level": "1급",
+    "tag": "일상",
+    "example": "병원에 가야 해요.",
+    "examplePronunciation": "병워네 가야 해요.",
+    "exampleMeaningJp": "病院に行かなければなりません。"
+  },
+  {
+    "id": "w-112",
+    "word": "은행",
+    "pronunciation": "은행",
+    "meaningJp": "銀行",
+    "level": "1급",
+    "tag": "일상",
+    "example": "은행에서 돈을 찾아요.",
+    "examplePronunciation": "은행에서 도늘 차자요.",
+    "exampleMeaningJp": "銀行でお金をおろします。"
+  },
+  {
+    "id": "w-113",
+    "word": "우체국",
+    "pronunciation": "우체국",
+    "meaningJp": "郵便局",
+    "level": "2급",
+    "tag": "일상",
+    "example": "우체국에서 소포를 보내요.",
+    "examplePronunciation": "우체구게서 소포를 보내요.",
+    "exampleMeaningJp": "郵便局で小包を送ります。"
+  },
+  {
+    "id": "w-114",
+    "word": "경찰서",
+    "pronunciation": "경찰써",
+    "meaningJp": "警察署",
+    "level": "2급",
+    "tag": "일상",
+    "example": "경찰서가 어디예요?",
+    "examplePronunciation": "경찰써가 어디예요?",
+    "exampleMeaningJp": "警察署はどこですか。"
+  },
+  {
+    "id": "w-115",
+    "word": "비",
+    "pronunciation": "비",
+    "meaningJp": "雨",
+    "level": "1급",
+    "tag": "일상",
+    "example": "비가 많이 와요.",
+    "examplePronunciation": "비가 마니 와요.",
+    "exampleMeaningJp": "雨がたくさん降ります。"
+  },
+  {
+    "id": "w-116",
+    "word": "눈",
+    "pronunciation": "눈",
+    "meaningJp": "雪、目",
+    "level": "1급",
+    "tag": "일상",
+    "example": "눈이 내려요.",
+    "examplePronunciation": "누니 내려요.",
+    "exampleMeaningJp": "雪が降ります。"
+  },
+  {
+    "id": "w-117",
+    "word": "바람",
+    "pronunciation": "바람",
+    "meaningJp": "風",
+    "level": "1급",
+    "tag": "일상",
+    "example": "바람이 세요.",
+    "examplePronunciation": "바라미 세요.",
+    "exampleMeaningJp": "風が強いです。"
+  },
+  {
+    "id": "w-118",
+    "word": "덥다",
+    "pronunciation": "덥따",
+    "meaningJp": "暑い",
+    "level": "1급",
+    "tag": "일상",
+    "example": "오늘 정말 더워요.",
+    "examplePronunciation": "오늘 정말 더워요.",
+    "exampleMeaningJp": "今日は本当に暑いです。"
+  },
+  {
+    "id": "w-119",
+    "word": "춥다",
+    "pronunciation": "춥따",
+    "meaningJp": "寒い",
+    "level": "1급",
+    "tag": "일상",
+    "example": "겨울에는 추워요.",
+    "examplePronunciation": "겨우레는 추워요.",
+    "exampleMeaningJp": "冬は寒いです。"
+  },
+  {
+    "id": "w-120",
+    "word": "피곤하다",
+    "pronunciation": "피곤하다",
+    "meaningJp": "疲れる",
+    "level": "2급",
+    "tag": "일상",
+    "example": "요즘 많이 피곤해요.",
+    "examplePronunciation": "요즘 마니 피곤해요.",
+    "exampleMeaningJp": "最近とても疲れています。"
+  },
+  {
+    "id": "w-121",
+    "word": "바쁘다",
+    "pronunciation": "바쁘다",
+    "meaningJp": "忙しい",
+    "level": "1급",
+    "tag": "일상",
+    "example": "이번 주는 바빠요.",
+    "examplePronunciation": "이번 주는 바빠요.",
+    "exampleMeaningJp": "今週は忙しいです。"
+  },
+  {
+    "id": "w-122",
+    "word": "심심하다",
+    "pronunciation": "심심하다",
+    "meaningJp": "退屈だ",
+    "level": "2급",
+    "tag": "일상",
+    "example": "오늘은 좀 심심해요.",
+    "examplePronunciation": "오느른 좀 심심해요.",
+    "exampleMeaningJp": "今日はちょっと退屈です。"
+  },
+  {
+    "id": "w-123",
+    "word": "기쁘다",
+    "pronunciation": "기쁘다",
+    "meaningJp": "嬉しい",
+    "level": "2급",
+    "tag": "일상",
+    "example": "만나서 기뻐요.",
+    "examplePronunciation": "만나서 기뻐요.",
+    "exampleMeaningJp": "会えて嬉しいです。"
+  },
+  {
+    "id": "w-124",
+    "word": "슬프다",
+    "pronunciation": "슬프다",
+    "meaningJp": "悲しい",
+    "level": "2급",
+    "tag": "일상",
+    "example": "이별은 슬퍼요.",
+    "examplePronunciation": "이벼른 슬퍼요.",
+    "exampleMeaningJp": "別れは悲しいです。"
+  },
+  {
+    "id": "w-125",
+    "word": "걱정하다",
+    "pronunciation": "걱쩡하다",
+    "meaningJp": "心配する",
+    "level": "2급",
+    "tag": "일상",
+    "example": "너무 걱정하지 마세요.",
+    "examplePronunciation": "너무 걱쩡하지 마세요.",
+    "exampleMeaningJp": "あまり心配しないでください。"
   }
 ];
 const GRAMMAR_KR = [
@@ -5899,6 +6181,206 @@ const GRAMMAR_KR = [
     "example": "밥을 먹기 전에 손을 씻어요.",
     "exampleMeaningJp": "ご飯を食べる前に手を洗います。",
     "japaneseNote": "日本語の「~する前に」「~した後に」とそれぞれ対応する、順序を表す基本文型です。"
+  },
+  {
+    "id": "g-016",
+    "level": "3급",
+    "pattern": "~는 동안",
+    "titleJp": "同時進行表現(~している間)",
+    "connection": "動詞語幹 + 는 동안",
+    "example": "자는 동안 전화가 왔어요.",
+    "exampleMeaningJp": "寝ている間に電話がきました。",
+    "japaneseNote": "日本語の「~している間」に対応する基本的な同時進行表現です。"
+  },
+  {
+    "id": "g-017",
+    "level": "3급",
+    "pattern": "~기 때문에",
+    "titleJp": "理由表現(~だから)",
+    "connection": "動詞・形容詞語幹 + 기 때문에",
+    "example": "비가 오기 때문에 안 나가요.",
+    "exampleMeaningJp": "雨が降るから出かけません。",
+    "japaneseNote": "「~니까」より書き言葉・かしこまった場面でよく使う理由表現です。"
+  },
+  {
+    "id": "g-018",
+    "level": "3급",
+    "pattern": "~(으)ㄹ 것 같다",
+    "titleJp": "推測表現(~しそうだ)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄹ 것 같다／パッチム有:을 것 같다)",
+    "example": "비가 올 것 같아요.",
+    "exampleMeaningJp": "雨が降りそうです。",
+    "japaneseNote": "日本語の「~しそう/~と思う」に対応。会話で非常によく使われる推測表現です。"
+  },
+  {
+    "id": "g-019",
+    "level": "3급",
+    "pattern": "~아/어 보다",
+    "titleJp": "試行表現(~してみる)",
+    "connection": "語幹末の母音がㅏ,ㅗ→아 보다／それ以外→어 보다",
+    "example": "한번 먹어 보세요.",
+    "exampleMeaningJp": "一度食べてみてください。",
+    "japaneseNote": "日本語の「~してみる」と全く同じ位置・意味で使えます。"
+  },
+  {
+    "id": "g-020",
+    "level": "3급",
+    "pattern": "~아/어 있다",
+    "titleJp": "結果状態表現(~している/~してある)",
+    "connection": "一部の自動詞の語幹 + 아/어 있다",
+    "example": "문이 열려 있어요.",
+    "exampleMeaningJp": "ドアが開いています。",
+    "japaneseNote": "「~고 있다」が動作の進行を表すのに対し、「~아/어 있다」は動作が終わった後の結果の状態を表します。日本語の「~ている(結果)」と「~ている(進行)」の区別に近い感覚です。"
+  },
+  {
+    "id": "g-021",
+    "level": "3급",
+    "pattern": "~게 되다",
+    "titleJp": "変化表現(~することになる)",
+    "connection": "動詞語幹 + 게 되다",
+    "example": "한국어를 잘하게 됐어요.",
+    "exampleMeaningJp": "韓国語が上手になりました。",
+    "japaneseNote": "自分の意志ではなく自然にそうなった、という変化を表す時に使う表現です。"
+  },
+  {
+    "id": "g-022",
+    "level": "3급",
+    "pattern": "~(으)ㄴ/는데",
+    "titleJp": "背景・逆接表現(~だが、~のに)",
+    "connection": "動詞・形容詞語幹(パッチム無:는데／パッチム有:은데)",
+    "example": "비가 오는데 우산이 없어요。",
+    "exampleMeaningJp": "雨が降っているのに傘がありません。",
+    "japaneseNote": "後ろの内容の前提や背景を説明する時に使う、会話で非常に頻度の高い文型です。"
+  },
+  {
+    "id": "g-023",
+    "level": "3급",
+    "pattern": "~아/어도",
+    "titleJp": "譲歩表現(~しても)",
+    "connection": "語幹末の母音がㅏ,ㅗ→아도／それ以外→어도",
+    "example": "비가 와도 가요.",
+    "exampleMeaningJp": "雨が降っても行きます。",
+    "japaneseNote": "日本語の「~ても」に対応する基本的な逆接仮定表現です。"
+  },
+  {
+    "id": "g-024",
+    "level": "4급",
+    "pattern": "~(으)므로",
+    "titleJp": "理由表現(格式体、書き言葉)",
+    "connection": "動詞・形容詞語幹(パッチム無:므로／パッチム有:으므로)",
+    "example": "시간이 없으므로 서두릅니다.",
+    "exampleMeaningJp": "時間がないので急ぎます。",
+    "japaneseNote": "「~기 때문에」よりさらに格式のある書き言葉的な理由表現です。"
+  },
+  {
+    "id": "g-025",
+    "level": "4급",
+    "pattern": "~더라도",
+    "titleJp": "強い譲歩表現(~だとしても)",
+    "connection": "動詞・形容詞語幹 + 더라도",
+    "example": "힘들더라도 참으세요.",
+    "exampleMeaningJp": "辛くても我慢してください。",
+    "japaneseNote": "「~아/어도」よりも強い譲歩・仮定のニュアンスを持つ表現です。"
+  },
+  {
+    "id": "g-026",
+    "level": "4급",
+    "pattern": "~는 바람에",
+    "titleJp": "否定的な理由表現(~したせいで)",
+    "connection": "動詞語幹 + 는 바람에",
+    "example": "늦잠을 자는 바람에 지각했어요.",
+    "exampleMeaningJp": "寝坊したせいで遅刻しました。",
+    "japaneseNote": "日本語の「~したせいで」に対応し、望ましくない結果の原因を表す時だけに使います。"
+  },
+  {
+    "id": "g-027",
+    "level": "4급",
+    "pattern": "~기는 하지만",
+    "titleJp": "部分肯定・逆接表現(~ではあるが)",
+    "connection": "動詞・形容詞語幹 + 기는 하지만",
+    "example": "맵기는 하지만 맛있어요.",
+    "exampleMeaningJp": "辛いことは辛いですが美味しいです。",
+    "japaneseNote": "一旦その内容を認めた上で逆接を続ける、日本語の「~ではあるが」に近い表現です。"
+  },
+  {
+    "id": "g-028",
+    "level": "4급",
+    "pattern": "~(으)ㄹ 뿐만 아니라",
+    "titleJp": "追加表現(~だけでなく)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄹ 뿐만 아니라／パッチム有:을 뿐만 아니라)",
+    "example": "예쁠 뿐만 아니라 성격도 좋아요.",
+    "exampleMeaningJp": "きれいなだけでなく性格も良いです。",
+    "japaneseNote": "日本語の「~だけでなく」と同じ構造・意味の表現です。"
+  },
+  {
+    "id": "g-029",
+    "level": "4급",
+    "pattern": "~(으)ㄴ/는 데다가",
+    "titleJp": "追加表現(~上に、~に加えて)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄴ/는 데다가／パッチム有:은 데다가)",
+    "example": "비싼 데다가 맛도 없어요.",
+    "exampleMeaningJp": "高い上に味もよくありません。",
+    "japaneseNote": "「~뿐만 아니라」と似ていますが、より会話的でネガティブな重ね方に使われやすい表現です。"
+  },
+  {
+    "id": "g-030",
+    "level": "5급",
+    "pattern": "~(으)ㄴ/는 셈이다",
+    "titleJp": "事実上の評価表現(~も同然だ)",
+    "connection": "動詞・形容詞語幹(パッチム無:는 셈이다／パッチム有:은 셈이다)",
+    "example": "이제 다 끝난 셈이에요.",
+    "exampleMeaningJp": "もうほぼ終わったも同然です。",
+    "japaneseNote": "厳密にはそうでなくても、実質的にはそう見なせるという評価を表す上級表現です。"
+  },
+  {
+    "id": "g-031",
+    "level": "5급",
+    "pattern": "~(으)ㄹ 리가 없다",
+    "titleJp": "強い否定推測表現(~するはずがない)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄹ 리가 없다／パッチム有:을 리가 없다)",
+    "example": "그럴 리가 없어요.",
+    "exampleMeaningJp": "そんなはずがありません。",
+    "japaneseNote": "日本語の「~はずがない」と1対1で対応する分かりやすい表現です。"
+  },
+  {
+    "id": "g-032",
+    "level": "5급",
+    "pattern": "~(으)ㄴ/는 척하다",
+    "titleJp": "偽装表現(~するふりをする)",
+    "connection": "動詞語幹(パッチム無:는 척하다／パッチム有:은 척하다)",
+    "example": "모르는 척했어요.",
+    "exampleMeaningJp": "知らないふりをしました。",
+    "japaneseNote": "日本語の「~ふりをする」に対応する表現です。"
+  },
+  {
+    "id": "g-033",
+    "level": "5급",
+    "pattern": "~기 마련이다",
+    "titleJp": "当然の理・自然な帰結表現(~するものだ)",
+    "connection": "動詞・形容詞語幹 + 기 마련이다",
+    "example": "시간이 지나면 잊히기 마련이에요.",
+    "exampleMeaningJp": "時間が経てば忘れるものです。",
+    "japaneseNote": "日本語の「~するものだ」に対応。当然そうなる、という一般論を語る時に使います。"
+  },
+  {
+    "id": "g-034",
+    "level": "6급",
+    "pattern": "~(으)ㄹ지언정",
+    "titleJp": "強い譲歩表現(格式体、~しようとも)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄹ지언정／パッチム有:을지언정)",
+    "example": "힘들지언정 포기하지 않겠습니다.",
+    "exampleMeaningJp": "辛くても諦めません。",
+    "japaneseNote": "「~더라도」よりさらに文語的・格式ばった強い譲歩表現で、演説や書き言葉でよく見られます。"
+  },
+  {
+    "id": "g-035",
+    "level": "6급",
+    "pattern": "~(으)ㅁ에 따라",
+    "titleJp": "比例・根拠表現(~にしたがって)",
+    "connection": "動詞・形容詞語幹の名詞形(パッチム無:ㅁ에 따라／パッチム有:음에 따라)",
+    "example": "나이가 듦에 따라 생각이 바뀌어요.",
+    "exampleMeaningJp": "年を取るにしたがって考えが変わります。",
+    "japaneseNote": "日本語の「~にしたがって」に対応する、格式のある比例表現です。"
   }
 ];
 const TRAVEL_KR = [
@@ -6045,10 +6527,228 @@ const TRAVEL_KR = [
     "pronunciation": "도와주세요.",
     "japanese": "助けてください。",
     "note": "緊急時に最初に使う言葉"
+  },
+  {
+    "id": "t-017",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "요즘 어떻게 지내요?",
+    "pronunciation": "요즘 어떠케 지내요?",
+    "japanese": "最近どう過ごしていますか。",
+    "note": "久しぶりに会った知人への基本のあいさつ"
+  },
+  {
+    "id": "t-018",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "별일 없어요.",
+    "pronunciation": "벼릴 업써요.",
+    "japanese": "特に変わりないです。",
+    "note": "「요즘 어떻게 지내요?」への定番の返し"
+  },
+  {
+    "id": "t-019",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "진짜요?",
+    "pronunciation": "진짜요?",
+    "japanese": "本当ですか。",
+    "note": "驚いた時に自然に出てくる相づち"
+  },
+  {
+    "id": "t-020",
+    "scene": "電話",
+    "level": "1급",
+    "korean": "여보세요?",
+    "pronunciation": "여보세요?",
+    "japanese": "もしもし。",
+    "note": "電話に出る時の決まり文句"
+  },
+  {
+    "id": "t-021",
+    "scene": "電話",
+    "level": "2급",
+    "korean": "지금 통화 괜찮아요?",
+    "pronunciation": "지금 통화 괜찬아요?",
+    "japanese": "今電話大丈夫ですか。",
+    "note": "電話をかけた直後に相手の都合を確認する表現"
+  },
+  {
+    "id": "t-022",
+    "scene": "電話",
+    "level": "2급",
+    "korean": "나중에 다시 전화할게요.",
+    "pronunciation": "나중에 다시 전화할께요.",
+    "japanese": "また後で電話します。",
+    "note": "電話を切り上げる時の表現"
+  },
+  {
+    "id": "t-023",
+    "scene": "約束",
+    "level": "2급",
+    "korean": "이번 주말에 시간 있어요?",
+    "pronunciation": "이번 주마레 시간 이써요?",
+    "japanese": "今週末時間ありますか。",
+    "note": "友達を誘う時の基本表現"
+  },
+  {
+    "id": "t-024",
+    "scene": "約束",
+    "level": "1급",
+    "korean": "몇 시에 만날까요?",
+    "pronunciation": "며칠씨에 만날까요?",
+    "japanese": "何時に会いましょうか。",
+    "note": "約束の時間を決める時の表現"
+  },
+  {
+    "id": "t-025",
+    "scene": "約束",
+    "level": "2급",
+    "korean": "약속을 취소해도 될까요?",
+    "pronunciation": "약쏘글 취소해도 될까요?",
+    "japanese": "約束をキャンセルしてもいいですか。",
+    "note": "やむを得ずキャンセルする際の丁寧な表現"
+  },
+  {
+    "id": "t-026",
+    "scene": "学校・職場",
+    "level": "2급",
+    "korean": "오늘 회의 몇 시예요?",
+    "pronunciation": "오늘 회이 며치예요?",
+    "japanese": "今日の会議は何時ですか。",
+    "note": "職場でのスケジュール確認"
+  },
+  {
+    "id": "t-027",
+    "scene": "学校・職場",
+    "level": "2급",
+    "korean": "과제를 아직 못 했어요.",
+    "pronunciation": "과제를 아직 모태써요.",
+    "japanese": "課題をまだやっていません。",
+    "note": "学生同士でよく使う会話"
+  },
+  {
+    "id": "t-028",
+    "scene": "学校・職場",
+    "level": "2급",
+    "korean": "먼저 퇴근하겠습니다.",
+    "pronunciation": "먼저 퇴근하겓씀니다.",
+    "japanese": "お先に失礼します。",
+    "note": "職場を先に出る時の定番あいさつ"
+  },
+  {
+    "id": "t-029",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "오늘 뭐 했어요?",
+    "pronunciation": "오늘 뭐 해써요?",
+    "japanese": "今日何をしましたか。",
+    "note": "친구/가족과의 일상 대화 시작 표현"
+  },
+  {
+    "id": "t-030",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "주말 잘 보내세요.",
+    "pronunciation": "주말 잘 보내세요.",
+    "japanese": "良い週末を。",
+    "note": "金曜日・週末前に交わすあいさつ"
+  },
+  {
+    "id": "t-031",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "조심히 가세요.",
+    "pronunciation": "조심히 가세요.",
+    "japanese": "気をつけて帰ってください。",
+    "note": "別れ際の定番のあいさつ"
+  },
+  {
+    "id": "t-032",
+    "scene": "ショッピング",
+    "level": "1급",
+    "korean": "포장해 주세요.",
+    "pronunciation": "포장해 주세요.",
+    "japanese": "包んでください。",
+    "note": "プレゼント包装や持ち帰り希望時に"
+  },
+  {
+    "id": "t-033",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "여기 물 좀 주세요.",
+    "pronunciation": "여기 물 좀 주세요.",
+    "japanese": "お水ください。",
+    "note": "食事中に店員を呼ぶ時の表現"
+  },
+  {
+    "id": "t-034",
+    "scene": "公共交通",
+    "level": "2급",
+    "korean": "카드 잔액이 부족해요.",
+    "pronunciation": "카드 잔애기 부족해요.",
+    "japanese": "カードの残高が足りません。",
+    "note": "交通カードのチャージが必要な時"
+  },
+  {
+    "id": "t-035",
+    "scene": "緊急事態",
+    "level": "2급",
+    "korean": "길을 잃어버렸어요.",
+    "pronunciation": "기를 이러버려써요.",
+    "japanese": "道に迷いました。",
+    "note": "迷子になった時に助けを求める表現"
+  },
+  {
+    "id": "t-036",
+    "scene": "病院",
+    "level": "2급",
+    "korean": "예약을 하고 싶어요.",
+    "pronunciation": "예야글 하고 시퍼요.",
+    "japanese": "予約をしたいです。",
+    "note": "病院・美容室など予約が必要な場所全般で使える"
   }
 ];
 
 const STATUS_LABEL = { new: '신규/新規', learning: '학습중/学習中', due: '복습필요/復習必要', mastered: '숙련/習熟済み' };
+
+// ==================== 유저 전체 통계 (XP / 연속학습 스트릭 - 듀오링고 스타일) ====================
+function useUserStats(user) {
+  const [stats, setStats] = useState({ xp: 0, streak: 0, lastStudyDate: null });
+  const uid = user ? user.uid : null;
+
+  useEffect(() => {
+    if (!uid) { setStats({ xp: 0, streak: 0, lastStudyDate: null }); return; }
+    const ref = db.collection('users').doc(uid);
+    const unsub = ref.onSnapshot(
+      (snap) => {
+        const data = snap.data() || {};
+        setStats({ xp: data.xp || 0, streak: data.streak || 0, lastStudyDate: data.lastStudyDate || null });
+      },
+      (err) => console.error('유저 통계 구독 오류:', err.code, err.message)
+    );
+    return () => unsub();
+  }, [uid]);
+
+  const recordActivity = useCallback((correct) => {
+    if (!uid) return;
+    const ref = db.collection('users').doc(uid);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    setStats((prev) => {
+      let nextStreak = prev.streak || 0;
+      if (prev.lastStudyDate !== todayStr) {
+        const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        nextStreak = prev.lastStudyDate === yesterdayStr ? nextStreak + 1 : 1;
+      }
+      const nextXp = (prev.xp || 0) + (correct ? 10 : 2);
+      const next = { xp: nextXp, streak: nextStreak, lastStudyDate: todayStr };
+      ref.set(next, { merge: true });
+      return next;
+    });
+  }, [uid]);
+
+  return { xp: stats.xp, streak: stats.streak, recordActivity };
+}
 
 // ==================== 실제 Firestore 연동 SRS 훅 (모든 덱 공용) ====================
 function useSrsDeck(user, deckType, firestoreName, masterList) {
@@ -6261,7 +6961,12 @@ function JaDashboard({ stats, onStartStudy, emptyMessage }) {
         <div className="stat-box"><div className="num">{stats.due}</div><div className="label">오늘 학습</div></div>
         <div className="stat-box"><div className="num">{stats.mastered}</div><div className="label">숙련</div></div>
       </div>
-      <button className="primary-btn" disabled={stats.due === 0} onClick={onStartStudy}>{stats.due > 0 ? ('학습 시작 (' + stats.due + '개)') : '오늘 학습 완료'}</button>
+      <button className="primary-btn" disabled={stats.due === 0} onClick={() => onStartStudy(false)}>{stats.due > 0 ? ('학습 시작 (' + stats.due + '개)') : '오늘 학습 완료'}</button>
+      {stats.total > 0 && (
+        <button className="secondary-btn" style={{ width: '100%', marginTop: 10 }} onClick={() => onStartStudy(true)}>
+          🔁 전체 다시 풀기 ({stats.total}개)
+        </button>
+      )}
     </div>
   );
 }
@@ -6279,7 +6984,7 @@ function JaLevelPicker({ levelCounts, onSelect }) {
     </div>
   );
 }
-function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish }) {
+function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish, onActivity }) {
   const [queue, setQueue] = useState(dueItems);
   const [doneCount, setDoneCount] = useState(0);
   const totalCount = useMemo(() => dueItems.length, [dueItems]);
@@ -6287,6 +6992,7 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   const current = queue[0];
   function handleResult(itemId, quality, sourceDeck) {
     submitReview(itemId, quality, sourceDeck);
+    if (onActivity) onActivity(quality >= RATING.HARD);
     setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
     if (quality >= RATING.HARD) setDoneCount((d) => d + 1);
   }
@@ -6344,10 +7050,11 @@ function JaListView({ deckType, items, onRemove }) {
   );
 }
 
-function JaSection({ user }) {
+function JaSection({ user, onActivity }) {
   const [deckType, setDeckType] = useState('words');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
+  const [studyAll, setStudyAll] = useState(false);
 
   const wordDeck = useSrsDeck(user, 'words', 'ja_words', VOCAB_JA);
   const grammarDeck = useSrsDeck(user, 'grammar', 'ja_grammar', GRAMMAR_JA);
@@ -6371,7 +7078,7 @@ function JaSection({ user }) {
   const scopedStats = useMemo(() => ({ total: scopedItems.length, due: scopedDueItems.length, mastered: scopedItems.filter((i) => i.status === 'mastered').length }), [scopedItems, scopedDueItems]);
   const levelCounts = useMemo(() => { const c = {}; unscopedItems.forEach((i) => { c[i.level] = (c[i.level] || 0) + 1; }); return c; }, [unscopedItems]);
 
-  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); }
+  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); setStudyAll(false); }
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
@@ -6389,8 +7096,8 @@ function JaSection({ user }) {
       ) : (
         <React.Fragment>
           {selectedLevel && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 급수 다시 선택 ({selectedLevel})</button>}
-          {tab === 'dashboard' && <JaDashboard stats={scopedStats} onStartStudy={() => setTab('study')} emptyMessage={isReview ? <React.Fragment>복습노트가 비어 있습니다.<br/>학습 중 "☆ 복습에 추가" 버튼을 눌러보세요.</React.Fragment> : undefined} />}
-          {tab === 'study' && <JaStudySession dueItems={scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} />}
+          {tab === 'dashboard' && <JaDashboard stats={scopedStats} onStartStudy={(all) => { setStudyAll(!!all); setTab('study'); }} emptyMessage={isReview ? <React.Fragment>복습노트가 비어 있습니다.<br/>학습 중 "☆ 복습에 추가" 버튼을 눌러보세요.</React.Fragment> : undefined} />}
+          {tab === 'study' && <JaStudySession dueItems={studyAll ? scopedItems : scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} onActivity={onActivity} />}
           {tab === 'list' && <JaListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
           <nav className="tab-bar">
             <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>홈</button>
@@ -6506,7 +7213,12 @@ function KrDashboard({ stats, onStartStudy, emptyMessage }) {
         <div className="stat-box"><div className="num">{stats.due}</div><div className="label">今日の学習</div></div>
         <div className="stat-box"><div className="num">{stats.mastered}</div><div className="label">習熟済み</div></div>
       </div>
-      <button className="primary-btn" disabled={stats.due === 0} onClick={onStartStudy}>{stats.due > 0 ? ('学習開始 (' + stats.due + '個)') : '今日の学習は完了しました'}</button>
+      <button className="primary-btn" disabled={stats.due === 0} onClick={() => onStartStudy(false)}>{stats.due > 0 ? ('学習開始 (' + stats.due + '個)') : '今日の学習は完了しました'}</button>
+      {stats.total > 0 && (
+        <button className="secondary-btn" style={{ width: '100%', marginTop: 10 }} onClick={() => onStartStudy(true)}>
+          🔁 全部もう一度解く ({stats.total}個)
+        </button>
+      )}
     </div>
   );
 }
@@ -6524,7 +7236,7 @@ function KrLevelPicker({ levelCounts, onSelect }) {
     </div>
   );
 }
-function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish }) {
+function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish, onActivity }) {
   const [queue, setQueue] = useState(dueItems);
   const [doneCount, setDoneCount] = useState(0);
   const totalCount = useMemo(() => dueItems.length, [dueItems]);
@@ -6532,6 +7244,7 @@ function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   const current = queue[0];
   function handleResult(itemId, quality, sourceDeck) {
     submitReview(itemId, quality, sourceDeck);
+    if (onActivity) onActivity(quality >= RATING.HARD);
     setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
     if (quality >= RATING.HARD) setDoneCount((d) => d + 1);
   }
@@ -6587,10 +7300,11 @@ function KrListView({ deckType, items, onRemove }) {
   );
 }
 
-function KrSection({ user }) {
+function KrSection({ user, onActivity }) {
   const [deckType, setDeckType] = useState('words');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
+  const [studyAll, setStudyAll] = useState(false);
 
   const wordDeck = useSrsDeck(user, 'words', 'kr_words', VOCAB_KR);
   const grammarDeck = useSrsDeck(user, 'grammar', 'kr_grammar', GRAMMAR_KR);
@@ -6613,7 +7327,7 @@ function KrSection({ user }) {
   const scopedStats = useMemo(() => ({ total: scopedItems.length, due: scopedDueItems.length, mastered: scopedItems.filter((i) => i.status === 'mastered').length }), [scopedItems, scopedDueItems]);
   const levelCounts = useMemo(() => { const c = {}; unscopedItems.forEach((i) => { c[i.level] = (c[i.level] || 0) + 1; }); return c; }, [unscopedItems]);
 
-  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); }
+  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); setStudyAll(false); }
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
@@ -6631,8 +7345,8 @@ function KrSection({ user }) {
       ) : (
         <React.Fragment>
           {selectedLevel && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 級を選び直す ({selectedLevel})</button>}
-          {tab === 'dashboard' && <KrDashboard stats={scopedStats} onStartStudy={() => setTab('study')} emptyMessage={isReview ? <React.Fragment>復習ノートが空です。<br/>学習中に「☆ 復習に追加」ボタンを押してみましょう。</React.Fragment> : undefined} />}
-          {tab === 'study' && <KrStudySession dueItems={scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} />}
+          {tab === 'dashboard' && <KrDashboard stats={scopedStats} onStartStudy={(all) => { setStudyAll(!!all); setTab('study'); }} emptyMessage={isReview ? <React.Fragment>復習ノートが空です。<br/>学習中に「☆ 復習に追加」ボタンを押してみましょう。</React.Fragment> : undefined} />}
+          {tab === 'study' && <KrStudySession dueItems={studyAll ? scopedItems : scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} onActivity={onActivity} />}
           {tab === 'list' && <KrListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
           <nav className="tab-bar">
             <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>ホーム</button>
@@ -6718,6 +7432,7 @@ const MODE_META = {
 function App() {
   const [user, setUser] = useState(undefined);
   const [mode, setMode] = useState('ja');
+  const userStats = useUserStats(user);
 
   useEffect(() => {
     const unsub = subscribeToAuth(setUser);
@@ -6733,11 +7448,18 @@ function App() {
           <h1 className="jp-text">{meta.title}</h1>
           <div className="subtitle">{meta.subtitle}</div>
         </div>
-        {user && (
-          <button onClick={signOutUser} style={{ background: 'none', border: 'none', fontSize: 12, color: 'var(--ink-soft)', cursor: 'pointer' }}>
-            {mode === 'ja' ? '로그아웃' : 'ログアウト'}
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {user && (userStats.streak > 0 || userStats.xp > 0) && (
+            <div className="streak-badge mono" title={mode === 'ja' ? '연속 학습일 · 누적 XP' : '連続学習日数・累計XP'}>
+              🔥{userStats.streak} · ⭐{userStats.xp}
+            </div>
+          )}
+          {user && (
+            <button onClick={signOutUser} style={{ background: 'none', border: 'none', fontSize: 12, color: 'var(--ink-soft)', cursor: 'pointer' }}>
+              {mode === 'ja' ? '로그아웃' : 'ログアウト'}
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="deck-switch" style={{ marginBottom: 18 }}>
@@ -6750,9 +7472,9 @@ function App() {
       ) : user === null ? (
         <LoginForm mode={mode} />
       ) : mode === 'ja' ? (
-        <JaSection user={user} />
+        <JaSection user={user} onActivity={userStats.recordActivity} />
       ) : (
-        <KrSection user={user} />
+        <KrSection user={user} onActivity={userStats.recordActivity} />
       )}
     </div>
   );
