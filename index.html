@@ -372,6 +372,64 @@ body {
 }
 
 /* 정답 확인 후 액션 버튼 (복습에 추가 / 다음) */
+/* 문장 조합(작문) 문제 - 단어 조각을 순서대로 배치 */
+.sentence-answer-row {
+  min-height: 52px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 2px dashed var(--paper-line);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.sentence-placeholder {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.sentence-pool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.tile-btn {
+  padding: 10px 14px;
+  border: 1.5px solid var(--indigo);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  color: var(--indigo);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tile-btn.placed {
+  background: var(--indigo);
+  color: #fffdf8;
+}
+
+.tile-btn.tile-correct {
+  background: var(--moss);
+  border-color: var(--moss);
+  color: #fffdf8;
+}
+
+.tile-btn.tile-wrong {
+  background: var(--vermillion);
+  border-color: var(--vermillion);
+  color: #fffdf8;
+}
+
+.tile-btn:disabled {
+  cursor: default;
+}
+
 .action-row {
   display: flex;
   gap: 8px;
@@ -4653,6 +4711,176 @@ const TRAVEL_JA = [
     "note": "이메일·공식 문서 마무리에 쓰는 가장 격식 있는 인사"
   }
 ];
+const SENTENCE_JA = [
+  {
+    "id": "s-001",
+    "level": "N5",
+    "meaning": "저는 학생입니다.",
+    "tiles": [
+      "私は",
+      "学生",
+      "です"
+    ],
+    "reading": "わたしはがくせいです"
+  },
+  {
+    "id": "s-002",
+    "level": "N5",
+    "meaning": "내일 학교에 갑니다.",
+    "tiles": [
+      "明日",
+      "学校に",
+      "行きます"
+    ],
+    "reading": "あしたがっこうにいきます"
+  },
+  {
+    "id": "s-003",
+    "level": "N5",
+    "meaning": "이것은 책입니다.",
+    "tiles": [
+      "これは",
+      "本",
+      "です"
+    ],
+    "reading": "これはほんです"
+  },
+  {
+    "id": "s-004",
+    "level": "N5",
+    "meaning": "오늘은 날씨가 좋습니다.",
+    "tiles": [
+      "今日は",
+      "天気が",
+      "いいです"
+    ],
+    "reading": "きょうはてんきがいいです"
+  },
+  {
+    "id": "s-005",
+    "level": "N5",
+    "meaning": "저는 매일 한국어를 공부합니다.",
+    "tiles": [
+      "私は",
+      "毎日",
+      "韓国語を",
+      "勉強します"
+    ],
+    "reading": "わたしはまいにちかんこくごをべんきょうします"
+  },
+  {
+    "id": "s-006",
+    "level": "N5",
+    "meaning": "친구와 영화를 봤습니다.",
+    "tiles": [
+      "友達と",
+      "映画を",
+      "見ました"
+    ],
+    "reading": "ともだちとえいがをみました"
+  },
+  {
+    "id": "s-007",
+    "level": "N5",
+    "meaning": "이 가게는 커피가 맛있습니다.",
+    "tiles": [
+      "この店は",
+      "コーヒーが",
+      "おいしいです"
+    ],
+    "reading": "このみせはコーヒーがおいしいです"
+  },
+  {
+    "id": "s-008",
+    "level": "N5",
+    "meaning": "저는 일본에 가고 싶습니다.",
+    "tiles": [
+      "私は",
+      "日本に",
+      "行きたいです"
+    ],
+    "reading": "わたしはにほんにいきたいです"
+  },
+  {
+    "id": "s-009",
+    "level": "N5",
+    "meaning": "창문을 열어 주세요.",
+    "tiles": [
+      "窓を",
+      "開けて",
+      "ください"
+    ],
+    "reading": "まどをあけてください"
+  },
+  {
+    "id": "s-010",
+    "level": "N5",
+    "meaning": "어제 친구를 만났습니다.",
+    "tiles": [
+      "昨日",
+      "友達に",
+      "会いました"
+    ],
+    "reading": "きのうともだちにあいました"
+  },
+  {
+    "id": "s-011",
+    "level": "N5",
+    "meaning": "이 가방은 비쌉니다.",
+    "tiles": [
+      "この",
+      "かばんは",
+      "高いです"
+    ],
+    "reading": "このかばんはたかいです"
+  },
+  {
+    "id": "s-012",
+    "level": "N4",
+    "meaning": "그는 매일 아침 운동을 합니다.",
+    "tiles": [
+      "彼は",
+      "毎朝",
+      "運動を",
+      "します"
+    ],
+    "reading": "かれはまいあさうんどうをします"
+  },
+  {
+    "id": "s-013",
+    "level": "N4",
+    "meaning": "여기서 사진을 찍어도 됩니까?",
+    "tiles": [
+      "ここで",
+      "写真を",
+      "撮っても",
+      "いいですか"
+    ],
+    "reading": "ここでしゃしんをとってもいいですか"
+  },
+  {
+    "id": "s-014",
+    "level": "N4",
+    "meaning": "시간이 없어서 서두릅니다.",
+    "tiles": [
+      "時間が",
+      "ないから",
+      "急ぎます"
+    ],
+    "reading": "じかんがないからいそぎます"
+  },
+  {
+    "id": "s-015",
+    "level": "N4",
+    "meaning": "그는 한국어를 잘합니다.",
+    "tiles": [
+      "彼は",
+      "韓国語が",
+      "上手です"
+    ],
+    "reading": "かれはかんこくごがじょうずです"
+  }
+];
 
 const VOCAB_KR = [
   {
@@ -6709,6 +6937,179 @@ const TRAVEL_KR = [
     "note": "病院・美容室など予約が必要な場所全般で使える"
   }
 ];
+const SENTENCE_KR = [
+  {
+    "id": "s-001",
+    "level": "1급",
+    "meaning": "私は学生です。",
+    "tiles": [
+      "저는",
+      "학생",
+      "입니다"
+    ],
+    "reading": "저는 학생입니다"
+  },
+  {
+    "id": "s-002",
+    "level": "1급",
+    "meaning": "明日学校に行きます。",
+    "tiles": [
+      "내일",
+      "학교에",
+      "갑니다"
+    ],
+    "reading": "내일 학교에 갑니다"
+  },
+  {
+    "id": "s-003",
+    "level": "1급",
+    "meaning": "これは本です。",
+    "tiles": [
+      "이것은",
+      "책",
+      "입니다"
+    ],
+    "reading": "이것은 책입니다"
+  },
+  {
+    "id": "s-004",
+    "level": "1급",
+    "meaning": "今日は天気がいいです。",
+    "tiles": [
+      "오늘은",
+      "날씨가",
+      "좋아요"
+    ],
+    "reading": "오늘은 날씨가 좋아요"
+  },
+  {
+    "id": "s-005",
+    "level": "2급",
+    "meaning": "私は毎日韓国語を勉強します。",
+    "tiles": [
+      "저는",
+      "매일",
+      "한국어를",
+      "공부해요"
+    ],
+    "reading": "저는 매일 한국어를 공부해요"
+  },
+  {
+    "id": "s-006",
+    "level": "2급",
+    "meaning": "友達と映画を見ました。",
+    "tiles": [
+      "친구랑",
+      "영화를",
+      "봤어요"
+    ],
+    "reading": "친구랑 영화를 봤어요"
+  },
+  {
+    "id": "s-007",
+    "level": "2급",
+    "meaning": "このお店はコーヒーがおいしいです。",
+    "tiles": [
+      "이",
+      "가게는",
+      "커피가",
+      "맛있어요"
+    ],
+    "reading": "이 가게는 커피가 맛있어요"
+  },
+  {
+    "id": "s-008",
+    "level": "2급",
+    "meaning": "私は韓国に行きたいです。",
+    "tiles": [
+      "저는",
+      "한국에",
+      "가고",
+      "싶어요"
+    ],
+    "reading": "저는 한국에 가고 싶어요"
+  },
+  {
+    "id": "s-009",
+    "level": "2급",
+    "meaning": "窓を開けてください。",
+    "tiles": [
+      "창문을",
+      "열어",
+      "주세요"
+    ],
+    "reading": "창문을 열어 주세요"
+  },
+  {
+    "id": "s-010",
+    "level": "2급",
+    "meaning": "彼は毎朝運動をします。",
+    "tiles": [
+      "그는",
+      "매일",
+      "아침",
+      "운동을",
+      "해요"
+    ],
+    "reading": "그는 매일 아침 운동을 해요"
+  },
+  {
+    "id": "s-011",
+    "level": "2급",
+    "meaning": "昨日友達に会いました。",
+    "tiles": [
+      "어제",
+      "친구를",
+      "만났어요"
+    ],
+    "reading": "어제 친구를 만났어요"
+  },
+  {
+    "id": "s-012",
+    "level": "1급",
+    "meaning": "このかばんは高いです。",
+    "tiles": [
+      "이",
+      "가방은",
+      "비싸요"
+    ],
+    "reading": "이 가방은 비싸요"
+  },
+  {
+    "id": "s-013",
+    "level": "2급",
+    "meaning": "ここで写真を撮ってもいいですか。",
+    "tiles": [
+      "여기서",
+      "사진을",
+      "찍어도",
+      "돼요?"
+    ],
+    "reading": "여기서 사진을 찍어도 돼요"
+  },
+  {
+    "id": "s-014",
+    "level": "3급",
+    "meaning": "時間がないから急ぎます。",
+    "tiles": [
+      "시간이",
+      "없어서",
+      "서둘러요"
+    ],
+    "reading": "시간이 없어서 서둘러요"
+  },
+  {
+    "id": "s-015",
+    "level": "2급",
+    "meaning": "彼は韓国語が上手です。",
+    "tiles": [
+      "그는",
+      "한국어를",
+      "잘해요"
+    ],
+    "reading": "그는 한국어를 잘해요"
+  }
+];
 
 const STATUS_LABEL = { new: '신규/新規', learning: '학습중/学習中', due: '복습필요/復習必要', mastered: '숙련/習熟済み' };
 
@@ -6845,7 +7246,7 @@ function useSrsDeck(user, deckType, firestoreName, masterList) {
 
 // ==================== JA 섹션 (일본어 학습, UI 한국어) ====================
 
-const JA_DECK_LABELS = { words: '단어', grammar: '문법', kanji: '한자', travel: '회화' };
+const JA_DECK_LABELS = { words: '단어', grammar: '문법', kanji: '한자', travel: '회화', sentence: '작문' };
 const JA_ANSWER_GETTERS = {
   words: (i) => i.meaning,
   grammar: (i) => i.title,
@@ -6999,10 +7400,91 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   return (
     <div>
       <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{doneCount} / {totalCount}</div>
-      <JaQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+      {current.sourceDeck === 'sentence'
+        ? <JaSentenceCard key={current.id + current.sourceDeck} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+        : <JaQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
     </div>
   );
 }
+function JaSentenceCard({ item, onResult, onToggleBookmark }) {
+  const [pool, setPool] = useState(() => shuffle(item.tiles.map((t, i) => ({ id: i, text: t }))));
+  const [placed, setPlaced] = useState([]);
+  const [checked, setChecked] = useState(false);
+  const [wasCorrect, setWasCorrect] = useState(false);
+  const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
+
+  useEffect(() => cancelSpeech, []);
+
+  function placeTile(tile) {
+    if (checked) return;
+    setPool((prev) => prev.filter((t) => t.id !== tile.id));
+    setPlaced((prev) => [...prev, tile]);
+  }
+  function removeTile(tile) {
+    if (checked) return;
+    setPlaced((prev) => prev.filter((t) => t.id !== tile.id));
+    setPool((prev) => [...prev, tile]);
+  }
+  const isComplete = pool.length === 0 && placed.length === item.tiles.length;
+
+  function handleCheck() {
+    const correct = placed.map((t) => t.text).join('|') === item.tiles.join('|');
+    setChecked(true);
+    setWasCorrect(correct);
+    if (correct) playCorrectSound(); else playWrongSound();
+    setTimeout(() => speakJapanese(item.reading || item.tiles.join('')), 400);
+  }
+  function handleNext() {
+    onResult(item.id, wasCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck);
+  }
+  function handleToggleBookmark() {
+    const next = !bookmarked;
+    setBookmarkedState(next);
+    onToggleBookmark(item, next);
+  }
+
+  return (
+    <div className="genkou-card">
+      <span className="hanko">{item.level}</span>
+      <div style={{ marginTop: 8 }}>
+        <div className="pattern-plate">
+          <div className="meaning-hint" style={{ fontSize: 12, opacity: 0.85 }}>다음 문장을 일본어로 배열하세요</div>
+          <div className="pattern" style={{ fontSize: 18 }}>{item.meaning}</div>
+        </div>
+
+        <div className="sentence-answer-row">
+          {placed.length === 0 && <span className="sentence-placeholder">아래 조각을 순서대로 눌러 문장을 완성하세요</span>}
+          {placed.map((t) => {
+            let cls = 'tile-btn placed jp-text';
+            if (checked) cls += wasCorrect ? ' tile-correct' : ' tile-wrong';
+            return <button key={t.id} className={cls} onClick={() => removeTile(t)} disabled={checked}>{t.text}</button>;
+          })}
+        </div>
+
+        <div className="sentence-pool-row">
+          {pool.map((t) => (
+            <button key={t.id} className="tile-btn jp-text" onClick={() => placeTile(t)} disabled={checked}>{t.text}</button>
+          ))}
+        </div>
+
+        {!checked ? (
+          <button className="primary-btn" style={{ marginTop: 16 }} disabled={!isComplete} onClick={handleCheck}>확인</button>
+        ) : (
+          <React.Fragment>
+            <div className={'feedback ' + (wasCorrect ? 'feedback-correct' : 'feedback-wrong')}>{wasCorrect ? '정답입니다!' : '오답입니다.'}</div>
+            <div className="example">정답: <span className="jp-text">{item.tiles.join('')}</span>{item.reading && (<React.Fragment><br/>({item.reading})</React.Fragment>)}</div>
+            <button className="replay-btn" onClick={() => speakJapanese(item.reading || item.tiles.join(''))}>🔊 다시 듣기</button>
+            <div className="action-row">
+              <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
+              <button className="primary-btn" onClick={handleNext}>다음</button>
+            </div>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function JaListView({ deckType, items, onRemove }) {
   const SCENES = ['전체', '공항', '식당', '숙소', '길찾기', '쇼핑', '병원', '대중교통', '긴급상황', '비즈니스'];
   const [scene, setScene] = useState('전체');
@@ -7013,6 +7495,7 @@ function JaListView({ deckType, items, onRemove }) {
     if (dt === 'words') return i.word;
     if (dt === 'grammar') return i.pattern;
     if (dt === 'kanji') return i.char;
+    if (dt === 'sentence') return i.tiles.join('');
     return i.japanese;
   }
   function secondary(i) {
@@ -7020,6 +7503,7 @@ function JaListView({ deckType, items, onRemove }) {
     if (dt === 'words') return i.meaning;
     if (dt === 'grammar') return i.title;
     if (dt === 'kanji') return i.meaning + ' · 한국음 ' + i.koreanSound;
+    if (dt === 'sentence') return i.meaning;
     return i.korean;
   }
   if (items.length === 0) {
@@ -7060,14 +7544,15 @@ function JaSection({ user, onActivity }) {
   const grammarDeck = useSrsDeck(user, 'grammar', 'ja_grammar', GRAMMAR_JA);
   const kanjiDeck = useSrsDeck(user, 'kanji', 'ja_kanji', KANJI_JA);
   const travelDeck = useSrsDeck(user, 'travel', 'ja_travel', TRAVEL_JA);
-  const decks = { words: wordDeck, grammar: grammarDeck, kanji: kanjiDeck, travel: travelDeck };
+  const sentenceDeck = useSrsDeck(user, 'sentence', 'ja_sentence', SENTENCE_JA);
+  const decks = { words: wordDeck, grammar: grammarDeck, kanji: kanjiDeck, travel: travelDeck, sentence: sentenceDeck };
 
-  const anyLoading = wordDeck.loading || grammarDeck.loading || kanjiDeck.loading || travelDeck.loading;
-  const anyError = wordDeck.error || grammarDeck.error || kanjiDeck.error || travelDeck.error;
+  const anyLoading = wordDeck.loading || grammarDeck.loading || kanjiDeck.loading || travelDeck.loading || sentenceDeck.loading;
+  const anyError = wordDeck.error || grammarDeck.error || kanjiDeck.error || travelDeck.error || sentenceDeck.error;
 
   const bookmarkedItems = useMemo(() => [
-    ...wordDeck.bookmarkedItems, ...grammarDeck.bookmarkedItems, ...kanjiDeck.bookmarkedItems, ...travelDeck.bookmarkedItems,
-  ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, kanjiDeck.bookmarkedItems, travelDeck.bookmarkedItems]);
+    ...wordDeck.bookmarkedItems, ...grammarDeck.bookmarkedItems, ...kanjiDeck.bookmarkedItems, ...travelDeck.bookmarkedItems, ...sentenceDeck.bookmarkedItems,
+  ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, kanjiDeck.bookmarkedItems, travelDeck.bookmarkedItems, sentenceDeck.bookmarkedItems]);
 
   const isReview = deckType === 'review';
   const activeDeck = isReview ? null : decks[deckType];
@@ -7112,7 +7597,7 @@ function JaSection({ user, onActivity }) {
 
 // ==================== KR 섹션 (한국어 학습, UI 일본어) ====================
 
-const KR_DECK_LABELS = { words: '単語', grammar: '文法', travel: '会話' };
+const KR_DECK_LABELS = { words: '単語', grammar: '文法', travel: '会話', sentence: '作文' };
 const KR_ANSWER_GETTERS = {
   words: (i) => i.meaningJp,
   grammar: (i) => i.titleJp,
@@ -7251,10 +7736,91 @@ function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   return (
     <div>
       <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{doneCount} / {totalCount}</div>
-      <KrQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+      {current.sourceDeck === 'sentence'
+        ? <KrSentenceCard key={current.id + current.sourceDeck} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+        : <KrQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
     </div>
   );
 }
+function KrSentenceCard({ item, onResult, onToggleBookmark }) {
+  const [pool, setPool] = useState(() => shuffle(item.tiles.map((t, i) => ({ id: i, text: t }))));
+  const [placed, setPlaced] = useState([]);
+  const [checked, setChecked] = useState(false);
+  const [wasCorrect, setWasCorrect] = useState(false);
+  const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
+
+  useEffect(() => cancelSpeech, []);
+
+  function placeTile(tile) {
+    if (checked) return;
+    setPool((prev) => prev.filter((t) => t.id !== tile.id));
+    setPlaced((prev) => [...prev, tile]);
+  }
+  function removeTile(tile) {
+    if (checked) return;
+    setPlaced((prev) => prev.filter((t) => t.id !== tile.id));
+    setPool((prev) => [...prev, tile]);
+  }
+  const isComplete = pool.length === 0 && placed.length === item.tiles.length;
+
+  function handleCheck() {
+    const correct = placed.map((t) => t.text).join('|') === item.tiles.join('|');
+    setChecked(true);
+    setWasCorrect(correct);
+    if (correct) playCorrectSound(); else playWrongSound();
+    setTimeout(() => speakKorean(item.reading || item.tiles.join(' ')), 400);
+  }
+  function handleNext() {
+    onResult(item.id, wasCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck);
+  }
+  function handleToggleBookmark() {
+    const next = !bookmarked;
+    setBookmarkedState(next);
+    onToggleBookmark(item, next);
+  }
+
+  return (
+    <div className="genkou-card">
+      <span className="hanko">{item.level}</span>
+      <div style={{ marginTop: 8 }}>
+        <div className="pattern-plate">
+          <div className="meaning-hint" style={{ fontSize: 12, opacity: 0.85 }}>次の文を韓国語で並べ替えてください</div>
+          <div className="pattern" style={{ fontSize: 18 }}>{item.meaning}</div>
+        </div>
+
+        <div className="sentence-answer-row">
+          {placed.length === 0 && <span className="sentence-placeholder">下の断片を順番に押して文を完成させてください</span>}
+          {placed.map((t) => {
+            let cls = 'tile-btn placed jp-text';
+            if (checked) cls += wasCorrect ? ' tile-correct' : ' tile-wrong';
+            return <button key={t.id} className={cls} onClick={() => removeTile(t)} disabled={checked}>{t.text}</button>;
+          })}
+        </div>
+
+        <div className="sentence-pool-row">
+          {pool.map((t) => (
+            <button key={t.id} className="tile-btn jp-text" onClick={() => placeTile(t)} disabled={checked}>{t.text}</button>
+          ))}
+        </div>
+
+        {!checked ? (
+          <button className="primary-btn" style={{ marginTop: 16 }} disabled={!isComplete} onClick={handleCheck}>確認</button>
+        ) : (
+          <React.Fragment>
+            <div className={'feedback ' + (wasCorrect ? 'feedback-correct' : 'feedback-wrong')}>{wasCorrect ? '正解です!' : '不正解です。'}</div>
+            <div className="example">正解: <span className="jp-text">{item.tiles.join(' ')}</span></div>
+            <button className="replay-btn" onClick={() => speakKorean(item.reading || item.tiles.join(' '))}>🔊 もう一度聞く</button>
+            <div className="action-row">
+              <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 復習ノートに追加済み' : '☆ 復習に追加'}</button>
+              <button className="primary-btn" onClick={handleNext}>次へ</button>
+            </div>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function KrListView({ deckType, items, onRemove }) {
   const SCENES = ['全体', '空港', '食堂', '宿泊先', '道案内', 'ショッピング', '病院', '公共交通', '緊急事態', 'ビジネス'];
   const [scene, setScene] = useState('全体');
@@ -7264,12 +7830,14 @@ function KrListView({ deckType, items, onRemove }) {
     const dt = deckType === 'review' ? i.sourceDeck : deckType;
     if (dt === 'words') return i.word;
     if (dt === 'grammar') return i.pattern;
+    if (dt === 'sentence') return i.tiles.join(' ');
     return i.korean;
   }
   function secondary(i) {
     const dt = deckType === 'review' ? i.sourceDeck : deckType;
     if (dt === 'words') return i.meaningJp;
     if (dt === 'grammar') return i.titleJp;
+    if (dt === 'sentence') return i.meaning;
     return i.japanese;
   }
   if (items.length === 0) {
@@ -7309,14 +7877,15 @@ function KrSection({ user, onActivity }) {
   const wordDeck = useSrsDeck(user, 'words', 'kr_words', VOCAB_KR);
   const grammarDeck = useSrsDeck(user, 'grammar', 'kr_grammar', GRAMMAR_KR);
   const travelDeck = useSrsDeck(user, 'travel', 'kr_travel', TRAVEL_KR);
-  const decks = { words: wordDeck, grammar: grammarDeck, travel: travelDeck };
+  const sentenceDeck = useSrsDeck(user, 'sentence', 'kr_sentence', SENTENCE_KR);
+  const decks = { words: wordDeck, grammar: grammarDeck, travel: travelDeck, sentence: sentenceDeck };
 
-  const anyLoading = wordDeck.loading || grammarDeck.loading || travelDeck.loading;
-  const anyError = wordDeck.error || grammarDeck.error || travelDeck.error;
+  const anyLoading = wordDeck.loading || grammarDeck.loading || travelDeck.loading || sentenceDeck.loading;
+  const anyError = wordDeck.error || grammarDeck.error || travelDeck.error || sentenceDeck.error;
 
   const bookmarkedItems = useMemo(() => [
-    ...wordDeck.bookmarkedItems, ...grammarDeck.bookmarkedItems, ...travelDeck.bookmarkedItems,
-  ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, travelDeck.bookmarkedItems]);
+    ...wordDeck.bookmarkedItems, ...grammarDeck.bookmarkedItems, ...travelDeck.bookmarkedItems, ...sentenceDeck.bookmarkedItems,
+  ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, travelDeck.bookmarkedItems, sentenceDeck.bookmarkedItems]);
 
   const isReview = deckType === 'review';
   const activeDeck = isReview ? null : decks[deckType];
