@@ -1,0 +1,6776 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#1B3A4B" />
+<title>日本語 / 한국어 学習・공부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap"
+  rel="stylesheet"
+/>
+
+<!-- React -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<!-- Babel (브라우저에서 바로 JSX 해석 - 별도 빌드/컴파일 과정 불필요) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<!-- Firebase (compat 버전 - 옛날 방식 문법, CDN 스크립트 태그만으로 동작) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  /* 화색(和色) 기반 팔레트 */
+  --paper: #f5f1e6;         /* 생성리(生成り) - 바탕 */
+  --paper-line: #ddd3ba;    /* 원고지 격자선 */
+  --ink: #2b2b28;           /* 스미(墨) - 본문 텍스트 */
+  --ink-soft: #5c584f;
+  --indigo: #1b3a4b;        /* 아이이로(藍色) - 주요 색상 */
+  --indigo-soft: #2f5468;
+  --vermillion: #9c3b2e;    /* 벵가라이로(弁柄色) - 낙관/강조 */
+  --vermillion-soft: #c9584a;
+  --moss: #4c6444;          /* 모스그린 - 완료/숙련 상태 */
+  --gold: #b08d3f;          /* 금색 - 배지 */
+  --card-shadow: 0 2px 10px rgba(43, 43, 40, 0.08);
+  --radius: 4px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+}
+
+.jp-text {
+  font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.app-shell {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 96px;
+  min-height: 100vh;
+}
+
+/* 상단 헤더 */
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 4px 20px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 20px;
+}
+
+.app-header h1 {
+  font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.app-header .subtitle {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* 하단 탭 네비게이션 */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--paper);
+  border-top: 2px solid var(--ink);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.tab-bar button {
+  flex: 1;
+  padding: 14px 0 12px;
+  background: none;
+  border: none;
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-top: 3px solid transparent;
+}
+
+.tab-bar button.active {
+  color: var(--indigo);
+  border-top: 3px solid var(--vermillion);
+}
+
+/* 낙관(hanko) 스탬프 배지 - 급수 표시 */
+.hanko {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--vermillion);
+  color: var(--vermillion);
+  font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
+  font-weight: 700;
+  font-size: 13px;
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+}
+
+/* 원고지 스타일 카드 - 단어 학습의 시그니처 요소 */
+.genkou-card {
+  position: relative;
+  background: #fffdf8;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.genkou-square {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 18px;
+  border: 1.5px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background:
+    linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0 / 100% 33.3%,
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0 / 33.3% 100%;
+}
+
+.genkou-square .char {
+  font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
+  font-size: 44px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.reading {
+  font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+.meaning {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 12px 0 8px;
+}
+
+.example {
+  font-size: 13px;
+  color: var(--ink-soft);
+  border-top: 1px dashed var(--paper-line);
+  padding-top: 12px;
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+/* 문법 패턴 카드 */
+.pattern-plate {
+  background: var(--indigo);
+  color: var(--paper);
+  border-radius: var(--radius);
+  padding: 26px 18px;
+  margin-bottom: 18px;
+}
+
+.pattern-plate .pattern {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.pattern-plate .meaning-hint {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 8px;
+}
+
+.scene-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.connection-note {
+  background: #f1ead6;
+  border-left: 3px solid var(--gold);
+  padding: 10px 12px;
+  font-size: 13px;
+  text-align: left;
+  margin-bottom: 10px;
+  border-radius: 2px;
+}
+
+.korean-contrast {
+  background: #f3dbd6;
+  border-left: 3px solid var(--vermillion);
+  padding: 10px 12px;
+  font-size: 13px;
+  text-align: left;
+  line-height: 1.6;
+  margin-top: 12px;
+  border-radius: 2px;
+}
+
+/* 단어/문법 덱 전환 */
+.deck-switch {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.deck-switch button {
+  flex: 1;
+  padding: 10px;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.deck-switch button.active {
+  background: var(--vermillion);
+  border-color: var(--vermillion);
+  color: #fffdf8;
+}
+
+/* 4지선다 퀴즈 보기 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.option-btn {
+  padding: 14px 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option-btn:disabled {
+  cursor: default;
+}
+
+.option-correct {
+  background: var(--moss);
+  border-color: var(--moss);
+  color: #fffdf8;
+}
+
+.option-wrong {
+  background: var(--vermillion);
+  border-color: var(--vermillion);
+  color: #fffdf8;
+}
+
+.feedback {
+  margin-top: 16px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.feedback-correct { color: var(--moss); }
+.feedback-wrong { color: var(--vermillion); }
+
+/* 급수 선택 화면 */
+.level-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.level-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  cursor: pointer;
+}
+
+.level-btn:not(:disabled):hover {
+  border-color: var(--vermillion);
+}
+
+.level-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.level-btn-label {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--indigo);
+}
+
+.level-btn-count {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.change-level-link {
+  display: block;
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0 2px 14px;
+}
+
+/* 정답 확인 후 액션 버튼 (복습에 추가 / 다음) */
+.action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.action-row .primary-btn,
+.action-row .secondary-btn {
+  flex: 1;
+  margin-top: 0;
+}
+
+.secondary-btn {
+  padding: 16px 8px;
+  border: 1.5px solid var(--indigo);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--indigo);
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.secondary-btn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fffdf8;
+}
+
+.replay-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: none;
+  border: 1px dashed var(--paper-line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* 복습노트 진입 버튼 */
+.review-bar {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  margin-bottom: 18px;
+  border: 1.5px dashed var(--gold);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.review-bar.active {
+  background: var(--gold);
+  border-style: solid;
+  color: #fffdf8;
+}
+
+/* 복습노트 목록에서 원본 덱 표시/제거 버튼 */
+.deck-tag {
+  display: inline-block;
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--indigo);
+  background: #e7edf0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.remove-btn {
+  background: none;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: 11px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+
+/* 복습 평가 버튼 */
+.rate-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.rate-btn {
+  padding: 12px 4px;
+  border-radius: var(--radius);
+  border: none;
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.rate-again { background: var(--vermillion); }
+.rate-hard { background: var(--gold); }
+.rate-good { background: var(--indigo); }
+.rate-easy { background: var(--moss); }
+
+.rate-btn .sub {
+  display: block;
+  font-weight: 400;
+  font-size: 10px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* 대시보드 통계 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-box {
+  background: #fffdf8;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.stat-box .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--indigo);
+}
+
+.stat-box .label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--indigo);
+  color: #fffdf8;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+}
+
+/* 단어 리스트 */
+.level-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+
+.level-tabs button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.level-tabs button.active {
+  background: var(--indigo);
+  border-color: var(--indigo);
+  color: #fffdf8;
+}
+
+.word-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 6px;
+  border-bottom: 1px solid var(--paper-line);
+}
+
+.word-row .info .jp {
+  font-family: 'Noto Serif JP', 'Noto Serif KR', serif;
+  font-size: 17px;
+}
+
+.word-row .info .kr {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+}
+
+.status-new { background: #e6e1d3; color: var(--ink-soft); }
+.status-learning { background: #f1e0c9; color: var(--gold); }
+.status-due { background: #f3dbd6; color: var(--vermillion); }
+.status-mastered { background: #dfe6d9; color: var(--moss); }
+
+.login-box {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.login-box p {
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.login-input {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--paper-line);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--indigo);
+}
+
+.login-error {
+  color: var(--vermillion);
+  font-size: 12px;
+  margin: 4px 0 12px;
+  text-align: left;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-soft);
+}
+
+.genkou-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+  max-width: 340px;
+  margin: 0 auto 16px;
+}
+
+.genkou-cell {
+  width: 54px;
+  height: 54px;
+  border: 1px solid var(--ink);
+  margin: -0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0 / 100% 33.3%,
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0 / 33.3% 100%;
+}
+
+.genkou-cell .char {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!--
+  아래 script 태그 안이 앱의 전체 소스코드입니다 (JSX 그대로, 컴파일 불필요).
+  수정하고 싶으면 이 파일 안의 코드를 직접 고치고 GitHub에 다시 올리면 됩니다.
+  (type="text/plain"으로 둬서 브라우저가 실행하지 않게 하고, 아래 부트스트랩 스크립트가
+   Babel로 변환한 뒤 classic 런타임(React.createElement)으로 직접 실행합니다.
+   automatic 런타임을 쓰면 import 구문이 섞여 들어가 일반 script 태그에서 실패하기 때문입니다.)
+-->
+<script type="text/plain" id="app-source">
+
+const { useState, useEffect, useMemo, useCallback } = React;
+
+// ==================== Firebase 초기화 (compat SDK, 빌드 도구 불필요) ====================
+const firebaseConfig = {
+  "apiKey": "AIzaSyCc__tTddKVmbMEvVxVBK0EdiRsLIoljGQ",
+  "authDomain": "jp-study-5d3ef.firebaseapp.com",
+  "projectId": "jp-study-5d3ef",
+  "storageBucket": "jp-study-5d3ef.firebasestorage.app",
+  "messagingSenderId": "187509468168",
+  "appId": "1:187509468168:web:133cc49a5b9f60ebbcf5bd"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function signUpWithEmail(email, password) {
+  return auth.createUserWithEmailAndPassword(email, password);
+}
+function signInWithEmail(email, password) {
+  return auth.signInWithEmailAndPassword(email, password);
+}
+function signOutUser() {
+  return auth.signOut();
+}
+function subscribeToAuth(callback) {
+  return auth.onAuthStateChanged(callback);
+}
+
+// ==================== SM-2 SRS 알고리즘 ====================
+const RATING = { AGAIN: 0, HARD: 3, GOOD: 4, EASY: 5 };
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function scheduleNext(prev, quality) {
+  prev = prev || {};
+  let repetition = prev.repetition !== undefined ? prev.repetition : 0;
+  let easeFactor = prev.easeFactor !== undefined ? prev.easeFactor : 2.5;
+  let interval = prev.interval !== undefined ? prev.interval : 0;
+  if (quality < 3) {
+    repetition = 0;
+    interval = 0;
+  } else {
+    if (repetition === 0) interval = 1;
+    else if (repetition === 1) interval = 6;
+    else interval = Math.round(interval * easeFactor);
+    repetition += 1;
+  }
+  easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+  const now = Date.now();
+  const nextReview = quality < 3
+    ? new Date(now + 10 * 60 * 1000).toISOString()
+    : new Date(now + interval * DAY_MS).toISOString();
+  return {
+    repetition,
+    easeFactor: Number(easeFactor.toFixed(2)),
+    interval,
+    nextReview,
+    lastReviewed: new Date(now).toISOString(),
+  };
+}
+function getStatus(srs) {
+  if (!srs || srs.repetition === undefined) return 'new';
+  if (srs.repetition >= 5 && srs.interval >= 21) return 'mastered';
+  if (new Date(srs.nextReview) <= new Date()) return 'due';
+  return 'learning';
+}
+function isDue(srs) {
+  if (!srs || !srs.nextReview) return true;
+  return new Date(srs.nextReview) <= new Date();
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function buildOptions(correctItem, pool, getAnswer, count) {
+  count = count || 4;
+  const correctText = getAnswer(correctItem);
+  const seen = new Set();
+  const distractorTexts = [];
+  pool.forEach((i) => {
+    if (i.id === correctItem.id) return;
+    const t = getAnswer(i);
+    if (!t || t === correctText || seen.has(t)) return;
+    seen.add(t);
+    distractorTexts.push(t);
+  });
+  const picked = shuffle(distractorTexts).slice(0, count - 1);
+  return shuffle([correctText, ...picked]);
+}
+
+// ==================== 정답/오답 효과음 (Web Audio API) ====================
+let sharedCtx = null;
+function getAudioCtx() {
+  if (typeof window === 'undefined') return null;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedCtx) sharedCtx = new AudioCtx();
+  if (sharedCtx.state === 'suspended') sharedCtx.resume();
+  return sharedCtx;
+}
+function playNote(ctx, freq, startTime, duration, type, volume) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.02);
+}
+function playCorrectSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  playNote(ctx, 880, now, 0.11, 'sine', 0.22);
+  playNote(ctx, 1318.51, now + 0.1, 0.16, 'sine', 0.22);
+}
+function playWrongSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  playNote(ctx, 300, now, 0.15, 'sawtooth', 0.14);
+  playNote(ctx, 175, now + 0.13, 0.2, 'sawtooth', 0.14);
+}
+function cancelSpeech() {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+// ==================== 일본어 TTS ====================
+let cachedVoiceJa = null;
+const FEMALE_HINTS_JA = ['female', 'woman', 'kyoko', 'haruka', 'nanami', 'sayaka', 'ayumi'];
+const MALE_HINTS_JA = ['male', 'otoya', 'ichiro', 'keita'];
+function pickVoiceJa() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) return null;
+  const ja = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('ja'));
+  const pool = ja.length > 0 ? ja : voices;
+  const female = pool.find((v) => FEMALE_HINTS_JA.some((h) => v.name.toLowerCase().includes(h)));
+  const notMale = pool.find((v) => !MALE_HINTS_JA.some((h) => v.name.toLowerCase().includes(h)));
+  cachedVoiceJa = female || notMale || pool[0] || null;
+  return cachedVoiceJa;
+}
+function speakJapanese(text) {
+  if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  utter.rate = 1.08;
+  utter.pitch = 1.15;
+  const voice = cachedVoiceJa || pickVoiceJa();
+  if (voice) utter.voice = voice;
+  window.speechSynthesis.speak(utter);
+}
+
+// ==================== 한국어 TTS ====================
+let cachedVoiceKr = null;
+const FEMALE_HINTS_KR = ['female', 'woman', 'yuna', 'heami', 'sunhi', 'jiyoung', 'seoyeon'];
+const MALE_HINTS_KR = ['male', 'injoon', 'jinho', 'yong'];
+function pickVoiceKr() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) return null;
+  const ko = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('ko'));
+  const pool = ko.length > 0 ? ko : voices;
+  const female = pool.find((v) => FEMALE_HINTS_KR.some((h) => v.name.toLowerCase().includes(h)));
+  const notMale = pool.find((v) => !MALE_HINTS_KR.some((h) => v.name.toLowerCase().includes(h)));
+  cachedVoiceKr = female || notMale || pool[0] || null;
+  return cachedVoiceKr;
+}
+function speakKorean(text) {
+  if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ko-KR';
+  utter.rate = 1.08;
+  utter.pitch = 1.15;
+  const voice = cachedVoiceKr || pickVoiceKr();
+  if (voice) utter.voice = voice;
+  window.speechSynthesis.speak(utter);
+}
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  pickVoiceJa();
+  pickVoiceKr();
+  window.speechSynthesis.onvoiceschanged = () => { pickVoiceJa(); pickVoiceKr(); };
+}
+
+// ==================== 콘텐츠 데이터 ====================
+const VOCAB_JA = [
+  {
+    "id": "n5-001",
+    "word": "私",
+    "reading": "わたし",
+    "meaning": "나, 저",
+    "level": "N5",
+    "tag": "일상",
+    "example": "私は学生です。",
+    "exampleReading": "わたしはがくせいです。",
+    "exampleMeaning": "저는 학생입니다."
+  },
+  {
+    "id": "n5-002",
+    "word": "学校",
+    "reading": "がっこう",
+    "meaning": "학교",
+    "level": "N5",
+    "tag": "일상",
+    "example": "学校へ行きます。",
+    "exampleReading": "がっこうへいきます。",
+    "exampleMeaning": "학교에 갑니다."
+  },
+  {
+    "id": "n5-003",
+    "word": "食べる",
+    "reading": "たべる",
+    "meaning": "먹다",
+    "level": "N5",
+    "tag": "일상",
+    "example": "朝ごはんを食べます。",
+    "exampleReading": "あさごはんをたべます。",
+    "exampleMeaning": "아침밥을 먹습니다."
+  },
+  {
+    "id": "n5-004",
+    "word": "飲む",
+    "reading": "のむ",
+    "meaning": "마시다",
+    "level": "N5",
+    "tag": "일상",
+    "example": "水を飲みます。",
+    "exampleReading": "みずをのみます。",
+    "exampleMeaning": "물을 마십니다."
+  },
+  {
+    "id": "n5-005",
+    "word": "空港",
+    "reading": "くうこう",
+    "meaning": "공항",
+    "level": "N5",
+    "tag": "여행",
+    "example": "空港はどこですか。",
+    "exampleReading": "くうこうはどこですか。",
+    "exampleMeaning": "공항은 어디입니까?"
+  },
+  {
+    "id": "n5-006",
+    "word": "駅",
+    "reading": "えき",
+    "meaning": "역",
+    "level": "N5",
+    "tag": "여행",
+    "example": "駅まで歩きます。",
+    "exampleReading": "えきまであるきます。",
+    "exampleMeaning": "역까지 걷습니다."
+  },
+  {
+    "id": "n5-007",
+    "word": "友達",
+    "reading": "ともだち",
+    "meaning": "친구",
+    "level": "N5",
+    "tag": "일상",
+    "example": "友達と会います。",
+    "exampleReading": "ともだちとあいます。",
+    "exampleMeaning": "친구를 만납니다."
+  },
+  {
+    "id": "n5-008",
+    "word": "先生",
+    "reading": "せんせい",
+    "meaning": "선생님",
+    "level": "N5",
+    "tag": "일상",
+    "example": "先生に聞きます。",
+    "exampleReading": "せんせいにききます。",
+    "exampleMeaning": "선생님께 여쭤봅니다."
+  },
+  {
+    "id": "n5-009",
+    "word": "今日",
+    "reading": "きょう",
+    "meaning": "오늘",
+    "level": "N5",
+    "tag": "일상",
+    "example": "今日は暑いです。",
+    "exampleReading": "きょうはあついです。",
+    "exampleMeaning": "오늘은 덥습니다."
+  },
+  {
+    "id": "n5-010",
+    "word": "明日",
+    "reading": "あした",
+    "meaning": "내일",
+    "level": "N5",
+    "tag": "일상",
+    "example": "明日、東京へ行きます。",
+    "exampleReading": "あした、とうきょうへいきます。",
+    "exampleMeaning": "내일 도쿄에 갑니다."
+  },
+  {
+    "id": "n5-011",
+    "word": "美味しい",
+    "reading": "おいしい",
+    "meaning": "맛있다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "これは美味しいです。",
+    "exampleReading": "これはおいしいです。",
+    "exampleMeaning": "이것은 맛있습니다."
+  },
+  {
+    "id": "n5-012",
+    "word": "高い",
+    "reading": "たかい",
+    "meaning": "비싸다, 높다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "このホテルは高いです。",
+    "exampleReading": "このホテルはたかいです。",
+    "exampleMeaning": "이 호텔은 비쌉니다."
+  },
+  {
+    "id": "n5-013",
+    "word": "安い",
+    "reading": "やすい",
+    "meaning": "싸다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "この店は安いです。",
+    "exampleReading": "このみせはやすいです。",
+    "exampleMeaning": "이 가게는 쌉니다."
+  },
+  {
+    "id": "n5-014",
+    "word": "電車",
+    "reading": "でんしゃ",
+    "meaning": "전철",
+    "level": "N5",
+    "tag": "여행",
+    "example": "電車で行きます。",
+    "exampleReading": "でんしゃでいきます。",
+    "exampleMeaning": "전철로 갑니다."
+  },
+  {
+    "id": "n5-015",
+    "word": "時間",
+    "reading": "じかん",
+    "meaning": "시간",
+    "level": "N5",
+    "tag": "일상",
+    "example": "時間がありません。",
+    "exampleReading": "じかんがありません。",
+    "exampleMeaning": "시간이 없습니다."
+  },
+  {
+    "id": "n5-016",
+    "word": "買う",
+    "reading": "かう",
+    "meaning": "사다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "お土産を買います。",
+    "exampleReading": "おみやげをかいます。",
+    "exampleMeaning": "기념품을 삽니다."
+  },
+  {
+    "id": "n5-017",
+    "word": "見る",
+    "reading": "みる",
+    "meaning": "보다",
+    "level": "N5",
+    "tag": "일상",
+    "example": "映画を見ます。",
+    "exampleReading": "えいがをみます。",
+    "exampleMeaning": "영화를 봅니다."
+  },
+  {
+    "id": "n5-018",
+    "word": "行く",
+    "reading": "いく",
+    "meaning": "가다",
+    "level": "N5",
+    "tag": "일상",
+    "example": "会社に行きます。",
+    "exampleReading": "かいしゃにいきます。",
+    "exampleMeaning": "회사에 갑니다."
+  },
+  {
+    "id": "n5-019",
+    "word": "来る",
+    "reading": "くる",
+    "meaning": "오다",
+    "level": "N5",
+    "tag": "일상",
+    "example": "友達が来ます。",
+    "exampleReading": "ともだちがきます。",
+    "exampleMeaning": "친구가 옵니다."
+  },
+  {
+    "id": "n5-020",
+    "word": "大丈夫",
+    "reading": "だいじょうぶ",
+    "meaning": "괜찮다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "大丈夫ですか。",
+    "exampleReading": "だいじょうぶですか。",
+    "exampleMeaning": "괜찮습니까?"
+  },
+  {
+    "id": "n5-021",
+    "word": "水",
+    "reading": "みず",
+    "meaning": "물",
+    "level": "N5",
+    "tag": "여행",
+    "example": "水をください。",
+    "exampleReading": "みずをください。",
+    "exampleMeaning": "물 좀 주세요."
+  },
+  {
+    "id": "n5-022",
+    "word": "部屋",
+    "reading": "へや",
+    "meaning": "방",
+    "level": "N5",
+    "tag": "여행",
+    "example": "部屋を予約しました。",
+    "exampleReading": "へやをよやくしました。",
+    "exampleMeaning": "방을 예약했습니다."
+  },
+  {
+    "id": "n5-023",
+    "word": "近い",
+    "reading": "ちかい",
+    "meaning": "가깝다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "駅から近いです。",
+    "exampleReading": "えきからちかいです。",
+    "exampleMeaning": "역에서 가깝습니다."
+  },
+  {
+    "id": "n5-024",
+    "word": "遠い",
+    "reading": "とおい",
+    "meaning": "멀다",
+    "level": "N5",
+    "tag": "여행",
+    "example": "空港まで遠いです。",
+    "exampleReading": "くうこうまでとおいです。",
+    "exampleMeaning": "공항까지 멉니다."
+  },
+  {
+    "id": "n5-025",
+    "word": "好き",
+    "reading": "すき",
+    "meaning": "좋아하다",
+    "level": "N5",
+    "tag": "일상",
+    "example": "音楽が好きです。",
+    "exampleReading": "おんがくがすきです。",
+    "exampleMeaning": "음악을 좋아합니다."
+  },
+  {
+    "id": "n4-001",
+    "word": "経験",
+    "reading": "けいけん",
+    "meaning": "경험",
+    "level": "N4",
+    "tag": "일상",
+    "example": "いい経験になりました。",
+    "exampleReading": "いいけいけんになりました。",
+    "exampleMeaning": "좋은 경험이 되었습니다."
+  },
+  {
+    "id": "n4-002",
+    "word": "予約",
+    "reading": "よやく",
+    "meaning": "예약",
+    "level": "N4",
+    "tag": "여행",
+    "example": "レストランを予約します。",
+    "exampleReading": "レストランをよやくします。",
+    "exampleMeaning": "레스토랑을 예약합니다."
+  },
+  {
+    "id": "n4-003",
+    "word": "説明",
+    "reading": "せつめい",
+    "meaning": "설명",
+    "level": "N4",
+    "tag": "일상",
+    "example": "先生が説明します。",
+    "exampleReading": "せんせいがせつめいします。",
+    "exampleMeaning": "선생님이 설명합니다."
+  },
+  {
+    "id": "n4-004",
+    "word": "習慣",
+    "reading": "しゅうかん",
+    "meaning": "습관",
+    "level": "N4",
+    "tag": "일상",
+    "example": "いい習慣を作ります。",
+    "exampleReading": "いいしゅうかんをつくります。",
+    "exampleMeaning": "좋은 습관을 만듭니다."
+  },
+  {
+    "id": "n4-005",
+    "word": "ゆっくり",
+    "reading": "ゆっくり",
+    "meaning": "천천히",
+    "level": "N4",
+    "tag": "일상",
+    "example": "ゆっくり話してください。",
+    "exampleReading": "ゆっくりはなしてください。",
+    "exampleMeaning": "천천히 말해주세요."
+  },
+  {
+    "id": "n4-006",
+    "word": "必要",
+    "reading": "ひつよう",
+    "meaning": "필요",
+    "level": "N4",
+    "tag": "일상",
+    "example": "パスポートが必要です。",
+    "exampleReading": "パスポートがひつようです。",
+    "exampleMeaning": "여권이 필요합니다."
+  },
+  {
+    "id": "n4-007",
+    "word": "遅れる",
+    "reading": "おくれる",
+    "meaning": "늦다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "電車が遅れました。",
+    "exampleReading": "でんしゃがおくれました。",
+    "exampleMeaning": "전철이 늦었습니다."
+  },
+  {
+    "id": "n4-008",
+    "word": "案内",
+    "reading": "あんない",
+    "meaning": "안내",
+    "level": "N4",
+    "tag": "여행",
+    "example": "道を案内します。",
+    "exampleReading": "みちをあんないします。",
+    "exampleMeaning": "길을 안내합니다."
+  },
+  {
+    "id": "n4-009",
+    "word": "運動",
+    "reading": "うんどう",
+    "meaning": "운동",
+    "level": "N4",
+    "tag": "일상",
+    "example": "毎朝運動します。",
+    "exampleReading": "まいあさうんどうします。",
+    "exampleMeaning": "매일 아침 운동합니다."
+  },
+  {
+    "id": "n4-010",
+    "word": "天気",
+    "reading": "てんき",
+    "meaning": "날씨",
+    "level": "N4",
+    "tag": "일상",
+    "example": "今日は天気がいいです。",
+    "exampleReading": "きょうはてんきがいいです。",
+    "exampleMeaning": "오늘은 날씨가 좋습니다."
+  },
+  {
+    "id": "n4-011",
+    "word": "写真",
+    "reading": "しゃしん",
+    "meaning": "사진",
+    "level": "N4",
+    "tag": "여행",
+    "example": "写真を撮ってもいいですか。",
+    "exampleReading": "しゃしんをとってもいいですか。",
+    "exampleMeaning": "사진을 찍어도 될까요?"
+  },
+  {
+    "id": "n4-012",
+    "word": "質問",
+    "reading": "しつもん",
+    "meaning": "질문",
+    "level": "N4",
+    "tag": "일상",
+    "example": "質問があります。",
+    "exampleReading": "しつもんがあります。",
+    "exampleMeaning": "질문이 있습니다."
+  },
+  {
+    "id": "n4-013",
+    "word": "教える",
+    "reading": "おしえる",
+    "meaning": "가르치다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "日本語を教えます。",
+    "exampleReading": "にほんごをおしえます。",
+    "exampleMeaning": "일본어를 가르칩니다."
+  },
+  {
+    "id": "n4-014",
+    "word": "習う",
+    "reading": "ならう",
+    "meaning": "배우다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "ピアノを習っています。",
+    "exampleReading": "ピアノをならっています。",
+    "exampleMeaning": "피아노를 배우고 있습니다."
+  },
+  {
+    "id": "n4-015",
+    "word": "届く",
+    "reading": "とどく",
+    "meaning": "도착하다, 닿다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "荷物が届きました。",
+    "exampleReading": "にもつがとどきました。",
+    "exampleMeaning": "짐이 도착했습니다."
+  },
+  {
+    "id": "n4-016",
+    "word": "連絡",
+    "reading": "れんらく",
+    "meaning": "연락",
+    "level": "N4",
+    "tag": "일상",
+    "example": "後で連絡します。",
+    "exampleReading": "あとでれんらくします。",
+    "exampleMeaning": "나중에 연락하겠습니다."
+  },
+  {
+    "id": "n4-017",
+    "word": "準備",
+    "reading": "じゅんび",
+    "meaning": "준비",
+    "level": "N4",
+    "tag": "일상",
+    "example": "旅行の準備をします。",
+    "exampleReading": "りょこうのじゅんびをします。",
+    "exampleMeaning": "여행 준비를 합니다."
+  },
+  {
+    "id": "n4-018",
+    "word": "最近",
+    "reading": "さいきん",
+    "meaning": "최근",
+    "level": "N4",
+    "tag": "일상",
+    "example": "最近、忙しいです。",
+    "exampleReading": "さいきん、いそがしいです。",
+    "exampleMeaning": "최근 바쁩니다."
+  },
+  {
+    "id": "n4-019",
+    "word": "最初",
+    "reading": "さいしょ",
+    "meaning": "최초, 처음",
+    "level": "N4",
+    "tag": "일상",
+    "example": "最初に自己紹介します。",
+    "exampleReading": "さいしょにじこしょうかいします。",
+    "exampleMeaning": "처음에 자기소개를 합니다."
+  },
+  {
+    "id": "n4-020",
+    "word": "最後",
+    "reading": "さいご",
+    "meaning": "마지막",
+    "level": "N4",
+    "tag": "일상",
+    "example": "最後まで頑張ります。",
+    "exampleReading": "さいごまでがんばります。",
+    "exampleMeaning": "마지막까지 힘내겠습니다."
+  },
+  {
+    "id": "n4-021",
+    "word": "続く",
+    "reading": "つづく",
+    "meaning": "계속되다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "雨が続いています。",
+    "exampleReading": "あめがつづいています。",
+    "exampleMeaning": "비가 계속되고 있습니다."
+  },
+  {
+    "id": "n4-022",
+    "word": "変わる",
+    "reading": "かわる",
+    "meaning": "바뀌다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "予定が変わりました。",
+    "exampleReading": "よていがかわりました。",
+    "exampleMeaning": "예정이 바뀌었습니다."
+  },
+  {
+    "id": "n4-023",
+    "word": "比べる",
+    "reading": "くらべる",
+    "meaning": "비교하다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "値段を比べます。",
+    "exampleReading": "ねだんをくらべます。",
+    "exampleMeaning": "가격을 비교합니다."
+  },
+  {
+    "id": "n4-024",
+    "word": "返す",
+    "reading": "かえす",
+    "meaning": "돌려주다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "本を返します。",
+    "exampleReading": "ほんをかえします。",
+    "exampleMeaning": "책을 돌려줍니다."
+  },
+  {
+    "id": "n4-025",
+    "word": "借りる",
+    "reading": "かりる",
+    "meaning": "빌리다",
+    "level": "N4",
+    "tag": "여행",
+    "example": "傘を借りてもいいですか。",
+    "exampleReading": "かさをかりてもいいですか。",
+    "exampleMeaning": "우산을 빌려도 될까요?"
+  },
+  {
+    "id": "n4-026",
+    "word": "貸す",
+    "reading": "かす",
+    "meaning": "빌려주다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "ペンを貸してください。",
+    "exampleReading": "ペンをかしてください。",
+    "exampleMeaning": "펜을 빌려주세요."
+  },
+  {
+    "id": "n4-027",
+    "word": "足りる",
+    "reading": "たりる",
+    "meaning": "충분하다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "お金が足りません。",
+    "exampleReading": "おかねがたりません。",
+    "exampleMeaning": "돈이 부족합니다."
+  },
+  {
+    "id": "n4-028",
+    "word": "気をつける",
+    "reading": "きをつける",
+    "meaning": "조심하다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "車に気をつけてください。",
+    "exampleReading": "くるまにきをつけてください。",
+    "exampleMeaning": "차를 조심하세요."
+  },
+  {
+    "id": "n3-001",
+    "word": "経済",
+    "reading": "けいざい",
+    "meaning": "경제",
+    "level": "N3",
+    "tag": "일상",
+    "example": "経済のニュースを見ます。",
+    "exampleReading": "けいざいのニュースをみます。",
+    "exampleMeaning": "경제 뉴스를 봅니다."
+  },
+  {
+    "id": "n3-002",
+    "word": "社会",
+    "reading": "しゃかい",
+    "meaning": "사회",
+    "level": "N3",
+    "tag": "일상",
+    "example": "社会の問題について話します。",
+    "exampleReading": "しゃかいのもんだいについてはなします。",
+    "exampleMeaning": "사회 문제에 대해 이야기합니다."
+  },
+  {
+    "id": "n3-003",
+    "word": "環境",
+    "reading": "かんきょう",
+    "meaning": "환경",
+    "level": "N3",
+    "tag": "일상",
+    "example": "環境を守ります。",
+    "exampleReading": "かんきょうをまもります。",
+    "exampleMeaning": "환경을 지킵니다."
+  },
+  {
+    "id": "n3-004",
+    "word": "影響",
+    "reading": "えいきょう",
+    "meaning": "영향",
+    "level": "N3",
+    "tag": "일상",
+    "example": "天気が影響します。",
+    "exampleReading": "てんきがえいきょうします。",
+    "exampleMeaning": "날씨가 영향을 줍니다."
+  },
+  {
+    "id": "n3-005",
+    "word": "努力",
+    "reading": "どりょく",
+    "meaning": "노력",
+    "level": "N3",
+    "tag": "일상",
+    "example": "合格のために努力します。",
+    "exampleReading": "ごうかくのためにどりょくします。",
+    "exampleMeaning": "합격을 위해 노력합니다."
+  },
+  {
+    "id": "n3-006",
+    "word": "成長",
+    "reading": "せいちょう",
+    "meaning": "성장",
+    "level": "N3",
+    "tag": "일상",
+    "example": "会社が成長しています。",
+    "exampleReading": "かいしゃがせいちょうしています。",
+    "exampleMeaning": "회사가 성장하고 있습니다."
+  },
+  {
+    "id": "n3-007",
+    "word": "状態",
+    "reading": "じょうたい",
+    "meaning": "상태",
+    "level": "N3",
+    "tag": "일상",
+    "example": "体の状態を確認します。",
+    "exampleReading": "からだのじょうたいをかくにんします。",
+    "exampleMeaning": "몸 상태를 확인합니다."
+  },
+  {
+    "id": "n3-008",
+    "word": "原因",
+    "reading": "げんいん",
+    "meaning": "원인",
+    "level": "N3",
+    "tag": "일상",
+    "example": "事故の原因を調べます。",
+    "exampleReading": "じこのげんいんをしらべます。",
+    "exampleMeaning": "사고 원인을 조사합니다."
+  },
+  {
+    "id": "n3-009",
+    "word": "結果",
+    "reading": "けっか",
+    "meaning": "결과",
+    "level": "N3",
+    "tag": "일상",
+    "example": "テストの結果が出ました。",
+    "exampleReading": "テストのけっかがでました。",
+    "exampleMeaning": "시험 결과가 나왔습니다."
+  },
+  {
+    "id": "n3-010",
+    "word": "判断",
+    "reading": "はんだん",
+    "meaning": "판단",
+    "level": "N3",
+    "tag": "일상",
+    "example": "自分で判断します。",
+    "exampleReading": "じぶんではんだんします。",
+    "exampleMeaning": "스스로 판단합니다."
+  },
+  {
+    "id": "n3-011",
+    "word": "解決",
+    "reading": "かいけつ",
+    "meaning": "해결",
+    "level": "N3",
+    "tag": "일상",
+    "example": "問題を解決しました。",
+    "exampleReading": "もんだいをかいけつしました。",
+    "exampleMeaning": "문제를 해결했습니다."
+  },
+  {
+    "id": "n3-012",
+    "word": "増える",
+    "reading": "ふえる",
+    "meaning": "늘다",
+    "level": "N3",
+    "tag": "일상",
+    "example": "観光客が増えました。",
+    "exampleReading": "かんこうきゃくがふえました。",
+    "exampleMeaning": "관광객이 늘었습니다."
+  },
+  {
+    "id": "n3-013",
+    "word": "減る",
+    "reading": "へる",
+    "meaning": "줄다",
+    "level": "N3",
+    "tag": "일상",
+    "example": "人口が減っています。",
+    "exampleReading": "じんこうがへっています。",
+    "exampleMeaning": "인구가 줄고 있습니다."
+  },
+  {
+    "id": "n3-014",
+    "word": "向上",
+    "reading": "こうじょう",
+    "meaning": "향상",
+    "level": "N3",
+    "tag": "일상",
+    "example": "技術が向上しました。",
+    "exampleReading": "ぎじゅつがこうじょうしました。",
+    "exampleMeaning": "기술이 향상되었습니다."
+  },
+  {
+    "id": "n3-015",
+    "word": "改善",
+    "reading": "かいぜん",
+    "meaning": "개선",
+    "level": "N3",
+    "tag": "일상",
+    "example": "サービスを改善します。",
+    "exampleReading": "サービスをかいぜんします。",
+    "exampleMeaning": "서비스를 개선합니다."
+  },
+  {
+    "id": "n3-016",
+    "word": "関係",
+    "reading": "かんけい",
+    "meaning": "관계",
+    "level": "N3",
+    "tag": "일상",
+    "example": "いい関係を作ります。",
+    "exampleReading": "いいかんけいをつくります。",
+    "exampleMeaning": "좋은 관계를 만듭니다."
+  },
+  {
+    "id": "n3-017",
+    "word": "態度",
+    "reading": "たいど",
+    "meaning": "태도",
+    "level": "N3",
+    "tag": "일상",
+    "example": "態度が変わりました。",
+    "exampleReading": "たいどがかわりました。",
+    "exampleMeaning": "태도가 바뀌었습니다."
+  },
+  {
+    "id": "n3-018",
+    "word": "性格",
+    "reading": "せいかく",
+    "meaning": "성격",
+    "level": "N3",
+    "tag": "일상",
+    "example": "明るい性格です。",
+    "exampleReading": "あかるいせいかくです。",
+    "exampleMeaning": "밝은 성격입니다."
+  },
+  {
+    "id": "n3-019",
+    "word": "可能",
+    "reading": "かのう",
+    "meaning": "가능",
+    "level": "N3",
+    "tag": "일상",
+    "example": "変更は可能ですか。",
+    "exampleReading": "へんこうはかのうですか。",
+    "exampleMeaning": "변경은 가능한가요?"
+  },
+  {
+    "id": "n3-020",
+    "word": "以上",
+    "reading": "いじょう",
+    "meaning": "이상",
+    "level": "N3",
+    "tag": "일상",
+    "example": "三日以上かかります。",
+    "exampleReading": "みっかいじょうかかります。",
+    "exampleMeaning": "3일 이상 걸립니다."
+  },
+  {
+    "id": "n3-021",
+    "word": "以下",
+    "reading": "いか",
+    "meaning": "이하",
+    "level": "N3",
+    "tag": "일상",
+    "example": "十歳以下は無料です。",
+    "exampleReading": "じゅっさいいかはむりょうです。",
+    "exampleMeaning": "10세 이하는 무료입니다."
+  },
+  {
+    "id": "n3-022",
+    "word": "特に",
+    "reading": "とくに",
+    "meaning": "특히",
+    "level": "N3",
+    "tag": "일상",
+    "example": "特にラーメンが好きです。",
+    "exampleReading": "とくにラーメンがすきです。",
+    "exampleMeaning": "특히 라멘을 좋아합니다."
+  },
+  {
+    "id": "n3-023",
+    "word": "むしろ",
+    "reading": "むしろ",
+    "meaning": "오히려",
+    "level": "N3",
+    "tag": "일상",
+    "example": "むしろ安いほうがいいです。",
+    "exampleReading": "むしろやすいほうがいいです。",
+    "exampleMeaning": "오히려 싼 쪽이 좋습니다."
+  },
+  {
+    "id": "n3-024",
+    "word": "一応",
+    "reading": "いちおう",
+    "meaning": "일단",
+    "level": "N3",
+    "tag": "일상",
+    "example": "一応確認してください。",
+    "exampleReading": "いちおうかくにんしてください。",
+    "exampleMeaning": "일단 확인해 주세요."
+  },
+  {
+    "id": "n3-025",
+    "word": "実は",
+    "reading": "じつは",
+    "meaning": "사실은",
+    "level": "N3",
+    "tag": "일상",
+    "example": "実は日本人ではありません。",
+    "exampleReading": "じつはにほんじんではありません。",
+    "exampleMeaning": "사실은 일본인이 아닙니다."
+  },
+  {
+    "id": "n2-001",
+    "word": "経営",
+    "reading": "けいえい",
+    "meaning": "경영",
+    "level": "N2",
+    "tag": "일상",
+    "example": "会社を経営しています。",
+    "exampleReading": "かいしゃをけいえいしています。",
+    "exampleMeaning": "회사를 경영하고 있습니다."
+  },
+  {
+    "id": "n2-002",
+    "word": "効果",
+    "reading": "こうか",
+    "meaning": "효과",
+    "level": "N2",
+    "tag": "일상",
+    "example": "この薬は効果があります。",
+    "exampleReading": "このくすりはこうかがあります。",
+    "exampleMeaning": "이 약은 효과가 있습니다."
+  },
+  {
+    "id": "n2-003",
+    "word": "評価",
+    "reading": "ひょうか",
+    "meaning": "평가",
+    "level": "N2",
+    "tag": "일상",
+    "example": "高く評価されています。",
+    "exampleReading": "たかくひょうかされています。",
+    "exampleMeaning": "높이 평가받고 있습니다."
+  },
+  {
+    "id": "n2-004",
+    "word": "提案",
+    "reading": "ていあん",
+    "meaning": "제안",
+    "level": "N2",
+    "tag": "일상",
+    "example": "新しい提案をします。",
+    "exampleReading": "あたらしいていあんをします。",
+    "exampleMeaning": "새로운 제안을 합니다."
+  },
+  {
+    "id": "n2-005",
+    "word": "検討",
+    "reading": "けんとう",
+    "meaning": "검토",
+    "level": "N2",
+    "tag": "일상",
+    "example": "社内で検討しています。",
+    "exampleReading": "しゃないでけんとうしています。",
+    "exampleMeaning": "사내에서 검토하고 있습니다."
+  },
+  {
+    "id": "n2-006",
+    "word": "対応",
+    "reading": "たいおう",
+    "meaning": "대응",
+    "level": "N2",
+    "tag": "일상",
+    "example": "迅速に対応します。",
+    "exampleReading": "じんそくにたいおうします。",
+    "exampleMeaning": "신속하게 대응합니다."
+  },
+  {
+    "id": "n2-007",
+    "word": "維持",
+    "reading": "いじ",
+    "meaning": "유지",
+    "level": "N2",
+    "tag": "일상",
+    "example": "健康を維持します。",
+    "exampleReading": "けんこうをいじします。",
+    "exampleMeaning": "건강을 유지합니다."
+  },
+  {
+    "id": "n2-008",
+    "word": "促進",
+    "reading": "そくしん",
+    "meaning": "촉진",
+    "level": "N2",
+    "tag": "일상",
+    "example": "交流を促進します。",
+    "exampleReading": "こうりゅうをそくしんします。",
+    "exampleMeaning": "교류를 촉진합니다."
+  },
+  {
+    "id": "n2-009",
+    "word": "負担",
+    "reading": "ふたん",
+    "meaning": "부담",
+    "level": "N2",
+    "tag": "일상",
+    "example": "費用の負担が大きいです。",
+    "exampleReading": "ひようのふたんがおおきいです。",
+    "exampleMeaning": "비용 부담이 큽니다."
+  },
+  {
+    "id": "n2-010",
+    "word": "機能",
+    "reading": "きのう",
+    "meaning": "기능",
+    "level": "N2",
+    "tag": "일상",
+    "example": "新しい機能が追加されました。",
+    "exampleReading": "あたらしいきのうがついかされました。",
+    "exampleMeaning": "새로운 기능이 추가되었습니다."
+  },
+  {
+    "id": "n2-011",
+    "word": "基準",
+    "reading": "きじゅん",
+    "meaning": "기준",
+    "level": "N2",
+    "tag": "일상",
+    "example": "評価の基準を決めます。",
+    "exampleReading": "ひょうかのきじゅんをきめます。",
+    "exampleMeaning": "평가 기준을 정합니다."
+  },
+  {
+    "id": "n2-012",
+    "word": "傾向",
+    "reading": "けいこう",
+    "meaning": "경향",
+    "level": "N2",
+    "tag": "일상",
+    "example": "最近の傾向を分析します。",
+    "exampleReading": "さいきんのけいこうをぶんせきします。",
+    "exampleMeaning": "최근 경향을 분석합니다."
+  },
+  {
+    "id": "n2-013",
+    "word": "矛盾",
+    "reading": "むじゅん",
+    "meaning": "모순",
+    "level": "N2",
+    "tag": "일상",
+    "example": "話に矛盾があります。",
+    "exampleReading": "はなしにむじゅんがあります。",
+    "exampleMeaning": "이야기에 모순이 있습니다."
+  },
+  {
+    "id": "n2-014",
+    "word": "抽象的",
+    "reading": "ちゅうしょうてき",
+    "meaning": "추상적",
+    "level": "N2",
+    "tag": "일상",
+    "example": "説明が抽象的すぎます。",
+    "exampleReading": "せつめいがちゅうしょうてきすぎます。",
+    "exampleMeaning": "설명이 너무 추상적입니다."
+  },
+  {
+    "id": "n2-015",
+    "word": "具体的",
+    "reading": "ぐたいてき",
+    "meaning": "구체적",
+    "level": "N2",
+    "tag": "일상",
+    "example": "具体的に説明してください。",
+    "exampleReading": "ぐたいてきにせつめいしてください。",
+    "exampleMeaning": "구체적으로 설명해 주세요."
+  },
+  {
+    "id": "n2-016",
+    "word": "一般的",
+    "reading": "いっぱんてき",
+    "meaning": "일반적",
+    "level": "N2",
+    "tag": "일상",
+    "example": "一般的な意見です。",
+    "exampleReading": "いっぱんてきないけんです。",
+    "exampleMeaning": "일반적인 의견입니다."
+  },
+  {
+    "id": "n2-017",
+    "word": "積極的",
+    "reading": "せっきょくてき",
+    "meaning": "적극적",
+    "level": "N2",
+    "tag": "일상",
+    "example": "積極的に参加します。",
+    "exampleReading": "せっきょくてきにさんかします。",
+    "exampleMeaning": "적극적으로 참가합니다."
+  },
+  {
+    "id": "n2-018",
+    "word": "消極的",
+    "reading": "しょうきょくてき",
+    "meaning": "소극적",
+    "level": "N2",
+    "tag": "일상",
+    "example": "彼は消極的な性格です。",
+    "exampleReading": "かれはしょうきょくてきなせいかくです。",
+    "exampleMeaning": "그는 소극적인 성격입니다."
+  },
+  {
+    "id": "n2-019",
+    "word": "妥協",
+    "reading": "だきょう",
+    "meaning": "타협",
+    "level": "N2",
+    "tag": "일상",
+    "example": "お互いに妥協します。",
+    "exampleReading": "おたがいにだきょうします。",
+    "exampleMeaning": "서로 타협합니다."
+  },
+  {
+    "id": "n2-020",
+    "word": "主張",
+    "reading": "しゅちょう",
+    "meaning": "주장",
+    "level": "N2",
+    "tag": "일상",
+    "example": "自分の意見を主張します。",
+    "exampleReading": "じぶんのいけんをしゅちょうします。",
+    "exampleMeaning": "자신의 의견을 주장합니다."
+  },
+  {
+    "id": "n2-021",
+    "word": "批判",
+    "reading": "ひはん",
+    "meaning": "비판",
+    "level": "N2",
+    "tag": "일상",
+    "example": "厳しく批判されました。",
+    "exampleReading": "きびしくひはんされました。",
+    "exampleMeaning": "엄하게 비판받았습니다."
+  },
+  {
+    "id": "n2-022",
+    "word": "承認",
+    "reading": "しょうにん",
+    "meaning": "승인",
+    "level": "N2",
+    "tag": "일상",
+    "example": "上司の承認を得ました。",
+    "exampleReading": "じょうしのしょうにんをえました。",
+    "exampleMeaning": "상사의 승인을 받았습니다."
+  },
+  {
+    "id": "n2-023",
+    "word": "拒否",
+    "reading": "きょひ",
+    "meaning": "거부",
+    "level": "N2",
+    "tag": "일상",
+    "example": "提案を拒否されました。",
+    "exampleReading": "ていあんをきょひされました。",
+    "exampleMeaning": "제안을 거부당했습니다."
+  },
+  {
+    "id": "n2-024",
+    "word": "辞退",
+    "reading": "じたい",
+    "meaning": "사퇴, 거절",
+    "level": "N2",
+    "tag": "일상",
+    "example": "招待を辞退しました。",
+    "exampleReading": "しょうたいをじたいしました。",
+    "exampleMeaning": "초대를 거절했습니다."
+  },
+  {
+    "id": "n2-025",
+    "word": "慎重",
+    "reading": "しんちょう",
+    "meaning": "신중",
+    "level": "N2",
+    "tag": "일상",
+    "example": "慎重に考えます。",
+    "exampleReading": "しんちょうにかんがえます。",
+    "exampleMeaning": "신중하게 생각합니다."
+  },
+  {
+    "id": "n1-001",
+    "word": "概念",
+    "reading": "がいねん",
+    "meaning": "개념",
+    "level": "N1",
+    "tag": "일상",
+    "example": "新しい概念を学びます。",
+    "exampleReading": "あたらしいがいねんをまなびます。",
+    "exampleMeaning": "새로운 개념을 배웁니다."
+  },
+  {
+    "id": "n1-002",
+    "word": "本質",
+    "reading": "ほんしつ",
+    "meaning": "본질",
+    "level": "N1",
+    "tag": "일상",
+    "example": "問題の本質を見極めます。",
+    "exampleReading": "もんだいのほんしつをみきわめます。",
+    "exampleMeaning": "문제의 본질을 파악합니다."
+  },
+  {
+    "id": "n1-003",
+    "word": "均衡",
+    "reading": "きんこう",
+    "meaning": "균형",
+    "level": "N1",
+    "tag": "일상",
+    "example": "需要と供給の均衡を保ちます。",
+    "exampleReading": "じゅようときょうきゅうのきんこうをたもちます。",
+    "exampleMeaning": "수요와 공급의 균형을 유지합니다."
+  },
+  {
+    "id": "n1-004",
+    "word": "偏見",
+    "reading": "へんけん",
+    "meaning": "편견",
+    "level": "N1",
+    "tag": "일상",
+    "example": "偏見を持たないようにします。",
+    "exampleReading": "へんけんをもたないようにします。",
+    "exampleMeaning": "편견을 갖지 않도록 합니다."
+  },
+  {
+    "id": "n1-005",
+    "word": "妥当",
+    "reading": "だとう",
+    "meaning": "타당",
+    "level": "N1",
+    "tag": "일상",
+    "example": "妥当な判断だと思います。",
+    "exampleReading": "だとうなはんだんだとおもいます。",
+    "exampleMeaning": "타당한 판단이라고 생각합니다."
+  },
+  {
+    "id": "n1-006",
+    "word": "曖昧",
+    "reading": "あいまい",
+    "meaning": "애매",
+    "level": "N1",
+    "tag": "일상",
+    "example": "曖昧な返事をされました。",
+    "exampleReading": "あいまいなへんじをされました。",
+    "exampleMeaning": "애매한 대답을 받았습니다."
+  },
+  {
+    "id": "n1-007",
+    "word": "潜在的",
+    "reading": "せんざいてき",
+    "meaning": "잠재적",
+    "level": "N1",
+    "tag": "일상",
+    "example": "潜在的なリスクがあります。",
+    "exampleReading": "せんざいてきなリスクがあります。",
+    "exampleMeaning": "잠재적인 위험이 있습니다."
+  },
+  {
+    "id": "n1-008",
+    "word": "顕著",
+    "reading": "けんちょ",
+    "meaning": "현저",
+    "level": "N1",
+    "tag": "일상",
+    "example": "効果が顕著に現れました。",
+    "exampleReading": "こうかがけんちょにあらわれました。",
+    "exampleMeaning": "효과가 현저하게 나타났습니다."
+  },
+  {
+    "id": "n1-009",
+    "word": "洞察",
+    "reading": "どうさつ",
+    "meaning": "통찰",
+    "level": "N1",
+    "tag": "일상",
+    "example": "鋭い洞察力を持っています。",
+    "exampleReading": "するどいどうさつりょくをもっています。",
+    "exampleMeaning": "날카로운 통찰력을 가지고 있습니다."
+  },
+  {
+    "id": "n1-010",
+    "word": "示唆",
+    "reading": "しさ",
+    "meaning": "시사",
+    "level": "N1",
+    "tag": "일상",
+    "example": "重要な点を示唆しています。",
+    "exampleReading": "じゅうようなてんをしさしています。",
+    "exampleMeaning": "중요한 점을 시사하고 있습니다."
+  },
+  {
+    "id": "n1-011",
+    "word": "把握",
+    "reading": "はあく",
+    "meaning": "파악",
+    "level": "N1",
+    "tag": "일상",
+    "example": "状況を正確に把握します。",
+    "exampleReading": "じょうきょうをせいかくにはあくします。",
+    "exampleMeaning": "상황을 정확히 파악합니다."
+  },
+  {
+    "id": "n1-012",
+    "word": "考慮",
+    "reading": "こうりょ",
+    "meaning": "고려",
+    "level": "N1",
+    "tag": "일상",
+    "example": "色々な事情を考慮します。",
+    "exampleReading": "いろいろなじじょうをこうりょします。",
+    "exampleMeaning": "여러 사정을 고려합니다."
+  },
+  {
+    "id": "n1-013",
+    "word": "是正",
+    "reading": "ぜせい",
+    "meaning": "시정",
+    "level": "N1",
+    "tag": "일상",
+    "example": "問題点を是正します。",
+    "exampleReading": "もんだいてんをぜせいします。",
+    "exampleMeaning": "문제점을 시정합니다."
+  },
+  {
+    "id": "n1-014",
+    "word": "卓越",
+    "reading": "たくえつ",
+    "meaning": "탁월",
+    "level": "N1",
+    "tag": "일상",
+    "example": "卓越した技術を持っています。",
+    "exampleReading": "たくえつしたぎじゅつをもっています。",
+    "exampleMeaning": "탁월한 기술을 가지고 있습니다."
+  },
+  {
+    "id": "n1-015",
+    "word": "遂行",
+    "reading": "すいこう",
+    "meaning": "수행",
+    "level": "N1",
+    "tag": "일상",
+    "example": "任務を遂行します。",
+    "exampleReading": "にんむをすいこうします。",
+    "exampleMeaning": "임무를 수행합니다."
+  },
+  {
+    "id": "n1-016",
+    "word": "円滑",
+    "reading": "えんかつ",
+    "meaning": "원활",
+    "level": "N1",
+    "tag": "일상",
+    "example": "円滑に進めます。",
+    "exampleReading": "えんかつにすすめます。",
+    "exampleMeaning": "원활하게 진행합니다."
+  },
+  {
+    "id": "n1-017",
+    "word": "柔軟",
+    "reading": "じゅうなん",
+    "meaning": "유연",
+    "level": "N1",
+    "tag": "일상",
+    "example": "柔軟に対応します。",
+    "exampleReading": "じゅうなんにたいおうします。",
+    "exampleMeaning": "유연하게 대응합니다."
+  },
+  {
+    "id": "n1-018",
+    "word": "厳密",
+    "reading": "げんみつ",
+    "meaning": "엄밀",
+    "level": "N1",
+    "tag": "일상",
+    "example": "厳密に言うと違います。",
+    "exampleReading": "げんみつにいうとちがいます。",
+    "exampleMeaning": "엄밀히 말하면 다릅니다."
+  },
+  {
+    "id": "n1-019",
+    "word": "克服",
+    "reading": "こくふく",
+    "meaning": "극복",
+    "level": "N1",
+    "tag": "일상",
+    "example": "困難を克服しました。",
+    "exampleReading": "こんなんをこくふくしました。",
+    "exampleMeaning": "어려움을 극복했습니다."
+  },
+  {
+    "id": "n1-020",
+    "word": "妥結",
+    "reading": "だけつ",
+    "meaning": "타결",
+    "level": "N1",
+    "tag": "일상",
+    "example": "交渉が妥結しました。",
+    "exampleReading": "こうしょうがだけつしました。",
+    "exampleMeaning": "협상이 타결되었습니다."
+  },
+  {
+    "id": "n1-021",
+    "word": "折衝",
+    "reading": "せっしょう",
+    "meaning": "절충",
+    "level": "N1",
+    "tag": "일상",
+    "example": "条件について折衝します。",
+    "exampleReading": "じょうけんについてせっしょうします。",
+    "exampleMeaning": "조건에 대해 절충합니다."
+  },
+  {
+    "id": "n1-022",
+    "word": "斡旋",
+    "reading": "あっせん",
+    "meaning": "알선",
+    "level": "N1",
+    "tag": "일상",
+    "example": "就職を斡旋してもらいました。",
+    "exampleReading": "しゅうしょくをあっせんしてもらいました。",
+    "exampleMeaning": "취업을 알선받았습니다."
+  },
+  {
+    "id": "n1-023",
+    "word": "逸脱",
+    "reading": "いつだつ",
+    "meaning": "일탈",
+    "level": "N1",
+    "tag": "일상",
+    "example": "規則から逸脱しています。",
+    "exampleReading": "きそくからいつだつしています。",
+    "exampleMeaning": "규칙에서 벗어나 있습니다."
+  },
+  {
+    "id": "n1-024",
+    "word": "架空",
+    "reading": "かくう",
+    "meaning": "가공(허구)",
+    "level": "N1",
+    "tag": "일상",
+    "example": "これは架空の人物です。",
+    "exampleReading": "これはかくうのじんぶつです。",
+    "exampleMeaning": "이것은 가공의 인물입니다."
+  },
+  {
+    "id": "n1-025",
+    "word": "不可欠",
+    "reading": "ふかけつ",
+    "meaning": "불가결",
+    "level": "N1",
+    "tag": "일상",
+    "example": "努力は不可欠です。",
+    "exampleReading": "どりょくはふかけつです。",
+    "exampleMeaning": "노력은 불가결합니다."
+  }
+];
+const GRAMMAR_JA = [
+  {
+    "id": "g-n5-001",
+    "level": "N5",
+    "pattern": "は",
+    "title": "주제를 나타내는 조사 は",
+    "connection": "명사 + は",
+    "example": "これは本です。",
+    "exampleReading": "これはほんです。",
+    "exampleMeaning": "이것은 책입니다.",
+    "koreanNote": "한국어 '은/는'과 거의 같은 역할이지만, 발음은 'わ[wa]'로 합니다. 표기(は)와 발음(わ)이 다른 대표적인 예외입니다."
+  },
+  {
+    "id": "g-n5-002",
+    "level": "N5",
+    "pattern": "を",
+    "title": "목적격 조사 を",
+    "connection": "명사 + を + 동사",
+    "example": "水を飲みます。",
+    "exampleReading": "みずをのみます。",
+    "exampleMeaning": "물을 마십니다.",
+    "koreanNote": "한국어 '을/를'과 동일한 역할. を는 항상 'お[o]'로 발음되며 다른 용도로는 거의 쓰이지 않습니다."
+  },
+  {
+    "id": "g-n5-003",
+    "level": "N5",
+    "pattern": "〜ます / 〜ません",
+    "title": "정중체 현재형 (긍정/부정)",
+    "connection": "동사 ます형",
+    "example": "毎日勉強します。行きません。",
+    "exampleReading": "まいにちべんきょうします。いきません。",
+    "exampleMeaning": "매일 공부합니다. 가지 않습니다.",
+    "koreanNote": "한국어 '~합니다/~하지 않습니다'와 대응. 단, 일본어는 미래형이 따로 없어 'します'가 현재/미래를 모두 표현합니다."
+  },
+  {
+    "id": "g-n5-004",
+    "level": "N5",
+    "pattern": "〜ました / 〜ませんでした",
+    "title": "정중체 과거형",
+    "connection": "동사 ます형 + でした",
+    "example": "昨日、友達に会いました。",
+    "exampleReading": "きのう、ともだちにあいました。",
+    "exampleMeaning": "어제 친구를 만났습니다.",
+    "koreanNote": "한국어 '~했습니다'와 동일한 위치. 부정 과거는 ませんでした로, 한국어의 '~하지 않았습니다'와 어순도 비슷해 헷갈리지 않습니다."
+  },
+  {
+    "id": "g-n5-005",
+    "level": "N5",
+    "pattern": "〜てください",
+    "title": "부탁·요청 표현",
+    "connection": "동사 て형 + ください",
+    "example": "ゆっくり話してください。",
+    "exampleReading": "ゆっくりはなしてください。",
+    "exampleMeaning": "천천히 말해주세요.",
+    "koreanNote": "'~해 주세요'에 해당. て형을 만드는 규칙(う→って, く→いて 등)은 한국어에 없는 개념이라 별도 암기가 필요합니다."
+  },
+  {
+    "id": "g-n5-006",
+    "level": "N5",
+    "pattern": "〜ています",
+    "title": "진행/상태 표현",
+    "connection": "동사 て형 + います",
+    "example": "今、雨が降っています。",
+    "exampleReading": "いま、あめがふっています。",
+    "exampleMeaning": "지금 비가 내리고 있습니다.",
+    "koreanNote": "한국어 '~하고 있습니다'와 같지만, 일본어는 '結婚しています(결혼했습니다)'처럼 완료된 상태의 지속에도 이 표현을 씁니다. 한국어 '~했습니다'로 번역되는 경우가 많아 주의가 필요합니다."
+  },
+  {
+    "id": "g-n5-007",
+    "level": "N5",
+    "pattern": "〜たいです",
+    "title": "희망 표현 (~하고 싶다)",
+    "connection": "동사 ます형(ます 제거) + たいです",
+    "example": "日本へ行きたいです。",
+    "exampleReading": "にほんへいきたいです。",
+    "exampleMeaning": "일본에 가고 싶습니다.",
+    "koreanNote": "'~하고 싶습니다'와 1:1 대응되어 한국인 학습자에게 쉬운 문형입니다. 목적어에는 を 대신 が를 쓰기도 함에 유의하세요."
+  },
+  {
+    "id": "g-n5-008",
+    "level": "N5",
+    "pattern": "い형용사 / な형용사",
+    "title": "형용사 두 종류와 현재형",
+    "connection": "い형용사: 어간+い / な형용사: 어간+な+명사",
+    "example": "この店は安いです。ここは静かな所です。",
+    "exampleReading": "このみせはやすいです。ここはしずかなところです。",
+    "exampleMeaning": "이 가게는 쌉니다. 여기는 조용한 곳입니다.",
+    "koreanNote": "한국어는 형용사가 하나의 활용체계지만, 일본어는 い형용사(끝이 い)와 な형용사(명사 수식 시 な 삽입) 두 종류로 나뉘는 점이 가장 큰 차이입니다."
+  },
+  {
+    "id": "g-n5-009",
+    "level": "N5",
+    "pattern": "から",
+    "title": "이유 표현 (~때문에)",
+    "connection": "문장 보통형 + から",
+    "example": "時間がないから、急ぎます。",
+    "exampleReading": "じかんがないから、いそぎます。",
+    "exampleMeaning": "시간이 없기 때문에 서두릅니다.",
+    "koreanNote": "'~니까/~때문에'와 대응. 회화체에서 이유를 말할 때 가장 많이 쓰는 표현으로, ので보다 주관적·구어적인 뉘앙스입니다."
+  },
+  {
+    "id": "g-n5-010",
+    "level": "N5",
+    "pattern": "が (역접)",
+    "title": "역접 조사 が (~지만)",
+    "connection": "문장 + が + 문장",
+    "example": "安いですが、おいしいです。",
+    "exampleReading": "やすいですが、おいしいです。",
+    "exampleMeaning": "싸지만 맛있습니다.",
+    "koreanNote": "'~지만'과 동일 위치. 주격 조사 が(이/가)와 형태는 같지만 역접 용법은 완전히 다른 의미이니 문맥으로 구분하세요."
+  },
+  {
+    "id": "g-n4-001",
+    "level": "N4",
+    "pattern": "〜なければなりません",
+    "title": "의무 표현 (~해야 합니다)",
+    "connection": "동사 ない형(ない 제거) + なければなりません",
+    "example": "パスポートを見せなければなりません。",
+    "exampleReading": "パスポートをみせなければなりません。",
+    "exampleMeaning": "여권을 보여줘야 합니다.",
+    "koreanNote": "'~해야 합니다'에 대응하지만 직역하면 '~하지 않으면 안 됩니다'라는 이중부정 구조입니다. 한국어에는 없는 문형이라 통째로 암기하는 편이 좋습니다."
+  },
+  {
+    "id": "g-n4-002",
+    "level": "N4",
+    "pattern": "〜ことができます",
+    "title": "가능 표현 (~할 수 있다)",
+    "connection": "동사 사전형 + ことができます",
+    "example": "日本語を話すことができます。",
+    "exampleReading": "にほんごをはなすことができます。",
+    "exampleMeaning": "일본어를 말할 수 있습니다.",
+    "koreanNote": "'~할 수 있습니다'와 대응. 동사를 가능형(話せます 등)으로 바꾸는 방법도 있는데, 초급에서는 이 문형이 먼저 나오고 이후 가능형으로 단축해서 표현합니다."
+  },
+  {
+    "id": "g-n4-003",
+    "level": "N4",
+    "pattern": "〜たことがあります",
+    "title": "경험 표현 (~한 적이 있다)",
+    "connection": "동사 た형 + ことがあります",
+    "example": "京都に行ったことがあります。",
+    "exampleReading": "きょうとにいったことがあります。",
+    "exampleMeaning": "교토에 간 적이 있습니다.",
+    "koreanNote": "'~한 적이 있습니다'와 정확히 대응되어 이해하기 쉽지만, た형 만드는 규칙(て형과 동일 규칙)을 먼저 익혀야 합니다."
+  },
+  {
+    "id": "g-n4-004",
+    "level": "N4",
+    "pattern": "〜そうです",
+    "title": "양태 표현 (~해 보인다)",
+    "connection": "い형용사/동사 ます형(ます제거) + そうです",
+    "example": "このケーキはおいしそうです。",
+    "exampleReading": "このケーキはおいしそうです。",
+    "exampleMeaning": "이 케이크는 맛있어 보입니다.",
+    "koreanNote": "'~해 보입니다'와 대응하지만, 전문의 そうです(~라고 합니다, 문장 보통형+そうです)와 형태가 비슷해 혼동하기 쉬우니 접속 방식으로 구분하세요."
+  },
+  {
+    "id": "g-n4-005",
+    "level": "N4",
+    "pattern": "〜ので",
+    "title": "이유 표현 (~이기 때문에, 격식체)",
+    "connection": "문장 보통형 + ので",
+    "example": "雨が降っているので、傘を持っていきます。",
+    "exampleReading": "あめがふっているので、かさをもっていきます。",
+    "exampleMeaning": "비가 오고 있어서 우산을 가져갑니다.",
+    "koreanNote": "から와 같은 '~때문에'지만 ので는 더 객관적·격식적인 어감입니다. 비즈니스 상황이나 공손한 설명에는 ので를 선호합니다."
+  },
+  {
+    "id": "g-n4-006",
+    "level": "N4",
+    "pattern": "〜てもいいです",
+    "title": "허가 표현 (~해도 됩니다)",
+    "connection": "동사 て형 + もいいです",
+    "example": "ここに座ってもいいですか。",
+    "exampleReading": "ここにすわってもいいですか。",
+    "exampleMeaning": "여기 앉아도 될까요?",
+    "koreanNote": "'~해도 됩니다'와 정확히 대응됩니다. 대답할 때는 'はい、いいです' 또는 'すみません、ちょっと…'로 완곡히 거절하는 것이 일본어식 화법입니다."
+  },
+  {
+    "id": "g-n4-007",
+    "level": "N4",
+    "pattern": "〜てはいけません",
+    "title": "금지 표현 (~하면 안 됩니다)",
+    "connection": "동사 て형 + はいけません",
+    "example": "ここで写真を撮ってはいけません。",
+    "exampleReading": "ここでしゃしんをとってはいけません。",
+    "exampleMeaning": "여기서 사진을 찍으면 안 됩니다.",
+    "koreanNote": "'~하면 안 됩니다'와 동일 위치. 표지판이나 공식 안내문에 자주 쓰이며, 회화에서는 だめです로 더 부드럽게 표현하기도 합니다."
+  },
+  {
+    "id": "g-n4-008",
+    "level": "N4",
+    "pattern": "〜つもりです",
+    "title": "의도 표현 (~할 생각이다)",
+    "connection": "동사 사전형 + つもりです",
+    "example": "来年、日本へ留学するつもりです。",
+    "exampleReading": "らいねん、にほんへりゅうがくするつもりです。",
+    "exampleMeaning": "내년에 일본으로 유학 갈 생각입니다.",
+    "koreanNote": "'~할 생각입니다/~할 작정입니다'와 대응. たいです(희망)보다 더 확정적인 계획을 말할 때 사용합니다."
+  },
+  {
+    "id": "g-n4-009",
+    "level": "N4",
+    "pattern": "〜ようになります",
+    "title": "변화 표현 (~하게 되다)",
+    "connection": "동사 사전형/가능형 + ようになります",
+    "example": "漢字が読めるようになりました。",
+    "exampleReading": "かんじがよめるようになりました。",
+    "exampleMeaning": "한자를 읽을 수 있게 되었습니다.",
+    "koreanNote": "'~하게 되었습니다'와 대응하며, 능력이나 습관의 점진적 변화를 나타냅니다. 한국어처럼 상태 변화를 표현하는 문형이라 이해가 쉽습니다."
+  },
+  {
+    "id": "g-n4-010",
+    "level": "N4",
+    "pattern": "〜すぎます",
+    "title": "정도 과다 표현 (너무 ~하다)",
+    "connection": "동사 ます형(ます 제거)/형용사 어간 + すぎます",
+    "example": "昨日、食べすぎました。",
+    "exampleReading": "きのう、たべすぎました。",
+    "exampleMeaning": "어제 너무 많이 먹었습니다.",
+    "koreanNote": "'너무 ~하다'와 대응. 명사가 아닌 동사·형용사에 바로 붙는 점이 한국어 '너무'의 위치와 달라 어순에 주의해야 합니다."
+  },
+  {
+    "id": "g-n4-011",
+    "level": "N4",
+    "pattern": "〜やすい／〜にくい",
+    "title": "용이·곤란 표현 (~하기 쉽다/어렵다)",
+    "connection": "동사 ます형(ます 제거) + やすい／にくい",
+    "example": "この靴は歩きやすいです。",
+    "exampleReading": "このくつはあるきやすいです。",
+    "exampleMeaning": "이 신발은 걷기 편합니다.",
+    "koreanNote": "'~하기 쉽다/어렵다'와 대응. い형용사처럼 활용되므로 やすかったです(쉬웠습니다) 형태로도 바뀝니다."
+  },
+  {
+    "id": "g-n4-012",
+    "level": "N4",
+    "pattern": "〜まえに",
+    "title": "순서 표현 (~하기 전에)",
+    "connection": "동사 사전형 + まえに",
+    "example": "寝るまえに歯を磨きます。",
+    "exampleReading": "ねるまえにはをみがきます。",
+    "exampleMeaning": "자기 전에 이를 닦습니다.",
+    "koreanNote": "'~하기 전에'와 동일 어순. 명사가 올 때는 '명사 + の + まえに' 형태가 되는 점에 유의하세요."
+  },
+  {
+    "id": "g-n4-013",
+    "level": "N4",
+    "pattern": "〜てから",
+    "title": "순서 표현 (~하고 나서)",
+    "connection": "동사 て형 + から",
+    "example": "シャワーを浴びてから寝ます。",
+    "exampleReading": "シャワーをあびてからねます。",
+    "exampleMeaning": "샤워를 하고 나서 잡니다.",
+    "koreanNote": "'~하고 나서'와 대응. て형만 알면 바로 만들 수 있어 まえに보다 활용이 쉬운 편입니다."
+  },
+  {
+    "id": "g-n3-001",
+    "level": "N3",
+    "pattern": "〜ばよかった",
+    "title": "후회 표현 (~했으면 좋았을걸)",
+    "connection": "동사 ば형 + よかった",
+    "example": "もっと勉強すればよかった。",
+    "exampleReading": "もっとべんきょうすればよかった。",
+    "exampleMeaning": "더 공부했으면 좋았을걸.",
+    "koreanNote": "'~했으면 좋았을걸'과 대응하는 후회 표현. ば형(가정형)을 먼저 익혀야 사용할 수 있습니다."
+  },
+  {
+    "id": "g-n3-002",
+    "level": "N3",
+    "pattern": "〜としても",
+    "title": "양보 표현 (~라고 해도)",
+    "connection": "문장 보통형 + としても",
+    "example": "安いとしても、買いません。",
+    "exampleReading": "やすいとしても、かいません。",
+    "exampleMeaning": "싸다고 해도 사지 않습니다.",
+    "koreanNote": "'~라고 해도'와 대응. ても보다 조건을 좀 더 강조하는 격식체 표현입니다."
+  },
+  {
+    "id": "g-n3-003",
+    "level": "N3",
+    "pattern": "〜おかげで",
+    "title": "긍정적 이유 표현 (~덕분에)",
+    "connection": "명사/동사 보통형 + おかげで",
+    "example": "先生のおかげで合格しました。",
+    "exampleReading": "せんせいのおかげでごうかくしました。",
+    "exampleMeaning": "선생님 덕분에 합격했습니다.",
+    "koreanNote": "한국어 '덕분에'와 정확히 대응되어 이해가 쉽습니다. 항상 좋은 결과에만 사용합니다."
+  },
+  {
+    "id": "g-n3-004",
+    "level": "N3",
+    "pattern": "〜せいで",
+    "title": "부정적 이유 표현 (~탓에)",
+    "connection": "명사/동사 보통형 + せいで",
+    "example": "雨のせいで遅れました。",
+    "exampleReading": "あめのせいでおくれました。",
+    "exampleMeaning": "비 때문에(비 탓에) 늦었습니다.",
+    "koreanNote": "한국어 '탓에'와 정확히 대응. おかげで와 짝을 이루는 표현으로 나쁜 결과에만 사용합니다."
+  },
+  {
+    "id": "g-n3-005",
+    "level": "N3",
+    "pattern": "〜ことになっている",
+    "title": "규칙·예정 표현 (~하기로 되어 있다)",
+    "connection": "동사 사전형/ない형 + ことになっている",
+    "example": "会議は3時からということになっている。",
+    "exampleReading": "かいぎはさんじからということになっている。",
+    "exampleMeaning": "회의는 3시부터 하기로 되어 있습니다.",
+    "koreanNote": "'~하기로 되어 있다'와 대응. 개인 의지가 아닌 규칙·관습·결정 사항을 말할 때 씁니다."
+  },
+  {
+    "id": "g-n3-006",
+    "level": "N3",
+    "pattern": "〜わけではない",
+    "title": "부분 부정 표현 (~인 것은 아니다)",
+    "connection": "문장 보통형 + わけではない",
+    "example": "嫌いなわけではないです。",
+    "exampleReading": "きらいなわけではないです。",
+    "exampleMeaning": "싫은 것은 아닙니다.",
+    "koreanNote": "'~인 것은 아니다'와 대응. 전면 부정(ない)과 달리 여지를 남기는 완곡한 부정 표현입니다."
+  },
+  {
+    "id": "g-n3-007",
+    "level": "N3",
+    "pattern": "〜つつある",
+    "title": "진행 변화 표현 (~해가고 있다, 격식체)",
+    "connection": "동사 ます형(ます 제거) + つつある",
+    "example": "景気は回復しつつある。",
+    "exampleReading": "けいきはかいふくしつつある。",
+    "exampleMeaning": "경기는 회복해가고 있다.",
+    "koreanNote": "ています와 뜻은 비슷하지만 뉴스·문어체에서 주로 쓰이는 격식 있는 표현입니다."
+  },
+  {
+    "id": "g-n3-008",
+    "level": "N3",
+    "pattern": "〜に違いない",
+    "title": "확신 표현 (~임에 틀림없다)",
+    "connection": "명사/문장 보통형 + に違いない",
+    "example": "あの店は人気があるに違いない。",
+    "exampleReading": "あのみせはにんきがあるにちがいない。",
+    "exampleMeaning": "저 가게는 인기가 있음에 틀림없다.",
+    "koreanNote": "'~임에 틀림없다'와 대응. かもしれない(추측)보다 확신의 정도가 훨씬 강합니다."
+  },
+  {
+    "id": "g-n3-009",
+    "level": "N3",
+    "pattern": "〜かもしれない",
+    "title": "추측 표현 (~일지도 모른다)",
+    "connection": "명사/문장 보통형 + かもしれない",
+    "example": "明日は雨かもしれない。",
+    "exampleReading": "あしたはあめかもしれない。",
+    "exampleMeaning": "내일은 비가 올지도 모른다.",
+    "koreanNote": "'~일지도 모른다'와 정확히 대응. でしょう보다 확신이 낮은 추측을 나타냅니다."
+  },
+  {
+    "id": "g-n3-010",
+    "level": "N3",
+    "pattern": "〜ば〜ほど",
+    "title": "비례 표현 (~하면 할수록)",
+    "connection": "동사/형용사 ば형 + 사전형 + ほど",
+    "example": "練習すればするほど上手になります。",
+    "exampleReading": "れんしゅうすればするほどじょうずになります。",
+    "exampleMeaning": "연습하면 할수록 능숙해집니다.",
+    "koreanNote": "'~하면 할수록'과 완전히 동일한 구조라 한국인 학습자에게 직관적인 문형입니다."
+  },
+  {
+    "id": "g-n3-011",
+    "level": "N3",
+    "pattern": "〜たびに",
+    "title": "매번 표현 (~할 때마다)",
+    "connection": "동사 사전형/명사+の + たびに",
+    "example": "日本に行くたびに、お土産を買います。",
+    "exampleReading": "にほんにいくたびに、おみやげをかいます。",
+    "exampleMeaning": "일본에 갈 때마다 기념품을 삽니다.",
+    "koreanNote": "'~할 때마다'와 대응. とき(~할 때)는 1회성, たびに는 반복되는 매번을 강조합니다."
+  },
+  {
+    "id": "g-n3-012",
+    "level": "N3",
+    "pattern": "〜ばかり",
+    "title": "한정 표현 (~만, ~뿐)",
+    "connection": "명사 + ばかり",
+    "example": "最近、雨ばかりです。",
+    "exampleReading": "さいきん、あめばかりです。",
+    "exampleMeaning": "요즘 비만 옵니다.",
+    "koreanNote": "'~만/~뿐'과 대응. だけ와 비슷하지만 ばかり는 다소 불만·과다함의 뉘앙스를 담을 때가 많습니다."
+  },
+  {
+    "id": "g-n2-001",
+    "level": "N2",
+    "pattern": "〜おそれがある",
+    "title": "우려 표현 (~할 우려가 있다)",
+    "connection": "동사 사전형/명사+の + おそれがある",
+    "example": "台風が来るおそれがあります。",
+    "exampleReading": "たいふうがくるおそれがあります。",
+    "exampleMeaning": "태풍이 올 우려가 있습니다.",
+    "koreanNote": "'~할 우려가 있다'와 대응. 뉴스나 공식 안내처럼 격식 있는 상황에서 나쁜 가능성을 경고할 때 씁니다."
+  },
+  {
+    "id": "g-n2-002",
+    "level": "N2",
+    "pattern": "〜半面",
+    "title": "양면 표현 (~인 반면)",
+    "connection": "동사/형용사 보통형 + 半面",
+    "example": "給料は高い半面、仕事がきついです。",
+    "exampleReading": "きゅうりょうはたかいはんめん、しごとがきついです。",
+    "exampleMeaning": "월급은 높은 반면 일이 힘듭니다.",
+    "koreanNote": "'~인 반면'과 대응. 하나의 대상이 가진 상반된 두 측면을 동시에 말할 때 사용합니다."
+  },
+  {
+    "id": "g-n2-003",
+    "level": "N2",
+    "pattern": "〜あげく",
+    "title": "결과 표현 (~한 끝에, 나쁜 결과)",
+    "connection": "동사 た형/명사+の + あげく",
+    "example": "迷ったあげく、買いませんでした。",
+    "exampleReading": "まよったあげく、かいませんでした。",
+    "exampleMeaning": "고민한 끝에 사지 않았습니다.",
+    "koreanNote": "'~한 끝에'와 비슷하지만, あげく는 대개 부정적이거나 허무한 결말에 쓰입니다."
+  },
+  {
+    "id": "g-n2-004",
+    "level": "N2",
+    "pattern": "〜末に",
+    "title": "결과 표현 (~한 끝에, 중립적)",
+    "connection": "동사 た형/명사+の + 末に",
+    "example": "長い議論の末に、結論が出ました。",
+    "exampleReading": "ながいぎろんのすえに、けつろんがでました。",
+    "exampleMeaning": "긴 논의 끝에 결론이 나왔습니다.",
+    "koreanNote": "'~한 끝에'와 대응하지만 あげく와 달리 좋고 나쁨에 관계없이 중립적으로 쓸 수 있습니다."
+  },
+  {
+    "id": "g-n2-005",
+    "level": "N2",
+    "pattern": "〜きり",
+    "title": "단절 표현 (~한 채로, 그 후 계속)",
+    "connection": "동사 た형 + きり",
+    "example": "彼は国へ帰ったきり、連絡がありません。",
+    "exampleReading": "かれはくにへかえったきり、れんらくがありません。",
+    "exampleMeaning": "그는 고국에 돌아간 채로 연락이 없습니다.",
+    "koreanNote": "'~한 채로'와 비슷. 한 동작 이후 상태가 계속되고 다른 일이 일어나지 않았음을 강조합니다."
+  },
+  {
+    "id": "g-n2-006",
+    "level": "N2",
+    "pattern": "〜つつ",
+    "title": "역접 동시 표현 (~하면서도)",
+    "connection": "동사 ます형(ます 제거) + つつ",
+    "example": "悪いと知りつつ、やってしまいました。",
+    "exampleReading": "わるいとしりつつ、やってしまいました。",
+    "exampleMeaning": "나쁘다는 것을 알면서도 해버렸습니다.",
+    "koreanNote": "'~하면서도'와 대응. ながら와 형태는 비슷하지만 つつ는 문어체·격식체에 더 많이 쓰입니다."
+  },
+  {
+    "id": "g-n2-007",
+    "level": "N2",
+    "pattern": "〜にすぎない",
+    "title": "한정 표현 (~에 지나지 않다)",
+    "connection": "명사/동사 보통형 + にすぎない",
+    "example": "それはただの噂にすぎません。",
+    "exampleReading": "それはただのうわさにすぎません。",
+    "exampleMeaning": "그것은 그저 소문에 지나지 않습니다.",
+    "koreanNote": "'~에 지나지 않다'와 정확히 대응. 대상의 가치나 정도를 낮춰서 말할 때 사용합니다."
+  },
+  {
+    "id": "g-n2-008",
+    "level": "N2",
+    "pattern": "〜に応じて",
+    "title": "대응 표현 (~에 따라)",
+    "connection": "명사 + に応じて",
+    "example": "経験に応じて給料が変わります。",
+    "exampleReading": "けいけんにおうじてきゅうりょうがかわります。",
+    "exampleMeaning": "경험에 따라 급여가 달라집니다.",
+    "koreanNote": "'~에 따라'와 대응. によって보다 '상황에 맞춰 대응한다'는 뉘앙스가 강합니다."
+  },
+  {
+    "id": "g-n2-009",
+    "level": "N2",
+    "pattern": "〜わりに",
+    "title": "비교 표현 (~에 비해)",
+    "connection": "명사+の/동사·형용사 보통형 + わりに",
+    "example": "値段のわりに、質がいいです。",
+    "exampleReading": "ねだんのわりに、しつがいいです。",
+    "exampleMeaning": "가격에 비해 품질이 좋습니다.",
+    "koreanNote": "'~에 비해'와 대응. 기대치와 실제 결과 사이의 의외성을 표현할 때 자주 씁니다."
+  },
+  {
+    "id": "g-n2-010",
+    "level": "N2",
+    "pattern": "〜も〜ば〜も",
+    "title": "병렬 표현 (~하기도 하고 ~하기도 하다)",
+    "connection": "명사+も + ば형 + 명사+も",
+    "example": "時間もあれば、お金もあります。",
+    "exampleReading": "じかんもあれば、おかねもあります。",
+    "exampleMeaning": "시간도 있고 돈도 있습니다.",
+    "koreanNote": "'~도 하고 ~도 하다'와 비슷. 여러 조건이 동시에 성립함을 강조하는 문어적 표현입니다."
+  },
+  {
+    "id": "g-n2-011",
+    "level": "N2",
+    "pattern": "〜べきだ",
+    "title": "당위 표현 (~해야 한다)",
+    "connection": "동사 사전형 + べきだ",
+    "example": "約束は守るべきです。",
+    "exampleReading": "やくそくはまもるべきです。",
+    "exampleMeaning": "약속은 지켜야 합니다.",
+    "koreanNote": "'~해야 한다'와 대응. なければならない보다 도덕적·규범적 당위를 강조하는 어감입니다."
+  },
+  {
+    "id": "g-n2-012",
+    "level": "N2",
+    "pattern": "〜次第だ",
+    "title": "의존 표현 (~에 달려 있다)",
+    "connection": "명사 + 次第だ",
+    "example": "合格できるかは努力次第です。",
+    "exampleReading": "ごうかくできるかはどりょくしだいです。",
+    "exampleMeaning": "합격할 수 있을지는 노력에 달려 있습니다.",
+    "koreanNote": "'~에 달려 있다'와 대응. '〜次第で'(동사 활용형태)로 쓰이면 '~하는 대로'라는 뜻이 되는 점도 함께 기억하면 좋습니다."
+  },
+  {
+    "id": "g-n1-001",
+    "level": "N1",
+    "pattern": "〜ずにはいられない",
+    "title": "충동 표현 (~하지 않을 수 없다)",
+    "connection": "동사 ない형(ない 제거) + ずにはいられない",
+    "example": "感動して泣かずにはいられませんでした。",
+    "exampleReading": "かんどうしてなかずにはいられませんでした。",
+    "exampleMeaning": "감동해서 울지 않을 수 없었습니다.",
+    "koreanNote": "'~하지 않을 수 없다'와 대응. 감정이 북받쳐 자연히 그 행동을 하게 됨을 나타냅니다."
+  },
+  {
+    "id": "g-n1-002",
+    "level": "N1",
+    "pattern": "〜を余儀なくされる",
+    "title": "강제 표현 (어쩔 수 없이 ~하게 되다)",
+    "connection": "명사 + を余儀なくされる",
+    "example": "台風で延期を余儀なくされました。",
+    "exampleReading": "たいふうでえんきをよぎなくされました。",
+    "exampleMeaning": "태풍으로 어쩔 수 없이 연기하게 되었습니다.",
+    "koreanNote": "'어쩔 수 없이 ~하게 되다'와 대응. 외부 상황 때문에 원치 않는 결과를 강요받았을 때 쓰는 격식체입니다."
+  },
+  {
+    "id": "g-n1-003",
+    "level": "N1",
+    "pattern": "〜にもまして",
+    "title": "강조 비교 표현 (~보다 더욱)",
+    "connection": "명사 + にもまして",
+    "example": "今年は昨年にもまして暑いです。",
+    "exampleReading": "ことしはさくねんにもましてあついです。",
+    "exampleMeaning": "올해는 작년보다 더욱 덥습니다.",
+    "koreanNote": "'~보다 더욱'과 대응. より도 비슷하지만 にもまして는 정도의 강조가 훨씬 강한 문어체입니다."
+  },
+  {
+    "id": "g-n1-004",
+    "level": "N1",
+    "pattern": "〜ことなく",
+    "title": "부정 부수 표현 (~하는 일 없이)",
+    "connection": "동사 사전형 + ことなく",
+    "example": "諦めることなく、挑戦し続けました。",
+    "exampleReading": "あきらめることなく、ちょうせんしつづけました。",
+    "exampleMeaning": "포기하는 일 없이 계속 도전했습니다.",
+    "koreanNote": "'~하지 않고/~하는 일 없이'와 대응. ないで보다 문어적이고 격식 있는 느낌을 줍니다."
+  },
+  {
+    "id": "g-n1-005",
+    "level": "N1",
+    "pattern": "〜きらいがある",
+    "title": "경향 표현 (~하는 경향이 있다, 부정적)",
+    "connection": "동사 사전형/명사+の + きらいがある",
+    "example": "彼は物事を大げさに言うきらいがあります。",
+    "exampleReading": "かれはものごとをおおげさにいうきらいがあります。",
+    "exampleMeaning": "그는 매사를 과장해서 말하는 경향이 있습니다.",
+    "koreanNote": "'~하는 경향이 있다'와 대응하지만, 傾向보다 부정적 뉘앙스가 강해 단점을 지적할 때 씁니다."
+  },
+  {
+    "id": "g-n1-006",
+    "level": "N1",
+    "pattern": "〜んがために",
+    "title": "목적 표현 (~하기 위해서, 문어체)",
+    "connection": "동사 ない형(의지형 어간) + んがために",
+    "example": "目標を達成せんがために努力しました。",
+    "exampleReading": "もくひょうをたっせいせんがためにどりょくしました。",
+    "exampleMeaning": "목표를 달성하기 위해서 노력했습니다.",
+    "koreanNote": "'~하기 위해서'와 대응하지만, ために보다 훨씬 격식 있고 결의를 담은 문어체 표현입니다."
+  },
+  {
+    "id": "g-n1-007",
+    "level": "N1",
+    "pattern": "〜てやまない",
+    "title": "지속 감정 표현 (~해 마지않다)",
+    "connection": "동사 て형 + やまない",
+    "example": "皆様のご健康を願ってやみません。",
+    "exampleReading": "みなさまのごけんこうをねがってやみません。",
+    "exampleMeaning": "여러분의 건강을 진심으로 바라 마지않습니다.",
+    "koreanNote": "'~해 마지않다'와 대응. 감사·기원 등의 감정이 끊임없이 지속됨을 격식 있게 표현합니다."
+  },
+  {
+    "id": "g-n1-008",
+    "level": "N1",
+    "pattern": "〜べからず",
+    "title": "금지 표현 (~해서는 안 된다, 고어체)",
+    "connection": "동사 사전형 + べからず",
+    "example": "芝生に入るべからず。",
+    "exampleReading": "しばふにはいるべからず。",
+    "exampleMeaning": "잔디밭에 들어가서는 안 된다.",
+    "koreanNote": "'~해서는 안 된다'와 대응하지만 표지판·격언 등에 쓰이는 고어체로, 회화에서는 거의 쓰지 않습니다."
+  },
+  {
+    "id": "g-n1-009",
+    "level": "N1",
+    "pattern": "〜極まりない",
+    "title": "극단 표현 (~하기 그지없다)",
+    "connection": "な형용사 어간 + 極まりない",
+    "example": "彼の態度は失礼極まりないです。",
+    "exampleReading": "かれのたいどはしつれいきわまりないです。",
+    "exampleMeaning": "그의 태도는 무례하기 그지없습니다.",
+    "koreanNote": "'~하기 그지없다'와 대응. 매우 강한 정도를 격식 있게 표현할 때 씁니다."
+  },
+  {
+    "id": "g-n1-010",
+    "level": "N1",
+    "pattern": "〜が最後",
+    "title": "필연 표현 (일단 ~하면 반드시)",
+    "connection": "동사 た형 + が最後",
+    "example": "彼は始めたが最後、最後までやり通します。",
+    "exampleReading": "かれははじめたがさいご、さいごまでやりとおします。",
+    "exampleMeaning": "그는 일단 시작하면 끝까지 해냅니다.",
+    "koreanNote": "'일단 ~하면 반드시(그렇게 된다)'는 뉘앙스. 한 번 그 행동을 하면 피할 수 없는 결과가 따름을 강조합니다."
+  },
+  {
+    "id": "g-n1-011",
+    "level": "N1",
+    "pattern": "〜ならでは",
+    "title": "고유성 표현 (~만의, ~특유의)",
+    "connection": "명사 + ならでは",
+    "example": "これは京都ならではの景色です。",
+    "exampleReading": "これはきょうとならではのけしきです。",
+    "exampleMeaning": "이것은 교토만의 풍경입니다.",
+    "koreanNote": "'~만의/~특유의'와 대응. 그 대상이 아니면 볼 수 없는 고유한 특징을 강조할 때 씁니다."
+  },
+  {
+    "id": "g-n1-012",
+    "level": "N1",
+    "pattern": "〜にたえない",
+    "title": "강한 감정/한계 표현 (차마 ~할 수 없다, 매우 ~하다)",
+    "connection": "명사/동사 사전형 + にたえない",
+    "example": "見るにたえない光景でした。",
+    "exampleReading": "みるにたえないこうけいでした。",
+    "exampleMeaning": "차마 볼 수 없는 광경이었습니다.",
+    "koreanNote": "'차마 ~할 수 없다'와 대응. 感謝にたえない(감사해 마지않다)처럼 강한 긍정 감정에도 쓰입니다."
+  }
+];
+const KANJI_JA = [
+  {
+    "id": "k-001",
+    "level": "N5",
+    "char": "日",
+    "onyomi": "ニチ・ジツ",
+    "kunyomi": "ひ・か",
+    "meaning": "날, 해",
+    "koreanSound": "일(日)",
+    "note": "음독 'ニチ'와 한국 한자음 '일'은 받침만 다를 뿐 어원이 같습니다.",
+    "examples": [
+      {
+        "word": "日本",
+        "reading": "にほん",
+        "meaning": "일본"
+      },
+      {
+        "word": "今日",
+        "reading": "きょう",
+        "meaning": "오늘"
+      }
+    ]
+  },
+  {
+    "id": "k-002",
+    "level": "N5",
+    "char": "月",
+    "onyomi": "ゲツ・ガツ",
+    "kunyomi": "つき",
+    "meaning": "달",
+    "koreanSound": "월(月)",
+    "note": "음독 'ゲツ'는 한국 한자음 '월'의 옛 발음과 가깝습니다.",
+    "examples": [
+      {
+        "word": "来月",
+        "reading": "らいげつ",
+        "meaning": "다음 달"
+      },
+      {
+        "word": "月曜日",
+        "reading": "げつようび",
+        "meaning": "월요일"
+      }
+    ]
+  },
+  {
+    "id": "k-003",
+    "level": "N5",
+    "char": "火",
+    "onyomi": "カ",
+    "kunyomi": "ひ",
+    "meaning": "불",
+    "koreanSound": "화(火)",
+    "note": "음독 'カ'와 한국 한자음 '화'는 자음이 유사합니다.",
+    "examples": [
+      {
+        "word": "火曜日",
+        "reading": "かようび",
+        "meaning": "화요일"
+      },
+      {
+        "word": "花火",
+        "reading": "はなび",
+        "meaning": "불꽃놀이"
+      }
+    ]
+  },
+  {
+    "id": "k-004",
+    "level": "N5",
+    "char": "水",
+    "onyomi": "スイ",
+    "kunyomi": "みず",
+    "meaning": "물",
+    "koreanSound": "수(水)",
+    "note": "음독 'スイ'와 한국 한자음 '수'가 매우 비슷해 외우기 쉽습니다.",
+    "examples": [
+      {
+        "word": "水曜日",
+        "reading": "すいようび",
+        "meaning": "수요일"
+      },
+      {
+        "word": "水道",
+        "reading": "すいどう",
+        "meaning": "수도"
+      }
+    ]
+  },
+  {
+    "id": "k-005",
+    "level": "N5",
+    "char": "木",
+    "onyomi": "モク・ボク",
+    "kunyomi": "き",
+    "meaning": "나무",
+    "koreanSound": "목(木)",
+    "note": "음독 'モク'와 한국 한자음 '목'의 자음이 동일합니다.",
+    "examples": [
+      {
+        "word": "木曜日",
+        "reading": "もくようび",
+        "meaning": "목요일"
+      },
+      {
+        "word": "木材",
+        "reading": "もくざい",
+        "meaning": "목재"
+      }
+    ]
+  },
+  {
+    "id": "k-006",
+    "level": "N5",
+    "char": "金",
+    "onyomi": "キン",
+    "kunyomi": "かね",
+    "meaning": "쇠, 금",
+    "koreanSound": "금(金)",
+    "note": "음독 'キン'과 한국 한자음 '금'이 거의 그대로 대응됩니다.",
+    "examples": [
+      {
+        "word": "金曜日",
+        "reading": "きんようび",
+        "meaning": "금요일"
+      },
+      {
+        "word": "お金",
+        "reading": "おかね",
+        "meaning": "돈"
+      }
+    ]
+  },
+  {
+    "id": "k-007",
+    "level": "N5",
+    "char": "土",
+    "onyomi": "ド・ト",
+    "kunyomi": "つち",
+    "meaning": "흙",
+    "koreanSound": "토(土)",
+    "note": "음독 'ド/ト'는 한국 한자음 '토'와 자음 계열이 같습니다.",
+    "examples": [
+      {
+        "word": "土曜日",
+        "reading": "どようび",
+        "meaning": "토요일"
+      },
+      {
+        "word": "土地",
+        "reading": "とち",
+        "meaning": "토지"
+      }
+    ]
+  },
+  {
+    "id": "k-008",
+    "level": "N5",
+    "char": "人",
+    "onyomi": "ジン・ニン",
+    "kunyomi": "ひと",
+    "meaning": "사람",
+    "koreanSound": "인(人)",
+    "note": "음독 'ジン/ニン'과 한국 한자음 '인'이 유사합니다.",
+    "examples": [
+      {
+        "word": "日本人",
+        "reading": "にほんじん",
+        "meaning": "일본인"
+      },
+      {
+        "word": "一人",
+        "reading": "ひとり",
+        "meaning": "한 사람, 혼자"
+      }
+    ]
+  },
+  {
+    "id": "k-009",
+    "level": "N5",
+    "char": "大",
+    "onyomi": "ダイ・タイ",
+    "kunyomi": "おお(きい)",
+    "meaning": "크다",
+    "koreanSound": "대(大)",
+    "note": "음독 'ダイ'와 한국 한자음 '대'가 거의 동일합니다.",
+    "examples": [
+      {
+        "word": "大学",
+        "reading": "だいがく",
+        "meaning": "대학"
+      },
+      {
+        "word": "大丈夫",
+        "reading": "だいじょうぶ",
+        "meaning": "괜찮다"
+      }
+    ]
+  },
+  {
+    "id": "k-010",
+    "level": "N5",
+    "char": "小",
+    "onyomi": "ショウ",
+    "kunyomi": "ちい(さい)",
+    "meaning": "작다",
+    "koreanSound": "소(小)",
+    "note": "음독 'ショウ'는 한국 한자음 '소'와 자음이 같습니다.",
+    "examples": [
+      {
+        "word": "小学校",
+        "reading": "しょうがっこう",
+        "meaning": "초등학교"
+      },
+      {
+        "word": "小説",
+        "reading": "しょうせつ",
+        "meaning": "소설"
+      }
+    ]
+  },
+  {
+    "id": "k-011",
+    "level": "N5",
+    "char": "山",
+    "onyomi": "サン",
+    "kunyomi": "やま",
+    "meaning": "산",
+    "koreanSound": "산(山)",
+    "note": "음독 'サン'과 한국 한자음 '산'이 거의 그대로 대응됩니다.",
+    "examples": [
+      {
+        "word": "富士山",
+        "reading": "ふじさん",
+        "meaning": "후지산"
+      },
+      {
+        "word": "山道",
+        "reading": "やまみち",
+        "meaning": "산길"
+      }
+    ]
+  },
+  {
+    "id": "k-012",
+    "level": "N5",
+    "char": "川",
+    "onyomi": "セン",
+    "kunyomi": "かわ",
+    "meaning": "내, 강",
+    "koreanSound": "천(川)",
+    "note": "음독 'セン'과 한국 한자음 '천'이 유사합니다.",
+    "examples": [
+      {
+        "word": "河川",
+        "reading": "かせん",
+        "meaning": "하천"
+      },
+      {
+        "word": "川辺",
+        "reading": "かわべ",
+        "meaning": "강변"
+      }
+    ]
+  },
+  {
+    "id": "k-013",
+    "level": "N4",
+    "char": "学",
+    "onyomi": "ガク",
+    "kunyomi": "まな(ぶ)",
+    "meaning": "배우다",
+    "koreanSound": "학(學)",
+    "note": "음독 'ガク'와 한국 한자음 '학'의 자음이 같습니다.",
+    "examples": [
+      {
+        "word": "学校",
+        "reading": "がっこう",
+        "meaning": "학교"
+      },
+      {
+        "word": "学生",
+        "reading": "がくせい",
+        "meaning": "학생"
+      }
+    ]
+  },
+  {
+    "id": "k-014",
+    "level": "N4",
+    "char": "校",
+    "onyomi": "コウ",
+    "kunyomi": "-",
+    "meaning": "학교",
+    "koreanSound": "교(校)",
+    "note": "음독 'コウ'는 한국 한자음 '교'의 옛 발음과 연결됩니다.",
+    "examples": [
+      {
+        "word": "学校",
+        "reading": "がっこう",
+        "meaning": "학교"
+      },
+      {
+        "word": "校長",
+        "reading": "こうちょう",
+        "meaning": "교장"
+      }
+    ]
+  },
+  {
+    "id": "k-015",
+    "level": "N4",
+    "char": "先",
+    "onyomi": "セン",
+    "kunyomi": "さき",
+    "meaning": "먼저",
+    "koreanSound": "선(先)",
+    "note": "음독 'セン'과 한국 한자음 '선'이 유사합니다.",
+    "examples": [
+      {
+        "word": "先生",
+        "reading": "せんせい",
+        "meaning": "선생님"
+      },
+      {
+        "word": "先週",
+        "reading": "せんしゅう",
+        "meaning": "지난주"
+      }
+    ]
+  },
+  {
+    "id": "k-016",
+    "level": "N4",
+    "char": "会",
+    "onyomi": "カイ",
+    "kunyomi": "あ(う)",
+    "meaning": "만나다, 모임",
+    "koreanSound": "회(會)",
+    "note": "음독 'カイ'와 한국 한자음 '회'가 유사합니다.",
+    "examples": [
+      {
+        "word": "会社",
+        "reading": "かいしゃ",
+        "meaning": "회사"
+      },
+      {
+        "word": "会話",
+        "reading": "かいわ",
+        "meaning": "회화"
+      }
+    ]
+  },
+  {
+    "id": "k-017",
+    "level": "N4",
+    "char": "社",
+    "onyomi": "シャ",
+    "kunyomi": "やしろ",
+    "meaning": "회사, 사당",
+    "koreanSound": "사(社)",
+    "note": "음독 'シャ'와 한국 한자음 '사'의 자음이 같습니다.",
+    "examples": [
+      {
+        "word": "会社",
+        "reading": "かいしゃ",
+        "meaning": "회사"
+      },
+      {
+        "word": "社会",
+        "reading": "しゃかい",
+        "meaning": "사회"
+      }
+    ]
+  },
+  {
+    "id": "k-018",
+    "level": "N4",
+    "char": "話",
+    "onyomi": "ワ",
+    "kunyomi": "はな(す)",
+    "meaning": "이야기",
+    "koreanSound": "화(話)",
+    "note": "음독 'ワ'는 한국 한자음 '화'의 초성과 연결됩니다.",
+    "examples": [
+      {
+        "word": "会話",
+        "reading": "かいわ",
+        "meaning": "회화"
+      },
+      {
+        "word": "電話",
+        "reading": "でんわ",
+        "meaning": "전화"
+      }
+    ]
+  },
+  {
+    "id": "k-019",
+    "level": "N4",
+    "char": "語",
+    "onyomi": "ゴ",
+    "kunyomi": "かた(る)",
+    "meaning": "말, 언어",
+    "koreanSound": "어(語)",
+    "note": "음독 'ゴ'와 한국 한자음 '어'는 다르지만, 単語(たんご) 같은 단어에서 함께 자주 등장합니다.",
+    "examples": [
+      {
+        "word": "日本語",
+        "reading": "にほんご",
+        "meaning": "일본어"
+      },
+      {
+        "word": "単語",
+        "reading": "たんご",
+        "meaning": "단어"
+      }
+    ]
+  },
+  {
+    "id": "k-020",
+    "level": "N4",
+    "char": "間",
+    "onyomi": "カン",
+    "kunyomi": "あいだ",
+    "meaning": "사이",
+    "koreanSound": "간(間)",
+    "note": "음독 'カン'과 한국 한자음 '간'이 매우 비슷합니다.",
+    "examples": [
+      {
+        "word": "時間",
+        "reading": "じかん",
+        "meaning": "시간"
+      },
+      {
+        "word": "人間",
+        "reading": "にんげん",
+        "meaning": "인간"
+      }
+    ]
+  },
+  {
+    "id": "k-021",
+    "level": "N4",
+    "char": "家",
+    "onyomi": "カ",
+    "kunyomi": "いえ",
+    "meaning": "집",
+    "koreanSound": "가(家)",
+    "note": "음독 'カ'와 한국 한자음 '가'가 거의 동일합니다.",
+    "examples": [
+      {
+        "word": "家族",
+        "reading": "かぞく",
+        "meaning": "가족"
+      },
+      {
+        "word": "作家",
+        "reading": "さっか",
+        "meaning": "작가"
+      }
+    ]
+  },
+  {
+    "id": "k-022",
+    "level": "N4",
+    "char": "国",
+    "onyomi": "コク",
+    "kunyomi": "くに",
+    "meaning": "나라",
+    "koreanSound": "국(國)",
+    "note": "음독 'コク'와 한국 한자음 '국'의 자음이 같습니다.",
+    "examples": [
+      {
+        "word": "外国",
+        "reading": "がいこく",
+        "meaning": "외국"
+      },
+      {
+        "word": "国際",
+        "reading": "こくさい",
+        "meaning": "국제"
+      }
+    ]
+  },
+  {
+    "id": "k-023",
+    "level": "N4",
+    "char": "来",
+    "onyomi": "ライ",
+    "kunyomi": "く(る)",
+    "meaning": "오다",
+    "koreanSound": "래(來)",
+    "note": "음독 'ライ'와 한국 한자음 '래'가 유사합니다.",
+    "examples": [
+      {
+        "word": "来年",
+        "reading": "らいねん",
+        "meaning": "내년"
+      },
+      {
+        "word": "未来",
+        "reading": "みらい",
+        "meaning": "미래"
+      }
+    ]
+  },
+  {
+    "id": "k-024",
+    "level": "N3",
+    "char": "経",
+    "onyomi": "ケイ",
+    "kunyomi": "へ(る)",
+    "meaning": "지나다, 다스리다",
+    "koreanSound": "경(經)",
+    "note": "음독 'ケイ'와 한국 한자음 '경'이 유사합니다.",
+    "examples": [
+      {
+        "word": "経済",
+        "reading": "けいざい",
+        "meaning": "경제"
+      },
+      {
+        "word": "経験",
+        "reading": "けいけん",
+        "meaning": "경험"
+      }
+    ]
+  },
+  {
+    "id": "k-025",
+    "level": "N3",
+    "char": "済",
+    "onyomi": "サイ",
+    "kunyomi": "す(む)",
+    "meaning": "끝나다, 구제하다",
+    "koreanSound": "제(濟)",
+    "note": "음독 'サイ'는 한국 한자음 '제'와 계열이 다르지만 経済처럼 세트로 외우면 편합니다.",
+    "examples": [
+      {
+        "word": "経済",
+        "reading": "けいざい",
+        "meaning": "경제"
+      },
+      {
+        "word": "済ませる",
+        "reading": "すませる",
+        "meaning": "끝내다"
+      }
+    ]
+  },
+  {
+    "id": "k-026",
+    "level": "N3",
+    "char": "環",
+    "onyomi": "カン",
+    "kunyomi": "-",
+    "meaning": "고리, 두르다",
+    "koreanSound": "환(環)",
+    "note": "음독 'カン'과 한국 한자음 '환'이 유사합니다.",
+    "examples": [
+      {
+        "word": "環境",
+        "reading": "かんきょう",
+        "meaning": "환경"
+      },
+      {
+        "word": "循環",
+        "reading": "じゅんかん",
+        "meaning": "순환"
+      }
+    ]
+  },
+  {
+    "id": "k-027",
+    "level": "N3",
+    "char": "境",
+    "onyomi": "キョウ",
+    "kunyomi": "さかい",
+    "meaning": "경계",
+    "koreanSound": "경(境)",
+    "note": "음독 'キョウ'는 한국 한자음 '경'과 자음 계열이 같습니다.",
+    "examples": [
+      {
+        "word": "環境",
+        "reading": "かんきょう",
+        "meaning": "환경"
+      },
+      {
+        "word": "国境",
+        "reading": "こっきょう",
+        "meaning": "국경"
+      }
+    ]
+  },
+  {
+    "id": "k-028",
+    "level": "N3",
+    "char": "主",
+    "onyomi": "シュ",
+    "kunyomi": "おも(に)",
+    "meaning": "주로, 주인",
+    "koreanSound": "주(主)",
+    "note": "음독 'シュ'와 한국 한자음 '주'가 유사합니다.",
+    "examples": [
+      {
+        "word": "主人",
+        "reading": "しゅじん",
+        "meaning": "주인"
+      },
+      {
+        "word": "主に",
+        "reading": "おもに",
+        "meaning": "주로"
+      }
+    ]
+  },
+  {
+    "id": "k-029",
+    "level": "N3",
+    "char": "由",
+    "onyomi": "ユウ",
+    "kunyomi": "よし",
+    "meaning": "이유, 말미암다",
+    "koreanSound": "유(由)",
+    "note": "음독 'ユウ'와 한국 한자음 '유'가 유사합니다.",
+    "examples": [
+      {
+        "word": "理由",
+        "reading": "りゆう",
+        "meaning": "이유"
+      },
+      {
+        "word": "自由",
+        "reading": "じゆう",
+        "meaning": "자유"
+      }
+    ]
+  },
+  {
+    "id": "k-030",
+    "level": "N3",
+    "char": "理",
+    "onyomi": "リ",
+    "kunyomi": "-",
+    "meaning": "이치, 다스리다",
+    "koreanSound": "리(理)",
+    "note": "음독 'リ'와 한국 한자음 '리'가 동일합니다.",
+    "examples": [
+      {
+        "word": "理由",
+        "reading": "りゆう",
+        "meaning": "이유"
+      },
+      {
+        "word": "料理",
+        "reading": "りょうり",
+        "meaning": "요리"
+      }
+    ]
+  },
+  {
+    "id": "k-031",
+    "level": "N3",
+    "char": "決",
+    "onyomi": "ケツ",
+    "kunyomi": "き(める)",
+    "meaning": "정하다, 결단하다",
+    "koreanSound": "결(決)",
+    "note": "음독 'ケツ'와 한국 한자음 '결'이 유사합니다.",
+    "examples": [
+      {
+        "word": "決定",
+        "reading": "けってい",
+        "meaning": "결정"
+      },
+      {
+        "word": "決める",
+        "reading": "きめる",
+        "meaning": "정하다"
+      }
+    ]
+  },
+  {
+    "id": "k-032",
+    "level": "N3",
+    "char": "定",
+    "onyomi": "テイ",
+    "kunyomi": "さだ(める)",
+    "meaning": "정하다",
+    "koreanSound": "정(定)",
+    "note": "음독 'テイ'와 한국 한자음 '정'의 자음이 같습니다.",
+    "examples": [
+      {
+        "word": "予定",
+        "reading": "よてい",
+        "meaning": "예정"
+      },
+      {
+        "word": "決定",
+        "reading": "けってい",
+        "meaning": "결정"
+      }
+    ]
+  },
+  {
+    "id": "k-033",
+    "level": "N3",
+    "char": "合",
+    "onyomi": "ゴウ",
+    "kunyomi": "あ(う)",
+    "meaning": "맞다, 합치다",
+    "koreanSound": "합(合)",
+    "note": "음독 'ゴウ'와 한국 한자음 '합'이 유사합니다.",
+    "examples": [
+      {
+        "word": "場合",
+        "reading": "ばあい",
+        "meaning": "경우"
+      },
+      {
+        "word": "都合",
+        "reading": "つごう",
+        "meaning": "사정"
+      }
+    ]
+  },
+  {
+    "id": "k-034",
+    "level": "N3",
+    "char": "場",
+    "onyomi": "ジョウ",
+    "kunyomi": "ば",
+    "meaning": "장소, 마당",
+    "koreanSound": "장(場)",
+    "note": "음독 'ジョウ'와 한국 한자음 '장'이 유사합니다.",
+    "examples": [
+      {
+        "word": "場合",
+        "reading": "ばあい",
+        "meaning": "경우"
+      },
+      {
+        "word": "会場",
+        "reading": "かいじょう",
+        "meaning": "회장(행사장)"
+      }
+    ]
+  },
+  {
+    "id": "k-035",
+    "level": "N3",
+    "char": "係",
+    "onyomi": "ケイ",
+    "kunyomi": "かかり",
+    "meaning": "담당, 관계",
+    "koreanSound": "계(係)",
+    "note": "음독 'ケイ'와 한국 한자음 '계'가 유사합니다.",
+    "examples": [
+      {
+        "word": "関係",
+        "reading": "かんけい",
+        "meaning": "관계"
+      },
+      {
+        "word": "係員",
+        "reading": "かかりいん",
+        "meaning": "담당자"
+      }
+    ]
+  },
+  {
+    "id": "k-036",
+    "level": "N2",
+    "char": "効",
+    "onyomi": "コウ",
+    "kunyomi": "き(く)",
+    "meaning": "효과, 효험",
+    "koreanSound": "효(效)",
+    "note": "음독 'コウ'와 한국 한자음 '효'는 다르지만, 効果(こうか)처럼 자주 쓰이는 단어로 익히면 좋습니다.",
+    "examples": [
+      {
+        "word": "効果",
+        "reading": "こうか",
+        "meaning": "효과"
+      },
+      {
+        "word": "有効",
+        "reading": "ゆうこう",
+        "meaning": "유효"
+      }
+    ]
+  },
+  {
+    "id": "k-037",
+    "level": "N2",
+    "char": "果",
+    "onyomi": "カ",
+    "kunyomi": "は(たす)・は(て)",
+    "meaning": "결과, 열매",
+    "koreanSound": "과(果)",
+    "note": "음독 'カ'와 한국 한자음 '과'가 유사합니다.",
+    "examples": [
+      {
+        "word": "結果",
+        "reading": "けっか",
+        "meaning": "결과"
+      },
+      {
+        "word": "果物",
+        "reading": "くだもの",
+        "meaning": "과일"
+      }
+    ]
+  },
+  {
+    "id": "k-038",
+    "level": "N2",
+    "char": "評",
+    "onyomi": "ヒョウ",
+    "kunyomi": "-",
+    "meaning": "평하다",
+    "koreanSound": "평(評)",
+    "note": "음독 'ヒョウ'와 한국 한자음 '평'이 유사합니다.",
+    "examples": [
+      {
+        "word": "評価",
+        "reading": "ひょうか",
+        "meaning": "평가"
+      },
+      {
+        "word": "評判",
+        "reading": "ひょうばん",
+        "meaning": "평판"
+      }
+    ]
+  },
+  {
+    "id": "k-039",
+    "level": "N2",
+    "char": "価",
+    "onyomi": "カ",
+    "kunyomi": "あたい",
+    "meaning": "값, 가치",
+    "koreanSound": "가(價)",
+    "note": "음독 'カ'와 한국 한자음 '가'가 유사합니다.",
+    "examples": [
+      {
+        "word": "価格",
+        "reading": "かかく",
+        "meaning": "가격"
+      },
+      {
+        "word": "評価",
+        "reading": "ひょうか",
+        "meaning": "평가"
+      }
+    ]
+  },
+  {
+    "id": "k-040",
+    "level": "N2",
+    "char": "検",
+    "onyomi": "ケン",
+    "kunyomi": "-",
+    "meaning": "검사하다",
+    "koreanSound": "검(檢)",
+    "note": "음독 'ケン'과 한국 한자음 '검'이 유사합니다.",
+    "examples": [
+      {
+        "word": "検討",
+        "reading": "けんとう",
+        "meaning": "검토"
+      },
+      {
+        "word": "検査",
+        "reading": "けんさ",
+        "meaning": "검사"
+      }
+    ]
+  },
+  {
+    "id": "k-041",
+    "level": "N2",
+    "char": "討",
+    "onyomi": "トウ",
+    "kunyomi": "-",
+    "meaning": "토론하다, 치다",
+    "koreanSound": "토(討)",
+    "note": "음독 'トウ'와 한국 한자음 '토'의 자음이 같습니다.",
+    "examples": [
+      {
+        "word": "検討",
+        "reading": "けんとう",
+        "meaning": "검토"
+      },
+      {
+        "word": "討論",
+        "reading": "とうろん",
+        "meaning": "토론"
+      }
+    ]
+  },
+  {
+    "id": "k-042",
+    "level": "N2",
+    "char": "維",
+    "onyomi": "イ",
+    "kunyomi": "-",
+    "meaning": "유지하다, 밧줄",
+    "koreanSound": "유(維)",
+    "note": "음독 'イ'는 한국 한자음 '유'와 다르지만, 維持(いじ)라는 단어로 세트로 외우면 편합니다.",
+    "examples": [
+      {
+        "word": "維持",
+        "reading": "いじ",
+        "meaning": "유지"
+      },
+      {
+        "word": "繊維",
+        "reading": "せんい",
+        "meaning": "섬유"
+      }
+    ]
+  },
+  {
+    "id": "k-043",
+    "level": "N2",
+    "char": "持",
+    "onyomi": "ジ",
+    "kunyomi": "も(つ)",
+    "meaning": "가지다",
+    "koreanSound": "지(持)",
+    "note": "음독 'ジ'와 한국 한자음 '지'가 유사합니다.",
+    "examples": [
+      {
+        "word": "維持",
+        "reading": "いじ",
+        "meaning": "유지"
+      },
+      {
+        "word": "持参",
+        "reading": "じさん",
+        "meaning": "지참"
+      }
+    ]
+  },
+  {
+    "id": "k-044",
+    "level": "N2",
+    "char": "機",
+    "onyomi": "キ",
+    "kunyomi": "-",
+    "meaning": "기계, 기회",
+    "koreanSound": "기(機)",
+    "note": "음독 'キ'와 한국 한자음 '기'가 유사합니다. 아래 基(기)와 발음이 같은 동음 한자이니 구별해서 외우세요.",
+    "examples": [
+      {
+        "word": "機能",
+        "reading": "きのう",
+        "meaning": "기능"
+      },
+      {
+        "word": "機会",
+        "reading": "きかい",
+        "meaning": "기회"
+      }
+    ]
+  },
+  {
+    "id": "k-045",
+    "level": "N2",
+    "char": "準",
+    "onyomi": "ジュン",
+    "kunyomi": "-",
+    "meaning": "준하다, 표준",
+    "koreanSound": "준(準)",
+    "note": "음독 'ジュン'과 한국 한자음 '준'이 유사합니다.",
+    "examples": [
+      {
+        "word": "準備",
+        "reading": "じゅんび",
+        "meaning": "준비"
+      },
+      {
+        "word": "基準",
+        "reading": "きじゅん",
+        "meaning": "기준"
+      }
+    ]
+  },
+  {
+    "id": "k-046",
+    "level": "N2",
+    "char": "基",
+    "onyomi": "キ",
+    "kunyomi": "もと",
+    "meaning": "기초, 근본",
+    "koreanSound": "기(基)",
+    "note": "음독 'キ'와 한국 한자음 '기'가 유사합니다. 機(기계)와 동음이의 한자이므로 문맥으로 구분하세요.",
+    "examples": [
+      {
+        "word": "基準",
+        "reading": "きじゅん",
+        "meaning": "기준"
+      },
+      {
+        "word": "基本",
+        "reading": "きほん",
+        "meaning": "기본"
+      }
+    ]
+  },
+  {
+    "id": "k-047",
+    "level": "N2",
+    "char": "傾",
+    "onyomi": "ケイ",
+    "kunyomi": "かたむ(く)",
+    "meaning": "기울다",
+    "koreanSound": "경(傾)",
+    "note": "음독 'ケイ'와 한국 한자음 '경'이 유사합니다.",
+    "examples": [
+      {
+        "word": "傾向",
+        "reading": "けいこう",
+        "meaning": "경향"
+      },
+      {
+        "word": "傾く",
+        "reading": "かたむく",
+        "meaning": "기울다"
+      }
+    ]
+  },
+  {
+    "id": "k-048",
+    "level": "N1",
+    "char": "概",
+    "onyomi": "ガイ",
+    "kunyomi": "-",
+    "meaning": "대개, 개관",
+    "koreanSound": "개(槪)",
+    "note": "음독 'ガイ'와 한국 한자음 '개'가 유사합니다.",
+    "examples": [
+      {
+        "word": "概念",
+        "reading": "がいねん",
+        "meaning": "개념"
+      },
+      {
+        "word": "大概",
+        "reading": "たいがい",
+        "meaning": "대개"
+      }
+    ]
+  },
+  {
+    "id": "k-049",
+    "level": "N1",
+    "char": "念",
+    "onyomi": "ネン",
+    "kunyomi": "-",
+    "meaning": "생각, 마음에 새기다",
+    "koreanSound": "념(念)",
+    "note": "음독 'ネン'과 한국 한자음 '념/염'이 유사합니다.",
+    "examples": [
+      {
+        "word": "概念",
+        "reading": "がいねん",
+        "meaning": "개념"
+      },
+      {
+        "word": "記念",
+        "reading": "きねん",
+        "meaning": "기념"
+      }
+    ]
+  },
+  {
+    "id": "k-050",
+    "level": "N1",
+    "char": "均",
+    "onyomi": "キン",
+    "kunyomi": "-",
+    "meaning": "고르다",
+    "koreanSound": "균(均)",
+    "note": "음독 'キン'과 한국 한자음 '균'이 유사합니다.",
+    "examples": [
+      {
+        "word": "均衡",
+        "reading": "きんこう",
+        "meaning": "균형"
+      },
+      {
+        "word": "平均",
+        "reading": "へいきん",
+        "meaning": "평균"
+      }
+    ]
+  },
+  {
+    "id": "k-051",
+    "level": "N1",
+    "char": "衡",
+    "onyomi": "コウ",
+    "kunyomi": "-",
+    "meaning": "저울대, 균형",
+    "koreanSound": "형(衡)",
+    "note": "음독 'コウ'는 한국 한자음 '형'과 다르지만, 均衡(균형)이라는 단어로 세트 암기하면 좋습니다.",
+    "examples": [
+      {
+        "word": "均衡",
+        "reading": "きんこう",
+        "meaning": "균형"
+      },
+      {
+        "word": "平衡",
+        "reading": "へいこう",
+        "meaning": "평형"
+      }
+    ]
+  },
+  {
+    "id": "k-052",
+    "level": "N1",
+    "char": "偏",
+    "onyomi": "ヘン",
+    "kunyomi": "かたよ(る)",
+    "meaning": "치우치다",
+    "koreanSound": "편(偏)",
+    "note": "음독 'ヘン'과 한국 한자음 '편'이 유사합니다.",
+    "examples": [
+      {
+        "word": "偏見",
+        "reading": "へんけん",
+        "meaning": "편견"
+      },
+      {
+        "word": "偏る",
+        "reading": "かたよる",
+        "meaning": "치우치다"
+      }
+    ]
+  },
+  {
+    "id": "k-053",
+    "level": "N1",
+    "char": "妥",
+    "onyomi": "ダ",
+    "kunyomi": "-",
+    "meaning": "온당하다",
+    "koreanSound": "타(妥)",
+    "note": "음독 'ダ'와 한국 한자음 '타'가 유사합니다.",
+    "examples": [
+      {
+        "word": "妥当",
+        "reading": "だとう",
+        "meaning": "타당"
+      },
+      {
+        "word": "妥協",
+        "reading": "だきょう",
+        "meaning": "타협"
+      }
+    ]
+  },
+  {
+    "id": "k-054",
+    "level": "N1",
+    "char": "潜",
+    "onyomi": "セン",
+    "kunyomi": "ひそ(む)",
+    "meaning": "잠기다, 숨다",
+    "koreanSound": "잠(潛)",
+    "note": "음독 'セン'과 한국 한자음 '잠'은 다르지만, 潜在(잠재)라는 단어로 함께 외우면 편합니다.",
+    "examples": [
+      {
+        "word": "潜在的",
+        "reading": "せんざいてき",
+        "meaning": "잠재적"
+      },
+      {
+        "word": "潜水",
+        "reading": "せんすい",
+        "meaning": "잠수"
+      }
+    ]
+  },
+  {
+    "id": "k-055",
+    "level": "N1",
+    "char": "顕",
+    "onyomi": "ケン",
+    "kunyomi": "-",
+    "meaning": "나타나다, 뚜렷하다",
+    "koreanSound": "현(顯)",
+    "note": "음독 'ケン'은 한국 한자음 '현'과 다르지만, 顕著(현저)라는 단어로 세트 암기하면 좋습니다.",
+    "examples": [
+      {
+        "word": "顕著",
+        "reading": "けんちょ",
+        "meaning": "현저"
+      }
+    ]
+  },
+  {
+    "id": "k-056",
+    "level": "N1",
+    "char": "洞",
+    "onyomi": "ドウ",
+    "kunyomi": "ほら",
+    "meaning": "동굴, 꿰뚫다",
+    "koreanSound": "동(洞)",
+    "note": "음독 'ドウ'와 한국 한자음 '동'이 유사합니다.",
+    "examples": [
+      {
+        "word": "洞察",
+        "reading": "どうさつ",
+        "meaning": "통찰"
+      },
+      {
+        "word": "洞窟",
+        "reading": "どうくつ",
+        "meaning": "동굴"
+      }
+    ]
+  },
+  {
+    "id": "k-057",
+    "level": "N1",
+    "char": "唆",
+    "onyomi": "サ",
+    "kunyomi": "そそのか(す)",
+    "meaning": "부추기다",
+    "koreanSound": "사(唆)",
+    "note": "음독 'サ'와 한국 한자음 '사'가 유사합니다.",
+    "examples": [
+      {
+        "word": "示唆",
+        "reading": "しさ",
+        "meaning": "시사"
+      },
+      {
+        "word": "教唆",
+        "reading": "きょうさ",
+        "meaning": "교사(부추김)"
+      }
+    ]
+  },
+  {
+    "id": "k-058",
+    "level": "N1",
+    "char": "卓",
+    "onyomi": "タク",
+    "kunyomi": "-",
+    "meaning": "탁월하다, 탁자",
+    "koreanSound": "탁(卓)",
+    "note": "음독 'タク'와 한국 한자음 '탁'이 유사합니다.",
+    "examples": [
+      {
+        "word": "卓越",
+        "reading": "たくえつ",
+        "meaning": "탁월"
+      },
+      {
+        "word": "食卓",
+        "reading": "しょくたく",
+        "meaning": "식탁"
+      }
+    ]
+  },
+  {
+    "id": "k-059",
+    "level": "N1",
+    "char": "柔",
+    "onyomi": "ジュウ",
+    "kunyomi": "やわ(らか)",
+    "meaning": "부드럽다",
+    "koreanSound": "유(柔)",
+    "note": "음독 'ジュウ'는 한국 한자음 '유'와 다르지만, 柔軟(유연)이라는 단어로 세트 암기하면 좋습니다.",
+    "examples": [
+      {
+        "word": "柔軟",
+        "reading": "じゅうなん",
+        "meaning": "유연"
+      },
+      {
+        "word": "柔道",
+        "reading": "じゅうどう",
+        "meaning": "유도"
+      }
+    ]
+  }
+];
+const TRAVEL_JA = [
+  {
+    "id": "t-001",
+    "scene": "공항",
+    "japanese": "パスポートをお願いします。",
+    "reading": "パスポートをおねがいします。",
+    "korean": "여권 부탁드립니다.",
+    "note": "입국 심사대에서 가장 먼저 듣는 말",
+    "level": "N5"
+  },
+  {
+    "id": "t-002",
+    "scene": "공항",
+    "japanese": "荷物はどこですか。",
+    "reading": "にもつはどこですか。",
+    "korean": "짐은 어디에 있나요?",
+    "note": "수하물 찾는 곳을 물을 때",
+    "level": "N5"
+  },
+  {
+    "id": "t-003",
+    "scene": "공항",
+    "japanese": "搭乗口はどこですか。",
+    "reading": "とうじょうぐちはどこですか。",
+    "korean": "탑승구는 어디인가요?",
+    "note": "환승 시 자주 씀",
+    "level": "N5"
+  },
+  {
+    "id": "t-004",
+    "scene": "식당",
+    "japanese": "メニューを見せてください。",
+    "reading": "メニューをみせてください。",
+    "korean": "메뉴 좀 보여주세요.",
+    "note": "자리에 앉은 직후",
+    "level": "N5"
+  },
+  {
+    "id": "t-005",
+    "scene": "식당",
+    "japanese": "おすすめは何ですか。",
+    "reading": "おすすめはなんですか。",
+    "korean": "추천 메뉴가 뭔가요?",
+    "note": "메뉴 고민될 때 유용",
+    "level": "N5"
+  },
+  {
+    "id": "t-006",
+    "scene": "식당",
+    "japanese": "お会計をお願いします。",
+    "reading": "おかいけいをおねがいします。",
+    "korean": "계산 부탁드립니다.",
+    "note": "식사 마친 후",
+    "level": "N5"
+  },
+  {
+    "id": "t-007",
+    "scene": "식당",
+    "japanese": "これをください。",
+    "reading": "これをください。",
+    "korean": "이거 주세요.",
+    "note": "메뉴판을 손가락으로 가리키며 사용 가능",
+    "level": "N5"
+  },
+  {
+    "id": "t-008",
+    "scene": "숙소",
+    "japanese": "チェックインをお願いします。",
+    "reading": "チェックインをおねがいします。",
+    "korean": "체크인 부탁드립니다.",
+    "note": "프런트 도착 시",
+    "level": "N5"
+  },
+  {
+    "id": "t-009",
+    "scene": "숙소",
+    "japanese": "部屋を変えてもらえますか。",
+    "reading": "へやをかえてもらえますか。",
+    "korean": "방을 바꿀 수 있을까요?",
+    "note": "방 상태가 불만족스러울 때",
+    "level": "N4"
+  },
+  {
+    "id": "t-010",
+    "scene": "숙소",
+    "japanese": "Wi-Fiのパスワードは何ですか。",
+    "reading": "ワイファイのパスワードはなんですか。",
+    "korean": "와이파이 비밀번호가 뭔가요?",
+    "note": "체크인 직후 바로 물어보면 좋음",
+    "level": "N5"
+  },
+  {
+    "id": "t-011",
+    "scene": "길찾기",
+    "japanese": "ここはどこですか。",
+    "reading": "ここはどこですか。",
+    "korean": "여기가 어디인가요?",
+    "note": "지도를 보여주며 물으면 더 정확",
+    "level": "N5"
+  },
+  {
+    "id": "t-012",
+    "scene": "길찾기",
+    "japanese": "駅までどう行きますか。",
+    "reading": "えきまでどういきますか。",
+    "korean": "역까지 어떻게 가나요?",
+    "note": "길 물을 때 기본형",
+    "level": "N5"
+  },
+  {
+    "id": "t-013",
+    "scene": "길찾기",
+    "japanese": "近くにコンビニがありますか。",
+    "reading": "ちかくにコンビニがありますか。",
+    "korean": "근처에 편의점이 있나요?",
+    "note": "'~がありますか'는 시설 유무를 물을 때 두루 사용",
+    "level": "N5"
+  },
+  {
+    "id": "t-014",
+    "scene": "쇼핑",
+    "japanese": "これはいくらですか。",
+    "reading": "これはいくらですか。",
+    "korean": "이거 얼마예요?",
+    "note": "쇼핑의 기본 표현",
+    "level": "N5"
+  },
+  {
+    "id": "t-015",
+    "scene": "쇼핑",
+    "japanese": "試着してもいいですか。",
+    "reading": "しちゃくしてもいいですか。",
+    "korean": "입어봐도 되나요?",
+    "note": "옷가게에서 필수 표현",
+    "level": "N4"
+  },
+  {
+    "id": "t-016",
+    "scene": "쇼핑",
+    "japanese": "免税できますか。",
+    "reading": "めんぜいできますか。",
+    "korean": "면세되나요?",
+    "note": "일정 금액 이상 구매 시 확인",
+    "level": "N4"
+  },
+  {
+    "id": "t-017",
+    "scene": "병원",
+    "japanese": "具合が悪いです。",
+    "reading": "ぐあいがわるいです。",
+    "korean": "몸이 안 좋아요.",
+    "note": "컨디션 난조를 알릴 때 기본 표현",
+    "level": "N5"
+  },
+  {
+    "id": "t-018",
+    "scene": "병원",
+    "japanese": "薬はありますか。",
+    "reading": "くすりはありますか。",
+    "korean": "약 있나요?",
+    "note": "약국·편의점에서 약 구할 때",
+    "level": "N5"
+  },
+  {
+    "id": "t-019",
+    "scene": "병원",
+    "japanese": "近くに病院はありますか。",
+    "reading": "ちかくにびょういんはありますか。",
+    "korean": "근처에 병원이 있나요?",
+    "note": "급하게 병원을 찾을 때",
+    "level": "N5"
+  },
+  {
+    "id": "t-020",
+    "scene": "대중교통",
+    "japanese": "この電車は新宿に行きますか。",
+    "reading": "このでんしゃはしんじゅくにいきますか。",
+    "korean": "이 전철은 신주쿠에 가나요?",
+    "note": "노선이 헷갈릴 때 확인용",
+    "level": "N5"
+  },
+  {
+    "id": "t-021",
+    "scene": "대중교통",
+    "japanese": "次の駅はどこですか。",
+    "reading": "つぎのえきはどこですか。",
+    "korean": "다음 역은 어디인가요?",
+    "note": "내릴 역을 놓치지 않기 위해",
+    "level": "N5"
+  },
+  {
+    "id": "t-022",
+    "scene": "대중교통",
+    "japanese": "ICカードはどこで買えますか。",
+    "reading": "ICカードはどこでかえますか。",
+    "korean": "IC카드는 어디서 살 수 있나요?",
+    "note": "교통카드(Suica 등) 구매처 확인",
+    "level": "N4"
+  },
+  {
+    "id": "t-023",
+    "scene": "긴급상황",
+    "japanese": "助けてください。",
+    "reading": "たすけてください。",
+    "korean": "도와주세요.",
+    "note": "위급 상황에서 가장 먼저 쓰는 말",
+    "level": "N5"
+  },
+  {
+    "id": "t-024",
+    "scene": "긴급상황",
+    "japanese": "警察を呼んでください。",
+    "reading": "けいさつをよんでください。",
+    "korean": "경찰을 불러주세요.",
+    "note": "도난·사고 시 사용",
+    "level": "N4"
+  },
+  {
+    "id": "t-025",
+    "scene": "긴급상황",
+    "japanese": "財布をなくしました。",
+    "reading": "さいふをなくしました。",
+    "korean": "지갑을 잃어버렸습니다.",
+    "note": "분실 신고 시 필요한 표현",
+    "level": "N4"
+  },
+  {
+    "id": "t-026",
+    "scene": "숙소",
+    "japanese": "荷物を預かってもらえますか。",
+    "reading": "にもつをあずかってもらえますか。",
+    "korean": "짐을 맡아주실 수 있나요?",
+    "note": "체크아웃 후 짐 보관 요청",
+    "level": "N4"
+  },
+  {
+    "id": "t-027",
+    "scene": "쇼핑",
+    "japanese": "クレジットカードは使えますか。",
+    "reading": "クレジットカードはつかえますか。",
+    "korean": "신용카드 되나요?",
+    "note": "현금만 받는 가게도 있어 미리 확인",
+    "level": "N4"
+  },
+  {
+    "id": "t-028",
+    "scene": "식당",
+    "japanese": "辛くしないでください。",
+    "reading": "からくしないでください。",
+    "korean": "맵지 않게 해주세요.",
+    "note": "매운 음식이 부담스러울 때",
+    "level": "N4"
+  },
+  {
+    "id": "t-029",
+    "scene": "긴급상황",
+    "level": "N3",
+    "japanese": "もう一度言っていただけますか。",
+    "reading": "もういちどいっていただけますか。",
+    "korean": "다시 한번 말씀해 주시겠어요?",
+    "note": "겸양 표현(いただけますか)을 쓴 정중한 되묻기"
+  },
+  {
+    "id": "t-030",
+    "scene": "숙소",
+    "level": "N3",
+    "japanese": "荷物を送っていただくことは可能ですか。",
+    "reading": "にもつをおくっていただくことはかのうですか。",
+    "korean": "짐을 보내주실 수 있나요?",
+    "note": "긴 문장이지만 호텔 프런트에서 자주 쓰이는 정중한 요청"
+  },
+  {
+    "id": "t-031",
+    "scene": "숙소",
+    "level": "N3",
+    "japanese": "予約を変更したいのですが。",
+    "reading": "よやくをへんこうしたいのですが。",
+    "korean": "예약을 변경하고 싶습니다만.",
+    "note": "'〜のですが'로 말을 흐리는 일본어 특유의 완곡한 요청 방식"
+  },
+  {
+    "id": "t-032",
+    "scene": "숙소",
+    "level": "N2",
+    "japanese": "お手数をおかけしますが、部屋を変更していただけますか。",
+    "reading": "おてすうをおかけしますが、へやをへんこうしていただけますか。",
+    "korean": "수고를 끼쳐드려 죄송하지만 방을 변경해주실 수 있을까요?",
+    "note": "'お手数をおかけしますが'는 상대에게 번거로움을 끼칠 때 붙이는 정중한 서두"
+  },
+  {
+    "id": "t-033",
+    "scene": "긴급상황",
+    "level": "N2",
+    "japanese": "保険の手続きについて教えていただけますか。",
+    "reading": "ほけんのてつづきについておしえていただけますか。",
+    "korean": "보험 절차에 대해 알려주실 수 있나요?",
+    "note": "사고·분실 시 보험 처리 문의"
+  },
+  {
+    "id": "t-034",
+    "scene": "쇼핑",
+    "level": "N2",
+    "japanese": "返品の際の手続きを教えてください。",
+    "reading": "へんぴんのさいのてつづきをおしえてください。",
+    "korean": "반품 시 절차를 알려주세요.",
+    "note": "구매 전 반품 정책 확인용"
+  },
+  {
+    "id": "t-035",
+    "scene": "식당",
+    "level": "N2",
+    "japanese": "アレルギーがあるので、成分を確認していただけますか。",
+    "reading": "アレルギーがあるので、せいぶんをかくにんしていただけますか。",
+    "korean": "알레르기가 있어서 성분을 확인해주실 수 있나요?",
+    "note": "알레르기 있는 경우 필수로 알아두면 좋은 표현"
+  },
+  {
+    "id": "t-036",
+    "scene": "대중교통",
+    "level": "N2",
+    "japanese": "遅延証明書をいただけますか。",
+    "reading": "ちえんしょうめいしょをいただけますか。",
+    "korean": "지연 증명서를 받을 수 있을까요?",
+    "note": "전철 지연으로 회사·학교에 제출해야 할 때"
+  },
+  {
+    "id": "t-037",
+    "scene": "공항",
+    "level": "N2",
+    "japanese": "乗り継ぎの案内をお願いできますか。",
+    "reading": "のりつぎのあんないをおねがいできますか。",
+    "korean": "환승 안내를 부탁드릴 수 있을까요?",
+    "note": "환승 게이트를 못 찾을 때"
+  },
+  {
+    "id": "t-038",
+    "scene": "숙소",
+    "level": "N2",
+    "japanese": "チェックアウトの時間を延長していただくことは可能でしょうか。",
+    "reading": "チェックアウトのじかんをえんちょうしていただくことはかのうでしょうか。",
+    "korean": "체크아웃 시간을 연장해주실 수 있을까요?",
+    "note": "늦은 비행기 시간 등으로 연장이 필요할 때"
+  },
+  {
+    "id": "t-039",
+    "scene": "병원",
+    "level": "N2",
+    "japanese": "症状について詳しく説明していただけますか。",
+    "reading": "しょうじょうについてくわしくせつめいしていただけますか。",
+    "korean": "증상에 대해 자세히 설명해주실 수 있나요?",
+    "note": "진료 시 의사에게 정중히 요청하는 표현"
+  },
+  {
+    "id": "t-040",
+    "scene": "공항",
+    "level": "N1",
+    "japanese": "恐れ入りますが、搭乗手続きの締め切り時間を教えていただけますでしょうか。",
+    "reading": "おそれいりますが、とうじょうてつづきのしめきりじかんをおしえていただけますでしょうか。",
+    "korean": "죄송하지만 탑승 수속 마감 시간을 알려주시겠습니까?",
+    "note": "'恐れ入りますが'는 아주 격식 있는 사죄·양해 표현"
+  },
+  {
+    "id": "t-041",
+    "scene": "숙소",
+    "level": "N1",
+    "japanese": "ご迷惑をおかけして誠に申し訳ございません。",
+    "reading": "ごめいわくをおかけしてまことにもうしわけございません。",
+    "korean": "폐를 끼쳐드려 대단히 죄송합니다.",
+    "note": "공식적인 사과 표현. 일상 회화보다 훨씬 격식 있음"
+  },
+  {
+    "id": "t-042",
+    "scene": "비즈니스",
+    "level": "N1",
+    "japanese": "貴重なお時間を頂戴し、誠にありがとうございます。",
+    "reading": "きちょうなおじかんをちょうだいし、まことにありがとうございます。",
+    "korean": "귀중한 시간을 내주셔서 대단히 감사합니다.",
+    "note": "미팅·상담 시작 시 쓰는 정중한 인사말"
+  },
+  {
+    "id": "t-043",
+    "scene": "긴급상황",
+    "level": "N1",
+    "japanese": "やむを得ない事情によりキャンセルさせていただきたく存じます。",
+    "reading": "やむをえないじじょうによりキャンセルさせていただきたくぞんじます。",
+    "korean": "부득이한 사정으로 취소하고자 합니다.",
+    "note": "공식적인 취소 통보에 쓰는 격식체"
+  },
+  {
+    "id": "t-044",
+    "scene": "식당",
+    "level": "N1",
+    "japanese": "お口に合わないようでしたら、遠慮なくお申し付けください。",
+    "reading": "おくちにあわないようでしたら、えんりょなくおもうしつけください。",
+    "korean": "입에 맞지 않으시면 부담 없이 말씀해 주세요.",
+    "note": "고급 식당 등에서 종업원이 손님에게 쓰는 표현"
+  },
+  {
+    "id": "t-045",
+    "scene": "쇼핑",
+    "level": "N1",
+    "japanese": "こちらの商品は在庫が切れておりまして、誠に恐縮でございます。",
+    "reading": "こちらのしょうひんはざいこがきれておりまして、まことにきょうしゅくでございます。",
+    "korean": "이 상품은 재고가 떨어져서 대단히 죄송합니다.",
+    "note": "점원이 고객에게 사과할 때 쓰는 격식체"
+  },
+  {
+    "id": "t-046",
+    "scene": "숙소",
+    "level": "N1",
+    "japanese": "お部屋の準備が整い次第、ご連絡させていただきます。",
+    "reading": "おへやのじゅんびがととのいしだい、ごれんらくさせていただきます。",
+    "korean": "방 준비가 되는 대로 연락드리겠습니다.",
+    "note": "호텔 프런트 직원이 손님에게 하는 정중한 응대"
+  },
+  {
+    "id": "t-047",
+    "scene": "비즈니스",
+    "level": "N1",
+    "japanese": "何卒よろしくお願い申し上げます。",
+    "reading": "なにとぞよろしくおねがいもうしあげます。",
+    "korean": "아무쪼록 잘 부탁드립니다.",
+    "note": "이메일·공식 문서 마무리에 쓰는 가장 격식 있는 인사"
+  }
+];
+
+const VOCAB_KR = [
+  {
+    "id": "w-001",
+    "word": "안녕하세요",
+    "pronunciation": "안녕하세요",
+    "meaningJp": "こんにちは",
+    "level": "1급",
+    "tag": "일상",
+    "example": "안녕하세요, 저는 다나카입니다.",
+    "examplePronunciation": "안녕하세요, 저는 다나카입니다.",
+    "exampleMeaningJp": "こんにちは、私は田中です。"
+  },
+  {
+    "id": "w-002",
+    "word": "감사합니다",
+    "pronunciation": "감사함니다",
+    "meaningJp": "ありがとうございます",
+    "level": "1급",
+    "tag": "일상",
+    "example": "도와주셔서 감사합니다.",
+    "examplePronunciation": "도와주셔서 감사함니다.",
+    "exampleMeaningJp": "手伝ってくださってありがとうございます。"
+  },
+  {
+    "id": "w-003",
+    "word": "죄송합니다",
+    "pronunciation": "죄송함니다",
+    "meaningJp": "申し訳ございません",
+    "level": "1급",
+    "tag": "일상",
+    "example": "늦어서 죄송합니다.",
+    "examplePronunciation": "느저서 죄송함니다.",
+    "exampleMeaningJp": "遅れて申し訳ございません。"
+  },
+  {
+    "id": "w-004",
+    "word": "이름",
+    "pronunciation": "이름",
+    "meaningJp": "名前",
+    "level": "1급",
+    "tag": "일상",
+    "example": "이름이 뭐예요?",
+    "examplePronunciation": "이르미 뭐예요?",
+    "exampleMeaningJp": "お名前は何ですか。"
+  },
+  {
+    "id": "w-005",
+    "word": "학교",
+    "pronunciation": "학꾜",
+    "meaningJp": "学校",
+    "level": "1급",
+    "tag": "일상",
+    "example": "학교에 갑니다.",
+    "examplePronunciation": "학꾜에 감니다.",
+    "exampleMeaningJp": "学校に行きます。"
+  },
+  {
+    "id": "w-006",
+    "word": "회사",
+    "pronunciation": "회사",
+    "meaningJp": "会社",
+    "level": "1급",
+    "tag": "일상",
+    "example": "회사에서 일합니다.",
+    "examplePronunciation": "회사에서 일함니다.",
+    "exampleMeaningJp": "会社で働いています。"
+  },
+  {
+    "id": "w-007",
+    "word": "친구",
+    "pronunciation": "친구",
+    "meaningJp": "友達",
+    "level": "1급",
+    "tag": "일상",
+    "example": "친구를 만납니다.",
+    "examplePronunciation": "친구를 만남니다.",
+    "exampleMeaningJp": "友達に会います。"
+  },
+  {
+    "id": "w-008",
+    "word": "가족",
+    "pronunciation": "가족",
+    "meaningJp": "家族",
+    "level": "1급",
+    "tag": "일상",
+    "example": "가족과 삽니다.",
+    "examplePronunciation": "가족꽈 삼니다.",
+    "exampleMeaningJp": "家族と暮らしています。"
+  },
+  {
+    "id": "w-009",
+    "word": "먹다",
+    "pronunciation": "먹따",
+    "meaningJp": "食べる",
+    "level": "1급",
+    "tag": "일상",
+    "example": "밥을 먹어요.",
+    "examplePronunciation": "바블 머거요.",
+    "exampleMeaningJp": "ご飯を食べます。"
+  },
+  {
+    "id": "w-010",
+    "word": "마시다",
+    "pronunciation": "마시다",
+    "meaningJp": "飲む",
+    "level": "1급",
+    "tag": "일상",
+    "example": "물을 마셔요.",
+    "examplePronunciation": "무를 마셔요.",
+    "exampleMeaningJp": "水を飲みます。"
+  },
+  {
+    "id": "w-011",
+    "word": "가다",
+    "pronunciation": "가다",
+    "meaningJp": "行く",
+    "level": "1급",
+    "tag": "일상",
+    "example": "집에 가요.",
+    "examplePronunciation": "지베 가요.",
+    "exampleMeaningJp": "家に行きます。"
+  },
+  {
+    "id": "w-012",
+    "word": "오다",
+    "pronunciation": "오다",
+    "meaningJp": "来る",
+    "level": "1급",
+    "tag": "일상",
+    "example": "친구가 와요.",
+    "examplePronunciation": "친구가 와요.",
+    "exampleMeaningJp": "友達が来ます。"
+  },
+  {
+    "id": "w-013",
+    "word": "좋다",
+    "pronunciation": "조타",
+    "meaningJp": "良い",
+    "level": "1급",
+    "tag": "일상",
+    "example": "날씨가 좋아요.",
+    "examplePronunciation": "날씨가 조아요.",
+    "exampleMeaningJp": "天気がいいです。"
+  },
+  {
+    "id": "w-014",
+    "word": "없다",
+    "pronunciation": "업따",
+    "meaningJp": "ない、いない",
+    "level": "1급",
+    "tag": "일상",
+    "example": "시간이 없어요.",
+    "examplePronunciation": "시가니 업써요.",
+    "exampleMeaningJp": "時間がありません。"
+  },
+  {
+    "id": "w-015",
+    "word": "있다",
+    "pronunciation": "읻따",
+    "meaningJp": "ある、いる",
+    "level": "1급",
+    "tag": "일상",
+    "example": "여기 있어요.",
+    "examplePronunciation": "여기 이써요.",
+    "exampleMeaningJp": "ここにあります。"
+  },
+  {
+    "id": "w-016",
+    "word": "시간",
+    "pronunciation": "시간",
+    "meaningJp": "時間",
+    "level": "2급",
+    "tag": "일상",
+    "example": "시간이 얼마나 걸려요?",
+    "examplePronunciation": "시가니 얼마나 걸려요?",
+    "exampleMeaningJp": "時間はどれくらいかかりますか。"
+  },
+  {
+    "id": "w-017",
+    "word": "오늘",
+    "pronunciation": "오늘",
+    "meaningJp": "今日",
+    "level": "2급",
+    "tag": "일상",
+    "example": "오늘은 바빠요.",
+    "examplePronunciation": "오느른 바빠요.",
+    "exampleMeaningJp": "今日は忙しいです。"
+  },
+  {
+    "id": "w-018",
+    "word": "내일",
+    "pronunciation": "내일",
+    "meaningJp": "明日",
+    "level": "2급",
+    "tag": "일상",
+    "example": "내일 만나요.",
+    "examplePronunciation": "내일 만나요.",
+    "exampleMeaningJp": "明日会いましょう。"
+  },
+  {
+    "id": "w-019",
+    "word": "어제",
+    "pronunciation": "어제",
+    "meaningJp": "昨日",
+    "level": "2급",
+    "tag": "일상",
+    "example": "어제 영화를 봤어요.",
+    "examplePronunciation": "어제 영화를 봐써요.",
+    "exampleMeaningJp": "昨日映画を見ました。"
+  },
+  {
+    "id": "w-020",
+    "word": "사람",
+    "pronunciation": "사람",
+    "meaningJp": "人",
+    "level": "2급",
+    "tag": "일상",
+    "example": "저 사람은 누구예요?",
+    "examplePronunciation": "저 사라믄 누구예요?",
+    "exampleMeaningJp": "あの人は誰ですか。"
+  },
+  {
+    "id": "w-021",
+    "word": "한국",
+    "pronunciation": "한국",
+    "meaningJp": "韓国",
+    "level": "2급",
+    "tag": "일상",
+    "example": "한국에 살아요.",
+    "examplePronunciation": "한구게 사라요.",
+    "exampleMeaningJp": "韓国に住んでいます。"
+  },
+  {
+    "id": "w-022",
+    "word": "일본",
+    "pronunciation": "일본",
+    "meaningJp": "日本",
+    "level": "2급",
+    "tag": "일상",
+    "example": "일본에서 왔어요.",
+    "examplePronunciation": "일보네서 와써요.",
+    "exampleMeaningJp": "日本から来ました。"
+  },
+  {
+    "id": "w-023",
+    "word": "공부하다",
+    "pronunciation": "공부하다",
+    "meaningJp": "勉強する",
+    "level": "2급",
+    "tag": "일상",
+    "example": "한국어를 공부해요.",
+    "examplePronunciation": "한구거를 공부해요.",
+    "exampleMeaningJp": "韓国語を勉強します。"
+  },
+  {
+    "id": "w-024",
+    "word": "일하다",
+    "pronunciation": "일하다",
+    "meaningJp": "働く",
+    "level": "2급",
+    "tag": "일상",
+    "example": "매일 일해요.",
+    "examplePronunciation": "매일 이래요.",
+    "exampleMeaningJp": "毎日働きます。"
+  },
+  {
+    "id": "w-025",
+    "word": "여행",
+    "pronunciation": "여행",
+    "meaningJp": "旅行",
+    "level": "2급",
+    "tag": "여행",
+    "example": "여행을 좋아해요.",
+    "examplePronunciation": "여행을 조아해요.",
+    "exampleMeaningJp": "旅行が好きです。"
+  },
+  {
+    "id": "w-026",
+    "word": "날씨",
+    "pronunciation": "날씨",
+    "meaningJp": "天気",
+    "level": "2급",
+    "tag": "일상",
+    "example": "오늘 날씨 어때요?",
+    "examplePronunciation": "오늘 날씨 어때요?",
+    "exampleMeaningJp": "今日の天気はどうですか。"
+  },
+  {
+    "id": "w-027",
+    "word": "음식",
+    "pronunciation": "음식",
+    "meaningJp": "食べ物",
+    "level": "2급",
+    "tag": "여행",
+    "example": "한국 음식을 좋아해요.",
+    "examplePronunciation": "한국 음시글 조아해요.",
+    "exampleMeaningJp": "韓国料理が好きです。"
+  },
+  {
+    "id": "w-028",
+    "word": "사진",
+    "pronunciation": "사진",
+    "meaningJp": "写真",
+    "level": "2급",
+    "tag": "여행",
+    "example": "사진을 찍어요.",
+    "examplePronunciation": "사지늘 찌거요.",
+    "exampleMeaningJp": "写真を撮ります。"
+  },
+  {
+    "id": "w-029",
+    "word": "재미있다",
+    "pronunciation": "재미읻따",
+    "meaningJp": "面白い",
+    "level": "2급",
+    "tag": "일상",
+    "example": "이 영화 재미있어요.",
+    "examplePronunciation": "이 영화 재미이써요.",
+    "exampleMeaningJp": "この映画は面白いです。"
+  },
+  {
+    "id": "w-030",
+    "word": "힘들다",
+    "pronunciation": "힘들다",
+    "meaningJp": "大変だ、疲れる",
+    "level": "2급",
+    "tag": "일상",
+    "example": "오늘 좀 힘들어요.",
+    "examplePronunciation": "오늘 좀 힘드러요.",
+    "exampleMeaningJp": "今日は少し大変です。"
+  },
+  {
+    "id": "w-031",
+    "word": "경험",
+    "pronunciation": "경험",
+    "meaningJp": "経験",
+    "level": "3급",
+    "tag": "일상",
+    "example": "좋은 경험이었어요.",
+    "examplePronunciation": "조은 경허미어써요.",
+    "exampleMeaningJp": "良い経験でした。"
+  },
+  {
+    "id": "w-032",
+    "word": "문화",
+    "pronunciation": "문화",
+    "meaningJp": "文化",
+    "level": "3급",
+    "tag": "일상",
+    "example": "한국 문화에 관심이 많아요.",
+    "examplePronunciation": "한국 문화에 관시미 만아요.",
+    "exampleMeaningJp": "韓国文化に関心があります。"
+  },
+  {
+    "id": "w-033",
+    "word": "환경",
+    "pronunciation": "환경",
+    "meaningJp": "環境",
+    "level": "3급",
+    "tag": "일상",
+    "example": "환경을 보호해야 해요.",
+    "examplePronunciation": "환경을 보호해야 해요.",
+    "exampleMeaningJp": "環境を保護しなければなりません。"
+  },
+  {
+    "id": "w-034",
+    "word": "관계",
+    "pronunciation": "관계",
+    "meaningJp": "関係",
+    "level": "3급",
+    "tag": "일상",
+    "example": "두 사람은 좋은 관계예요.",
+    "examplePronunciation": "두 사라믄 조은 관계예요.",
+    "exampleMeaningJp": "二人は良い関係です。"
+  },
+  {
+    "id": "w-035",
+    "word": "태도",
+    "pronunciation": "태도",
+    "meaningJp": "態度",
+    "level": "3급",
+    "tag": "일상",
+    "example": "태도가 진지해요.",
+    "examplePronunciation": "태도가 진지해요.",
+    "exampleMeaningJp": "態度が真剣です。"
+  },
+  {
+    "id": "w-036",
+    "word": "습관",
+    "pronunciation": "습꽌",
+    "meaningJp": "習慣",
+    "level": "3급",
+    "tag": "일상",
+    "example": "좋은 습관을 만들어요.",
+    "examplePronunciation": "조은 습꽈늘 만드러요.",
+    "exampleMeaningJp": "良い習慣を作ります。"
+  },
+  {
+    "id": "w-037",
+    "word": "준비하다",
+    "pronunciation": "준비하다",
+    "meaningJp": "準備する",
+    "level": "3급",
+    "tag": "일상",
+    "example": "시험을 준비해요.",
+    "examplePronunciation": "시허믈 준비해요.",
+    "exampleMeaningJp": "試験を準備します。"
+  },
+  {
+    "id": "w-038",
+    "word": "결정하다",
+    "pronunciation": "결쩡하다",
+    "meaningJp": "決定する",
+    "level": "3급",
+    "tag": "일상",
+    "example": "아직 결정하지 못했어요.",
+    "examplePronunciation": "아직 결쩡하지 모태써요.",
+    "exampleMeaningJp": "まだ決定していません。"
+  },
+  {
+    "id": "w-039",
+    "word": "계획",
+    "pronunciation": "계획",
+    "meaningJp": "計画",
+    "level": "3급",
+    "tag": "일상",
+    "example": "여행 계획을 세워요.",
+    "examplePronunciation": "여행 계회글 세워요.",
+    "exampleMeaningJp": "旅行の計画を立てます。"
+  },
+  {
+    "id": "w-040",
+    "word": "발전하다",
+    "pronunciation": "발쩐하다",
+    "meaningJp": "発展する",
+    "level": "3급",
+    "tag": "일상",
+    "example": "회사가 발전하고 있어요.",
+    "examplePronunciation": "회사가 발쩐하고 이써요.",
+    "exampleMeaningJp": "会社が発展しています。"
+  },
+  {
+    "id": "w-041",
+    "word": "대화",
+    "pronunciation": "대화",
+    "meaningJp": "対話、会話",
+    "level": "3급",
+    "tag": "일상",
+    "example": "친구와 대화를 나눠요.",
+    "examplePronunciation": "친구와 대화를 나눠요.",
+    "exampleMeaningJp": "友達と対話をします。"
+  },
+  {
+    "id": "w-042",
+    "word": "표현하다",
+    "pronunciation": "표현하다",
+    "meaningJp": "表現する",
+    "level": "3급",
+    "tag": "일상",
+    "example": "감정을 표현해요.",
+    "examplePronunciation": "감저글 표현해요.",
+    "exampleMeaningJp": "感情を表現します。"
+  },
+  {
+    "id": "w-043",
+    "word": "이해하다",
+    "pronunciation": "이해하다",
+    "meaningJp": "理解する",
+    "level": "3급",
+    "tag": "일상",
+    "example": "잘 이해했어요.",
+    "examplePronunciation": "잘 이해해써요.",
+    "exampleMeaningJp": "よく理解しました。"
+  },
+  {
+    "id": "w-044",
+    "word": "설명하다",
+    "pronunciation": "설명하다",
+    "meaningJp": "説明する",
+    "level": "3급",
+    "tag": "일상",
+    "example": "자세히 설명해 주세요.",
+    "examplePronunciation": "자세히 설명해 주세요.",
+    "exampleMeaningJp": "詳しく説明してください。"
+  },
+  {
+    "id": "w-045",
+    "word": "경제",
+    "pronunciation": "경제",
+    "meaningJp": "経済",
+    "level": "3급",
+    "tag": "일상",
+    "example": "경제 뉴스를 봐요.",
+    "examplePronunciation": "경제 뉴스를 봐요.",
+    "exampleMeaningJp": "経済ニュースを見ます。"
+  },
+  {
+    "id": "w-046",
+    "word": "사회",
+    "pronunciation": "사회",
+    "meaningJp": "社会",
+    "level": "3급",
+    "tag": "일상",
+    "example": "사회 문제에 관심이 있어요.",
+    "examplePronunciation": "사회 문제에 관시미 이써요.",
+    "exampleMeaningJp": "社会問題に関心があります。"
+  },
+  {
+    "id": "w-047",
+    "word": "정치",
+    "pronunciation": "정치",
+    "meaningJp": "政治",
+    "level": "3급",
+    "tag": "일상",
+    "example": "정치에 대해 이야기해요.",
+    "examplePronunciation": "정치에 대해 이야기해요.",
+    "exampleMeaningJp": "政治について話します。"
+  },
+  {
+    "id": "w-048",
+    "word": "역사",
+    "pronunciation": "역싸",
+    "meaningJp": "歴史",
+    "level": "3급",
+    "tag": "일상",
+    "example": "한국 역사를 배워요.",
+    "examplePronunciation": "한국 역싸를 배워요.",
+    "exampleMeaningJp": "韓国の歴史を学びます。"
+  },
+  {
+    "id": "w-049",
+    "word": "전통",
+    "pronunciation": "전통",
+    "meaningJp": "伝統",
+    "level": "3급",
+    "tag": "여행",
+    "example": "전통 음식을 먹어요.",
+    "examplePronunciation": "전통 음시글 머거요.",
+    "exampleMeaningJp": "伝統料理を食べます。"
+  },
+  {
+    "id": "w-050",
+    "word": "성격",
+    "pronunciation": "성껵",
+    "meaningJp": "性格",
+    "level": "3급",
+    "tag": "일상",
+    "example": "성격이 밝아요.",
+    "examplePronunciation": "성껴기 발가요.",
+    "exampleMeaningJp": "性格が明るいです。"
+  },
+  {
+    "id": "w-051",
+    "word": "향상되다",
+    "pronunciation": "향상되다",
+    "meaningJp": "向上する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "실력이 향상됐어요.",
+    "examplePronunciation": "실려기 향상돼써요.",
+    "exampleMeaningJp": "実力が向上しました。"
+  },
+  {
+    "id": "w-052",
+    "word": "개선하다",
+    "pronunciation": "개선하다",
+    "meaningJp": "改善する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "문제를 개선해요.",
+    "examplePronunciation": "문제를 개선해요.",
+    "exampleMeaningJp": "問題を改善します。"
+  },
+  {
+    "id": "w-053",
+    "word": "극복하다",
+    "pronunciation": "극뽀카다",
+    "meaningJp": "克服する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "어려움을 극복했어요.",
+    "examplePronunciation": "어려우믈 극뽀케써요.",
+    "exampleMeaningJp": "困難を克服しました。"
+  },
+  {
+    "id": "w-054",
+    "word": "반영하다",
+    "pronunciation": "바녕하다",
+    "meaningJp": "反映する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "의견을 반영해요.",
+    "examplePronunciation": "의겨늘 바녕해요.",
+    "exampleMeaningJp": "意見を反映します。"
+  },
+  {
+    "id": "w-055",
+    "word": "강조하다",
+    "pronunciation": "강조하다",
+    "meaningJp": "強調する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "중요성을 강조해요.",
+    "examplePronunciation": "중요성을 강조해요.",
+    "exampleMeaningJp": "重要性を強調します。"
+  },
+  {
+    "id": "w-056",
+    "word": "유지하다",
+    "pronunciation": "유지하다",
+    "meaningJp": "維持する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "건강을 유지해요.",
+    "examplePronunciation": "건강을 유지해요.",
+    "exampleMeaningJp": "健康を維持します。"
+  },
+  {
+    "id": "w-057",
+    "word": "판단하다",
+    "pronunciation": "판단하다",
+    "meaningJp": "判断する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "스스로 판단해요.",
+    "examplePronunciation": "스스로 판단해요.",
+    "exampleMeaningJp": "自分で判断します。"
+  },
+  {
+    "id": "w-058",
+    "word": "예상하다",
+    "pronunciation": "예상하다",
+    "meaningJp": "予想する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "결과를 예상했어요.",
+    "examplePronunciation": "결과를 예상해써요.",
+    "exampleMeaningJp": "結果を予想しました。"
+  },
+  {
+    "id": "w-059",
+    "word": "조사하다",
+    "pronunciation": "조사하다",
+    "meaningJp": "調査する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "원인을 조사해요.",
+    "examplePronunciation": "워니늘 조사해요.",
+    "exampleMeaningJp": "原因を調査します。"
+  },
+  {
+    "id": "w-060",
+    "word": "협력하다",
+    "pronunciation": "혐녀카다",
+    "meaningJp": "協力する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "서로 협력해요.",
+    "examplePronunciation": "서로 혐녀캐요.",
+    "exampleMeaningJp": "お互いに協力します。"
+  },
+  {
+    "id": "w-061",
+    "word": "실현하다",
+    "pronunciation": "실려나다",
+    "meaningJp": "実現する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "꿈을 실현했어요.",
+    "examplePronunciation": "꾸믈 실려내써요.",
+    "exampleMeaningJp": "夢を実現しました。"
+  },
+  {
+    "id": "w-062",
+    "word": "대응하다",
+    "pronunciation": "대응하다",
+    "meaningJp": "対応する",
+    "level": "4급",
+    "tag": "일상",
+    "example": "빠르게 대응해요.",
+    "examplePronunciation": "빠르게 대응해요.",
+    "exampleMeaningJp": "素早く対応します。"
+  },
+  {
+    "id": "w-063",
+    "word": "갈등",
+    "pronunciation": "갈뜽",
+    "meaningJp": "葛藤",
+    "level": "4급",
+    "tag": "일상",
+    "example": "갈등을 해결해요.",
+    "examplePronunciation": "갈뜽을 해결해요.",
+    "exampleMeaningJp": "葛藤を解決します。"
+  },
+  {
+    "id": "w-064",
+    "word": "부담",
+    "pronunciation": "부담",
+    "meaningJp": "負担",
+    "level": "4급",
+    "tag": "일상",
+    "example": "부담을 느껴요.",
+    "examplePronunciation": "부담을 느껴요.",
+    "exampleMeaningJp": "負担を感じます。"
+  },
+  {
+    "id": "w-065",
+    "word": "기준",
+    "pronunciation": "기준",
+    "meaningJp": "基準",
+    "level": "4급",
+    "tag": "일상",
+    "example": "평가 기준이 달라요.",
+    "examplePronunciation": "평가 기주니 달라요.",
+    "exampleMeaningJp": "評価基準が違います。"
+  },
+  {
+    "id": "w-066",
+    "word": "조건",
+    "pronunciation": "조건",
+    "meaningJp": "条件",
+    "level": "4급",
+    "tag": "일상",
+    "example": "조건에 맞아요.",
+    "examplePronunciation": "조꺼네 마자요.",
+    "exampleMeaningJp": "条件に合います。"
+  },
+  {
+    "id": "w-067",
+    "word": "상황",
+    "pronunciation": "상황",
+    "meaningJp": "状況",
+    "level": "4급",
+    "tag": "일상",
+    "example": "상황이 복잡해요.",
+    "examplePronunciation": "상황이 복짜패요.",
+    "exampleMeaningJp": "状況が複雑です。"
+  },
+  {
+    "id": "w-068",
+    "word": "결과",
+    "pronunciation": "결과",
+    "meaningJp": "結果",
+    "level": "4급",
+    "tag": "일상",
+    "example": "결과가 좋아요.",
+    "examplePronunciation": "결과가 조아요.",
+    "exampleMeaningJp": "結果が良いです。"
+  },
+  {
+    "id": "w-069",
+    "word": "원인",
+    "pronunciation": "워닌",
+    "meaningJp": "原因",
+    "level": "4급",
+    "tag": "일상",
+    "example": "원인을 찾았어요.",
+    "examplePronunciation": "워니늘 차자써요.",
+    "exampleMeaningJp": "原因を見つけました。"
+  },
+  {
+    "id": "w-070",
+    "word": "목표",
+    "pronunciation": "목표",
+    "meaningJp": "目標",
+    "level": "4급",
+    "tag": "일상",
+    "example": "목표를 세워요.",
+    "examplePronunciation": "목표를 세워요.",
+    "exampleMeaningJp": "目標を立てます。"
+  },
+  {
+    "id": "w-071",
+    "word": "통찰력",
+    "pronunciation": "통찰력",
+    "meaningJp": "洞察力",
+    "level": "5급",
+    "tag": "일상",
+    "example": "통찰력이 뛰어나요.",
+    "examplePronunciation": "통찰려기 뛰어나요.",
+    "exampleMeaningJp": "洞察力が優れています。"
+  },
+  {
+    "id": "w-072",
+    "word": "배려하다",
+    "pronunciation": "배려하다",
+    "meaningJp": "配慮する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "상대방을 배려해요.",
+    "examplePronunciation": "상대방을 배려해요.",
+    "exampleMeaningJp": "相手に配慮します。"
+  },
+  {
+    "id": "w-073",
+    "word": "신뢰하다",
+    "pronunciation": "실뢰하다",
+    "meaningJp": "信頼する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "서로 신뢰해요.",
+    "examplePronunciation": "서로 실뢰해요.",
+    "exampleMeaningJp": "お互いに信頼します。"
+  },
+  {
+    "id": "w-074",
+    "word": "타협하다",
+    "pronunciation": "타혀파다",
+    "meaningJp": "妥協する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "결국 타협했어요.",
+    "examplePronunciation": "결국 타혀패써요.",
+    "exampleMeaningJp": "結局妥協しました。"
+  },
+  {
+    "id": "w-075",
+    "word": "논리적",
+    "pronunciation": "놀리적",
+    "meaningJp": "論理的",
+    "level": "5급",
+    "tag": "일상",
+    "example": "논리적으로 설명해요.",
+    "examplePronunciation": "놀리저그로 설명해요.",
+    "exampleMeaningJp": "論理的に説明します。"
+  },
+  {
+    "id": "w-076",
+    "word": "객관적",
+    "pronunciation": "객꽌적",
+    "meaningJp": "客観的",
+    "level": "5급",
+    "tag": "일상",
+    "example": "객관적으로 판단해요.",
+    "examplePronunciation": "객꽌저그로 판단해요.",
+    "exampleMeaningJp": "客観的に判断します。"
+  },
+  {
+    "id": "w-077",
+    "word": "주관적",
+    "pronunciation": "주관적",
+    "meaningJp": "主観的",
+    "level": "5급",
+    "tag": "일상",
+    "example": "주관적인 생각이에요.",
+    "examplePronunciation": "주관저긴 생가기에요.",
+    "exampleMeaningJp": "主観的な考えです。"
+  },
+  {
+    "id": "w-078",
+    "word": "모순되다",
+    "pronunciation": "모순되다",
+    "meaningJp": "矛盾する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "말이 모순돼요.",
+    "examplePronunciation": "마리 모순돼요.",
+    "exampleMeaningJp": "話が矛盾しています。"
+  },
+  {
+    "id": "w-079",
+    "word": "왜곡하다",
+    "pronunciation": "왜고카다",
+    "meaningJp": "歪曲する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "사실을 왜곡했어요.",
+    "examplePronunciation": "사시를 왜고캐써요.",
+    "exampleMeaningJp": "事実を歪曲しました。"
+  },
+  {
+    "id": "w-080",
+    "word": "초래하다",
+    "pronunciation": "초래하다",
+    "meaningJp": "招く、もたらす",
+    "level": "5급",
+    "tag": "일상",
+    "example": "큰 문제를 초래했어요.",
+    "examplePronunciation": "큰 문제를 초래해써요.",
+    "exampleMeaningJp": "大きな問題を招きました。"
+  },
+  {
+    "id": "w-081",
+    "word": "좌우하다",
+    "pronunciation": "좌우하다",
+    "meaningJp": "左右する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "결과를 좌우해요.",
+    "examplePronunciation": "결과를 좌우해요.",
+    "exampleMeaningJp": "結果を左右します。"
+  },
+  {
+    "id": "w-082",
+    "word": "간과하다",
+    "pronunciation": "간과하다",
+    "meaningJp": "看過する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "문제를 간과했어요.",
+    "examplePronunciation": "문제를 간과해써요.",
+    "exampleMeaningJp": "問題を看過しました。"
+  },
+  {
+    "id": "w-083",
+    "word": "재고하다",
+    "pronunciation": "재고하다",
+    "meaningJp": "再考する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "계획을 재고해요.",
+    "examplePronunciation": "계회글 재고해요.",
+    "exampleMeaningJp": "計画を再考します。"
+  },
+  {
+    "id": "w-084",
+    "word": "함축하다",
+    "pronunciation": "함추카다",
+    "meaningJp": "含蓄する、含意する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "깊은 뜻을 함축해요.",
+    "examplePronunciation": "기픈 뜨슬 함추캐요.",
+    "exampleMeaningJp": "深い意味を含んでいます。"
+  },
+  {
+    "id": "w-085",
+    "word": "지향하다",
+    "pronunciation": "지향하다",
+    "meaningJp": "志向する",
+    "level": "5급",
+    "tag": "일상",
+    "example": "평화를 지향해요.",
+    "examplePronunciation": "평화를 지향해요.",
+    "exampleMeaningJp": "平和を志向します。"
+  },
+  {
+    "id": "w-086",
+    "word": "불가피하다",
+    "pronunciation": "불가피하다",
+    "meaningJp": "不可避だ",
+    "level": "6급",
+    "tag": "일상",
+    "example": "변화는 불가피해요.",
+    "examplePronunciation": "변화는 불가피해요.",
+    "exampleMeaningJp": "変化は不可避です。"
+  },
+  {
+    "id": "w-087",
+    "word": "편파적",
+    "pronunciation": "편파적",
+    "meaningJp": "偏頗的、偏った",
+    "level": "6급",
+    "tag": "일상",
+    "example": "편파적인 보도예요.",
+    "examplePronunciation": "편파저긴 보도예요.",
+    "exampleMeaningJp": "偏った報道です。"
+  },
+  {
+    "id": "w-088",
+    "word": "무궁무진하다",
+    "pronunciation": "무궁무진하다",
+    "meaningJp": "無尽蔵だ",
+    "level": "6급",
+    "tag": "일상",
+    "example": "가능성이 무궁무진해요.",
+    "examplePronunciation": "가능성이 무궁무진해요.",
+    "exampleMeaningJp": "可能性が無限です。"
+  },
+  {
+    "id": "w-089",
+    "word": "심오하다",
+    "pronunciation": "시모하다",
+    "meaningJp": "深遠だ",
+    "level": "6급",
+    "tag": "일상",
+    "example": "심오한 의미가 있어요.",
+    "examplePronunciation": "시모한 의미가 이써요.",
+    "exampleMeaningJp": "深遠な意味があります。"
+  },
+  {
+    "id": "w-090",
+    "word": "첨예하다",
+    "pronunciation": "처몌하다",
+    "meaningJp": "先鋭だ、鋭い",
+    "level": "6급",
+    "tag": "일상",
+    "example": "의견 대립이 첨예해요.",
+    "examplePronunciation": "의견 대리비 처몌해요.",
+    "exampleMeaningJp": "意見の対立が先鋭化しています。"
+  },
+  {
+    "id": "w-091",
+    "word": "유례없다",
+    "pronunciation": "유례업따",
+    "meaningJp": "類例がない",
+    "level": "6급",
+    "tag": "일상",
+    "example": "유례없는 성과예요.",
+    "examplePronunciation": "유례엄는 성과예요.",
+    "exampleMeaningJp": "類例のない成果です。"
+  },
+  {
+    "id": "w-092",
+    "word": "획기적",
+    "pronunciation": "획끼적",
+    "meaningJp": "画期的",
+    "level": "6급",
+    "tag": "일상",
+    "example": "획기적인 발명이에요.",
+    "examplePronunciation": "획끼저긴 발명이에요.",
+    "exampleMeaningJp": "画期的な発明です。"
+  },
+  {
+    "id": "w-093",
+    "word": "지대하다",
+    "pronunciation": "지대하다",
+    "meaningJp": "至大だ",
+    "level": "6급",
+    "tag": "일상",
+    "example": "영향이 지대해요.",
+    "examplePronunciation": "영향이 지대해요.",
+    "exampleMeaningJp": "影響が非常に大きいです。"
+  },
+  {
+    "id": "w-094",
+    "word": "만연하다",
+    "pronunciation": "마년하다",
+    "meaningJp": "蔓延する",
+    "level": "6급",
+    "tag": "일상",
+    "example": "거짓 정보가 만연해요.",
+    "examplePronunciation": "거짇 정보가 마년해요.",
+    "exampleMeaningJp": "偽情報が蔓延しています。"
+  },
+  {
+    "id": "w-095",
+    "word": "도외시하다",
+    "pronunciation": "도외시하다",
+    "meaningJp": "度外視する",
+    "level": "6급",
+    "tag": "일상",
+    "example": "현실을 도외시했어요.",
+    "examplePronunciation": "현시를 도외시해써요.",
+    "exampleMeaningJp": "現実を度外視しました。"
+  },
+  {
+    "id": "w-096",
+    "word": "편중되다",
+    "pronunciation": "편중되다",
+    "meaningJp": "偏重する",
+    "level": "6급",
+    "tag": "일상",
+    "example": "한쪽으로 편중돼요.",
+    "examplePronunciation": "한쪼그로 편중돼요.",
+    "exampleMeaningJp": "一方に偏っています。"
+  },
+  {
+    "id": "w-097",
+    "word": "상충하다",
+    "pronunciation": "상충하다",
+    "meaningJp": "相反する、抵触する",
+    "level": "6급",
+    "tag": "일상",
+    "example": "의견이 상충해요.",
+    "examplePronunciation": "의겨니 상충해요.",
+    "exampleMeaningJp": "意見が相反します。"
+  },
+  {
+    "id": "w-098",
+    "word": "파급되다",
+    "pronunciation": "파급되다",
+    "meaningJp": "波及する",
+    "level": "6급",
+    "tag": "일상",
+    "example": "영향이 파급돼요.",
+    "examplePronunciation": "영향이 파급돼요.",
+    "exampleMeaningJp": "影響が波及します。"
+  },
+  {
+    "id": "w-099",
+    "word": "유동적",
+    "pronunciation": "유동적",
+    "meaningJp": "流動的",
+    "level": "6급",
+    "tag": "일상",
+    "example": "상황이 유동적이에요.",
+    "examplePronunciation": "상황이 유동저기에요.",
+    "exampleMeaningJp": "状況が流動的です。"
+  },
+  {
+    "id": "w-100",
+    "word": "전제하다",
+    "pronunciation": "전제하다",
+    "meaningJp": "前提とする",
+    "level": "6급",
+    "tag": "일상",
+    "example": "조건을 전제해요.",
+    "examplePronunciation": "조꺼늘 전제해요.",
+    "exampleMeaningJp": "条件を前提とします。"
+  }
+];
+const GRAMMAR_KR = [
+  {
+    "id": "g-001",
+    "level": "1급",
+    "pattern": "은/는",
+    "titleJp": "主題を表す助詞(は)",
+    "connection": "名詞(パッチム有:은／パッチム無:는)",
+    "example": "저는 학생입니다.",
+    "exampleMeaningJp": "私は学生です。",
+    "japaneseNote": "日本語の「は」とほぼ同じ役割です。前の名詞にパッチム(終声)があれば「은」、なければ「는」を使います。"
+  },
+  {
+    "id": "g-002",
+    "level": "1급",
+    "pattern": "이/가",
+    "titleJp": "主格助詞(が)",
+    "connection": "名詞(パッチム有:이／パッチム無:가)",
+    "example": "친구가 옵니다.",
+    "exampleMeaningJp": "友達が来ます。",
+    "japaneseNote": "日本語の「が」に対応します。은/는(は)との使い分けは日本語話者にも馴染み深い感覚です。"
+  },
+  {
+    "id": "g-003",
+    "level": "1급",
+    "pattern": "을/를",
+    "titleJp": "目的格助詞(を)",
+    "connection": "名詞(パッチム有:을／パッチム無:를)",
+    "example": "밥을 먹습니다.",
+    "exampleMeaningJp": "ご飯を食べます。",
+    "japaneseNote": "日本語の「を」と同じ位置に来ます。パッチムの有無で形が変わる点だけ意識すれば簡単です。"
+  },
+  {
+    "id": "g-004",
+    "level": "1급",
+    "pattern": "~아요/어요",
+    "titleJp": "打ち解けた丁寧形(現在)",
+    "connection": "語幹末の母音がㅏ,ㅗ→아요／それ以外→어요",
+    "example": "학교에 가요.",
+    "exampleMeaningJp": "学校に行きます。",
+    "japaneseNote": "「~です/ます」よりカジュアルな丁寧語です。友人や年下の相手にもよく使われる、会話で最も頻度の高い文型です。"
+  },
+  {
+    "id": "g-005",
+    "level": "1급",
+    "pattern": "~ㅂ니다/습니다",
+    "titleJp": "かしこまった丁寧形",
+    "connection": "語幹(パッチム無:ㅂ니다／パッチム有:습니다)",
+    "example": "감사합니다.",
+    "exampleMeaningJp": "ありがとうございます。",
+    "japaneseNote": "日本語の「です・ます」の中でもより formal な言い方に近く、ニュースや発表、初対面のあいさつでよく使われます。"
+  },
+  {
+    "id": "g-006",
+    "level": "1급",
+    "pattern": "~고 싶다",
+    "titleJp": "希望表現(~したい)",
+    "connection": "動詞語幹 + 고 싶다",
+    "example": "한국에 가고 싶어요.",
+    "exampleMeaningJp": "韓国に行きたいです。",
+    "japaneseNote": "日本語の「~たい」とほぼ同じ位置・意味で使えるので、日本語話者には直感的に理解しやすい文型です。"
+  },
+  {
+    "id": "g-007",
+    "level": "1급",
+    "pattern": "~지 않다",
+    "titleJp": "否定表現(~しない)",
+    "connection": "動詞・形容詞語幹 + 지 않다",
+    "example": "이 음식은 맵지 않아요.",
+    "exampleMeaningJp": "この料理は辛くありません。",
+    "japaneseNote": "日本語の「~ない」に対応します。안 + 動詞という短い否定形もありますが、지 않다はより丁寧で書き言葉にも使えます。"
+  },
+  {
+    "id": "g-008",
+    "level": "1급",
+    "pattern": "~에서",
+    "titleJp": "場所を表す助詞(で)",
+    "connection": "名詞 + 에서",
+    "example": "학교에서 공부해요.",
+    "exampleMeaningJp": "学校で勉強します。",
+    "japaneseNote": "日本語の「~で(場所)」と同じ。존재の場所を表す「에」とは違い、動作が行われる場所に使う点に注意しましょう。"
+  },
+  {
+    "id": "g-009",
+    "level": "2급",
+    "pattern": "~(으)러 가다/오다",
+    "titleJp": "目的表現(~しに行く/来る)",
+    "connection": "動詞語幹(パッチム無:러／パッチム有:으러) + 가다/오다",
+    "example": "밥을 먹으러 가요.",
+    "exampleMeaningJp": "ご飯を食べに行きます。",
+    "japaneseNote": "日本語の「~しに行く」と語順・意味がほぼ同じなので覚えやすい文型です。"
+  },
+  {
+    "id": "g-010",
+    "level": "2급",
+    "pattern": "~아/어서",
+    "titleJp": "理由・順序表現(~て/~ので)",
+    "connection": "語幹末の母音がㅏ,ㅗ→아서／それ以外→어서",
+    "example": "배고파서 밥을 먹어요.",
+    "exampleMeaningJp": "お腹が空いたのでご飯を食べます。",
+    "japaneseNote": "理由を表す時は日本語の「~ので」、動作の順序を表す時は「~て」に近い感覚です。文脈で判断します。"
+  },
+  {
+    "id": "g-011",
+    "level": "2급",
+    "pattern": "~(으)면",
+    "titleJp": "仮定表現(~れば/~たら)",
+    "connection": "動詞・形容詞語幹(パッチム無:면／パッチム有:으면)",
+    "example": "비가 오면 집에 있어요.",
+    "exampleMeaningJp": "雨が降ったら家にいます。",
+    "japaneseNote": "日本語の「~ば/~たら」に対応する最も基本的な仮定表現です。"
+  },
+  {
+    "id": "g-012",
+    "level": "2급",
+    "pattern": "~(으)ㄹ 수 있다/없다",
+    "titleJp": "可能表現(~できる/できない)",
+    "connection": "動詞語幹(パッチム無:ㄹ 수 있다／パッチム有:을 수 있다)",
+    "example": "한국어를 할 수 있어요.",
+    "exampleMeaningJp": "韓国語ができます。",
+    "japaneseNote": "日本語の「~ことができる」に対応。可能・不可能をはっきり伝える丁寧な言い方です。"
+  },
+  {
+    "id": "g-013",
+    "level": "2급",
+    "pattern": "~아/어야 하다",
+    "titleJp": "必要・義務表現(~しなければならない)",
+    "connection": "語幹末の母音がㅏ,ㅗ→아야 하다／それ以外→어야 하다",
+    "example": "내일 일찍 일어나야 해요.",
+    "exampleMeaningJp": "明日早く起きなければなりません。",
+    "japaneseNote": "日本語の「~なければならない」に対応する義務表現です。"
+  },
+  {
+    "id": "g-014",
+    "level": "2급",
+    "pattern": "~(으)니까",
+    "titleJp": "理由表現(~だから、口語的)",
+    "connection": "動詞・形容詞語幹(パッチム無:니까／パッチム有:으니까)",
+    "example": "비싸니까 안 살래요.",
+    "exampleMeaningJp": "高いから買いません。",
+    "japaneseNote": "日本語の「~から」に近い会話でよく使う理由表現。아/어서より主観的で、命令や勧誘の前にもよく使われます。"
+  },
+  {
+    "id": "g-015",
+    "level": "2급",
+    "pattern": "~기 전에 / ~(으)ㄴ 후에",
+    "titleJp": "順序表現(~する前に/~した後に)",
+    "connection": "動詞語幹 + 기 전에 ／ 動詞語幹(パッチム無:ㄴ 후에／パッチム有:은 후에)",
+    "example": "밥을 먹기 전에 손을 씻어요.",
+    "exampleMeaningJp": "ご飯を食べる前に手を洗います。",
+    "japaneseNote": "日本語の「~する前に」「~した後に」とそれぞれ対応する、順序を表す基本文型です。"
+  }
+];
+const TRAVEL_KR = [
+  {
+    "id": "t-001",
+    "scene": "空港",
+    "level": "1급",
+    "korean": "여권 부탁드립니다.",
+    "pronunciation": "여꿘 부탁드림니다.",
+    "japanese": "パスポートをお願いします。",
+    "note": "入国審査で最初に言われる/使うフレーズ"
+  },
+  {
+    "id": "t-002",
+    "scene": "空港",
+    "level": "1급",
+    "korean": "짐은 어디에 있나요?",
+    "pronunciation": "지믄 어디에 인나요?",
+    "japanese": "荷物はどこにありますか。",
+    "note": "手荷物受取所を探すとき"
+  },
+  {
+    "id": "t-003",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "메뉴 좀 보여주세요.",
+    "pronunciation": "메뉴 좀 보여주세요.",
+    "japanese": "メニューを見せてください。",
+    "note": "席についた直後に"
+  },
+  {
+    "id": "t-004",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "이거 주세요.",
+    "pronunciation": "이거 주세요.",
+    "japanese": "これをください。",
+    "note": "メニューを指差しながら使える"
+  },
+  {
+    "id": "t-005",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "계산해 주세요.",
+    "pronunciation": "계산해 주세요.",
+    "japanese": "お会計をお願いします。",
+    "note": "食事の後に"
+  },
+  {
+    "id": "t-006",
+    "scene": "宿泊先",
+    "level": "1급",
+    "korean": "체크인 하고 싶어요.",
+    "pronunciation": "체크인 하고 시퍼요.",
+    "japanese": "チェックインしたいです。",
+    "note": "フロント到着時"
+  },
+  {
+    "id": "t-007",
+    "scene": "宿泊先",
+    "level": "2급",
+    "korean": "와이파이 비밀번호가 뭐예요?",
+    "pronunciation": "와이파이 비밀버노가 뭐예요?",
+    "japanese": "Wi-Fiのパスワードは何ですか。",
+    "note": "チェックイン直後に聞くとよい"
+  },
+  {
+    "id": "t-008",
+    "scene": "道案内",
+    "level": "1급",
+    "korean": "여기가 어디예요?",
+    "pronunciation": "여기가 어디예요?",
+    "japanese": "ここはどこですか。",
+    "note": "地図を見せながら聞くとより正確"
+  },
+  {
+    "id": "t-009",
+    "scene": "道案内",
+    "level": "1급",
+    "korean": "역까지 어떻게 가요?",
+    "pronunciation": "역까지 어떠케 가요?",
+    "japanese": "駅までどう行きますか。",
+    "note": "道を尋ねる基本表現"
+  },
+  {
+    "id": "t-010",
+    "scene": "ショッピング",
+    "level": "1급",
+    "korean": "이거 얼마예요?",
+    "pronunciation": "이거 얼마예요?",
+    "japanese": "これはいくらですか。",
+    "note": "買い物の基本表現"
+  },
+  {
+    "id": "t-011",
+    "scene": "ショッピング",
+    "level": "2급",
+    "korean": "다른 색 있어요?",
+    "pronunciation": "다른 색 이써요?",
+    "japanese": "他の色はありますか。",
+    "note": "服や小物を選ぶときに便利"
+  },
+  {
+    "id": "t-012",
+    "scene": "病院",
+    "level": "2급",
+    "korean": "몸이 안 좋아요.",
+    "pronunciation": "모미 안 조아요.",
+    "japanese": "体調が悪いです。",
+    "note": "体調不良を伝える基本表現"
+  },
+  {
+    "id": "t-013",
+    "scene": "病院",
+    "level": "2급",
+    "korean": "근처에 약국 있어요?",
+    "pronunciation": "근처에 약꾹 이써요?",
+    "japanese": "近くに薬局はありますか。",
+    "note": "薬を探すときに"
+  },
+  {
+    "id": "t-014",
+    "scene": "公共交通",
+    "level": "2급",
+    "korean": "이 버스 시청 가요?",
+    "pronunciation": "이 버스 시청 가요?",
+    "japanese": "このバスは市庁に行きますか。",
+    "note": "路線が不安なときの確認用"
+  },
+  {
+    "id": "t-015",
+    "scene": "公共交通",
+    "level": "1급",
+    "korean": "다음 역이 어디예요?",
+    "pronunciation": "다음 여기 어디예요?",
+    "japanese": "次の駅はどこですか。",
+    "note": "降りる駅を逃さないために"
+  },
+  {
+    "id": "t-016",
+    "scene": "緊急事態",
+    "level": "1급",
+    "korean": "도와주세요.",
+    "pronunciation": "도와주세요.",
+    "japanese": "助けてください。",
+    "note": "緊急時に最初に使う言葉"
+  }
+];
+
+const STATUS_LABEL = { new: '신규/新規', learning: '학습중/学習中', due: '복습필요/復習必要', mastered: '숙련/習熟済み' };
+
+// ==================== 실제 Firestore 연동 SRS 훅 (모든 덱 공용) ====================
+function useSrsDeck(user, deckName, masterList) {
+  const [progress, setProgress] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [seeded, setSeeded] = useState(false);
+  const [error, setError] = useState(null);
+  const uid = user ? user.uid : null;
+
+  useEffect(() => { setSeeded(false); }, [deckName]);
+
+  useEffect(() => {
+    if (!uid) { setProgress({}); setLoading(false); return; }
+    setLoading(true);
+    setError(null);
+    const colRef = db.collection('users').doc(uid).collection(deckName);
+    const unsub = colRef.onSnapshot(
+      (snapshot) => {
+        const p = {};
+        snapshot.forEach((docSnap) => { p[docSnap.id] = docSnap.data(); });
+        setProgress(p);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('[' + deckName + '] Firestore 오류:', err.code, err.message);
+        setError(err);
+        setLoading(false);
+      }
+    );
+    return () => unsub();
+  }, [uid, deckName]);
+
+  useEffect(() => {
+    if (!uid || loading || seeded || error) return;
+    const existingIds = new Set(Object.keys(progress));
+    const missing = masterList.filter((item) => !existingIds.has(item.id));
+    if (missing.length === 0) { setSeeded(true); return; }
+    const batch = db.batch();
+    const colRef = db.collection('users').doc(uid).collection(deckName);
+    missing.forEach((item) => {
+      batch.set(colRef.doc(item.id), {
+        repetition: 0,
+        easeFactor: 2.5,
+        interval: 0,
+        nextReview: new Date().toISOString(),
+        lastReviewed: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    batch.commit().then(() => setSeeded(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, deckName, loading, seeded, error]);
+
+  const items = useMemo(() => masterList.map((item) => {
+    const srs = progress[item.id];
+    return { ...item, srs, status: getStatus(srs), due: isDue(srs), sourceDeck: deckName };
+  }), [progress, masterList, deckName]);
+
+  const dueItems = useMemo(() => items.filter((i) => i.due), [items]);
+
+  const submitReview = useCallback((itemId, quality) => {
+    if (!uid) return;
+    const current = progress[itemId];
+    const next = scheduleNext(current, quality);
+    setProgress((prev) => ({ ...prev, [itemId]: { ...current, ...next } }));
+    db.collection('users').doc(uid).collection(deckName).doc(itemId).set(
+      { ...next, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+  }, [uid, deckName, progress]);
+
+  const toggleBookmark = useCallback((itemId, nextValue) => {
+    if (!uid) return;
+    const current = progress[itemId];
+    const value = nextValue !== undefined ? nextValue : !(current && current.bookmarked);
+    setProgress((prev) => ({ ...prev, [itemId]: { ...prev[itemId], bookmarked: value } }));
+    db.collection('users').doc(uid).collection(deckName).doc(itemId).set(
+      { bookmarked: value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+  }, [uid, deckName, progress]);
+
+  const bookmarkedItems = useMemo(() => items.filter((i) => i.srs && i.srs.bookmarked), [items]);
+
+  const stats = useMemo(() => {
+    const total = items.length;
+    const due = dueItems.length;
+    const mastered = items.filter((i) => i.status === 'mastered').length;
+    return { total, due, mastered };
+  }, [items, dueItems]);
+
+  return { items, dueItems, bookmarkedItems, loading, error, submitReview, toggleBookmark, stats };
+}
+
+// ==================== JA 섹션 (일본어 학습, UI 한국어) ====================
+
+const JA_DECK_LABELS = { words: '단어', grammar: '문법', kanji: '한자', travel: '회화' };
+const JA_ANSWER_GETTERS = {
+  words: (i) => i.meaning,
+  grammar: (i) => i.title,
+  kanji: (i) => i.meaning,
+  travel: (i) => i.korean,
+};
+function jaSplitChars(text) { return Array.from(text || ''); }
+function jaSpeechText(deckType, item) {
+  if (deckType === 'words') return item.exampleReading || item.example;
+  if (deckType === 'grammar') return item.exampleReading || item.example;
+  if (deckType === 'travel') return item.reading || item.japanese;
+  if (deckType === 'kanji') return (item.examples && item.examples[0] && item.examples[0].reading) || item.char;
+  return null;
+}
+function jaRenderQuestion(deckType, item) {
+  if (deckType === 'words') {
+    return (<React.Fragment>
+      <div className="genkou-row">{jaSplitChars(item.word).map((ch, i) => (<div className="genkou-cell" key={i}><span className="char">{ch}</span></div>))}</div>
+      <div className="reading">{item.reading}</div>
+    </React.Fragment>);
+  }
+  if (deckType === 'kanji') return <div className="genkou-square"><span className="char">{item.char}</span></div>;
+  if (deckType === 'grammar') return <div className="pattern-plate"><div className="pattern jp-text">{item.pattern}</div></div>;
+  return (<div className="pattern-plate">
+    <div className="scene-tag">{item.scene}</div>
+    <div className="pattern jp-text" style={{ fontSize: 19 }}>{item.japanese}</div>
+    <div className="meaning-hint">{item.reading}</div>
+  </div>);
+}
+function jaRenderDetail(deckType, item) {
+  if (deckType === 'words') return <div className="example">{item.example}<br/>({item.exampleReading})<br/>{item.exampleMeaning}</div>;
+  if (deckType === 'grammar') return (<React.Fragment>
+    <div className="connection-note"><strong>접속</strong> · {item.connection}</div>
+    <div className="example">{item.example}<br/>({item.exampleReading})<br/>{item.exampleMeaning}</div>
+    <div className="korean-contrast"><strong>한국인 학습자 노트</strong><br/>{item.koreanNote}</div>
+  </React.Fragment>);
+  if (deckType === 'kanji') return (<React.Fragment>
+    <div className="reading">음독 {item.onyomi} · 훈독 {item.kunyomi}</div>
+    <div className="korean-contrast"><strong>한국 한자음: {item.koreanSound}</strong><br/>{item.note}</div>
+    <div className="example" style={{ textAlign: 'left' }}>
+      {item.examples.map((ex, i) => (<div key={i} style={{ marginBottom: 6 }}><span className="jp-text">{ex.word}</span> ({ex.reading}) — {ex.meaning}</div>))}
+    </div>
+  </React.Fragment>);
+  return <div className="connection-note">{item.note}</div>;
+}
+
+function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
+  const deckType = item.sourceDeck;
+  const [selected, setSelected] = useState(null);
+  const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
+  const getAnswer = JA_ANSWER_GETTERS[deckType];
+  const correctText = useMemo(() => getAnswer(item), [item]);
+  const options = useMemo(() => buildOptions(item, pool, getAnswer, 4), [item, pool]);
+  const speechText = useMemo(() => jaSpeechText(deckType, item), [deckType, item]);
+  const answered = selected !== null;
+  const isCorrect = selected === correctText;
+
+  useEffect(() => cancelSpeech, []);
+  useEffect(() => {
+    if (deckType === 'travel' && speechText) {
+      const t = setTimeout(() => speakJapanese(speechText), 500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleSelect(opt) {
+    if (answered) return;
+    const correct = opt === correctText;
+    setSelected(opt);
+    if (correct) playCorrectSound(); else playWrongSound();
+    if (speechText) setTimeout(() => speakJapanese(speechText), 500);
+  }
+  function handleNext() { onResult(item.id, isCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck); }
+  function handleToggleBookmark() {
+    const next = !bookmarked;
+    setBookmarkedState(next);
+    onToggleBookmark(item, next);
+  }
+
+  return (
+    <div className="genkou-card">
+      <span className="hanko">{item.level}</span>
+      <div style={{ marginTop: 8 }}>
+        {jaRenderQuestion(deckType, item)}
+        <div className="option-list">
+          {options.map((opt) => {
+            let cls = 'option-btn';
+            if (answered) { if (opt === correctText) cls += ' option-correct'; else if (opt === selected) cls += ' option-wrong'; }
+            return <button key={opt} className={cls} onClick={() => handleSelect(opt)} disabled={answered}>{opt}</button>;
+          })}
+        </div>
+        {answered && (<React.Fragment>
+          <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '정답입니다!' : ('오답입니다. 정답: ' + correctText)}</div>
+          {jaRenderDetail(deckType, item)}
+          {speechText && <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>}
+          <div className="action-row">
+            <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
+            <button className="primary-btn" onClick={handleNext}>다음</button>
+          </div>
+        </React.Fragment>)}
+      </div>
+    </div>
+  );
+}
+
+function JaDashboard({ stats, onStartStudy, emptyMessage }) {
+  if (stats.total === 0) return <div className="empty-state">{emptyMessage || <React.Fragment>이 급수의 콘텐츠가 아직 준비되지 않았습니다.<br/>다른 급수를 선택해주세요.</React.Fragment>}</div>;
+  return (
+    <div>
+      <div className="stat-grid">
+        <div className="stat-box"><div className="num">{stats.total}</div><div className="label">전체</div></div>
+        <div className="stat-box"><div className="num">{stats.due}</div><div className="label">오늘 학습</div></div>
+        <div className="stat-box"><div className="num">{stats.mastered}</div><div className="label">숙련</div></div>
+      </div>
+      <button className="primary-btn" disabled={stats.due === 0} onClick={onStartStudy}>{stats.due > 0 ? ('학습 시작 (' + stats.due + '개)') : '오늘 학습 완료'}</button>
+    </div>
+  );
+}
+function JaLevelPicker({ levelCounts, onSelect }) {
+  const LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+  return (
+    <div>
+      <div className="empty-state" style={{ padding: '4px 4px 16px' }}>학습할 급수를 선택하세요.</div>
+      <div className="level-picker">
+        {LEVELS.map((lv) => {
+          const count = levelCounts[lv] || 0;
+          return <button key={lv} className="level-btn" disabled={count === 0} onClick={() => onSelect(lv)}><span className="level-btn-label mono">{lv}</span><span className="level-btn-count">{count > 0 ? (count + '개') : '준비중'}</span></button>;
+        })}
+      </div>
+    </div>
+  );
+}
+function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish }) {
+  const [queue, setQueue] = useState(dueItems);
+  const [doneCount, setDoneCount] = useState(0);
+  const totalCount = useMemo(() => dueItems.length, [dueItems]);
+  if (queue.length === 0) return <div className="empty-state"><p>오늘 학습할 항목이 없습니다 🎉</p><button className="primary-btn" onClick={onFinish}>목록으로</button></div>;
+  const current = queue[0];
+  function handleResult(itemId, quality, sourceDeck) {
+    submitReview(itemId, quality, sourceDeck);
+    setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
+    if (quality >= RATING.HARD) setDoneCount((d) => d + 1);
+  }
+  return (
+    <div>
+      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{doneCount} / {totalCount}</div>
+      <JaQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+    </div>
+  );
+}
+function JaListView({ deckType, items, onRemove }) {
+  const SCENES = ['전체', '공항', '식당', '숙소', '길찾기', '쇼핑', '병원', '대중교통', '긴급상황', '비즈니스'];
+  const [scene, setScene] = useState('전체');
+  const showSceneFilter = deckType === 'travel';
+  const filtered = showSceneFilter && scene !== '전체' ? items.filter((i) => i.scene === scene) : items;
+  function primary(i) {
+    const dt = deckType === 'review' ? i.sourceDeck : deckType;
+    if (dt === 'words') return i.word;
+    if (dt === 'grammar') return i.pattern;
+    if (dt === 'kanji') return i.char;
+    return i.japanese;
+  }
+  function secondary(i) {
+    const dt = deckType === 'review' ? i.sourceDeck : deckType;
+    if (dt === 'words') return i.meaning;
+    if (dt === 'grammar') return i.title;
+    if (dt === 'kanji') return i.meaning + ' · 한국음 ' + i.koreanSound;
+    return i.korean;
+  }
+  if (items.length === 0) {
+    return deckType === 'review'
+      ? <div className="empty-state">복습노트가 비어 있습니다.<br/>학습 중 "☆ 복습에 추가" 버튼을 누르면 여기에 모입니다.</div>
+      : <div className="empty-state">아직 콘텐츠가 없습니다.</div>;
+  }
+  return (
+    <div>
+      {showSceneFilter && (<div className="level-tabs">{SCENES.map((s) => (<button key={s} className={scene === s ? 'active' : ''} onClick={() => setScene(s)}>{s}</button>))}</div>)}
+      {filtered.length === 0 ? <div className="empty-state">해당 장면의 회화가 없습니다.</div> : (
+        <div>
+          {filtered.map((i) => (
+            <div className="word-row" key={deckType === 'review' ? (i.sourceDeck + '-' + i.id) : i.id}>
+              <div className="info">
+                <div className="jp">{primary(i)}{deckType === 'review' && <span className="deck-tag" style={{ marginLeft: 6 }}>{JA_DECK_LABELS[i.sourceDeck]}</span>}</div>
+                <div className="kr">{secondary(i)}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className={'status-badge status-' + i.status}>{STATUS_LABEL[i.status]}</span>
+                {deckType === 'review' && <button className="remove-btn" onClick={() => onRemove(i)}>제거</button>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function JaSection({ user }) {
+  const [deckType, setDeckType] = useState('words');
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [tab, setTab] = useState('dashboard');
+
+  const wordDeck = useSrsDeck(user, 'ja_words', VOCAB_JA);
+  const grammarDeck = useSrsDeck(user, 'ja_grammar', GRAMMAR_JA);
+  const kanjiDeck = useSrsDeck(user, 'ja_kanji', KANJI_JA);
+  const travelDeck = useSrsDeck(user, 'ja_travel', TRAVEL_JA);
+  const decks = { words: wordDeck, grammar: grammarDeck, kanji: kanjiDeck, travel: travelDeck };
+
+  const anyLoading = wordDeck.loading || grammarDeck.loading || kanjiDeck.loading || travelDeck.loading;
+  const anyError = wordDeck.error || grammarDeck.error || kanjiDeck.error || travelDeck.error;
+
+  const bookmarkedItems = useMemo(() => [
+    ...wordDeck.bookmarkedItems, ...grammarDeck.bookmarkedItems, ...kanjiDeck.bookmarkedItems, ...travelDeck.bookmarkedItems,
+  ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, kanjiDeck.bookmarkedItems, travelDeck.bookmarkedItems]);
+
+  const isReview = deckType === 'review';
+  const activeDeck = isReview ? null : decks[deckType];
+  const unscopedItems = isReview ? bookmarkedItems : activeDeck.items;
+  const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
+  const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
+  const scopedDueItems = useMemo(() => (isReview ? scopedItems : scopedItems.filter((i) => i.due)), [isReview, scopedItems]);
+  const scopedStats = useMemo(() => ({ total: scopedItems.length, due: scopedDueItems.length, mastered: scopedItems.filter((i) => i.status === 'mastered').length }), [scopedItems, scopedDueItems]);
+  const levelCounts = useMemo(() => { const c = {}; unscopedItems.forEach((i) => { c[i.level] = (c[i.level] || 0) + 1; }); return c; }, [unscopedItems]);
+
+  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); }
+  function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
+  function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
+
+  return (
+    <React.Fragment>
+      <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
+      <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
+
+      {anyLoading ? (
+        <div className="empty-state">학습 데이터 불러오는 중...</div>
+      ) : anyError ? (
+        <div className="empty-state">데이터를 불러오지 못했습니다.<br/>Firestore 보안 규칙이 게시되어 있는지 확인해주세요.<br/><span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>{anyError.code}</span></div>
+      ) : needsLevelPick ? (
+        <JaLevelPicker levelCounts={levelCounts} onSelect={(lv) => { setSelectedLevel(lv); setTab('dashboard'); }} />
+      ) : (
+        <React.Fragment>
+          {selectedLevel && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 급수 다시 선택 ({selectedLevel})</button>}
+          {tab === 'dashboard' && <JaDashboard stats={scopedStats} onStartStudy={() => setTab('study')} emptyMessage={isReview ? <React.Fragment>복습노트가 비어 있습니다.<br/>학습 중 "☆ 복습에 추가" 버튼을 눌러보세요.</React.Fragment> : undefined} />}
+          {tab === 'study' && <JaStudySession dueItems={scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} />}
+          {tab === 'list' && <JaListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
+          <nav className="tab-bar">
+            <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>홈</button>
+            <button className={tab === 'study' ? 'active' : ''} onClick={() => setTab('study')}>학습</button>
+            <button className={tab === 'list' ? 'active' : ''} onClick={() => setTab('list')}>목록</button>
+          </nav>
+        </React.Fragment>
+      )}
+    </React.Fragment>
+  );
+}
+
+// ==================== KR 섹션 (한국어 학습, UI 일본어) ====================
+
+const KR_DECK_LABELS = { words: '単語', grammar: '文法', travel: '会話' };
+const KR_ANSWER_GETTERS = {
+  words: (i) => i.meaningJp,
+  grammar: (i) => i.titleJp,
+  travel: (i) => i.japanese,
+};
+function krSplitChars(text) { return Array.from(text || ''); }
+function krSpeechText(deckType, item) {
+  if (deckType === 'words') return item.example || item.word;
+  if (deckType === 'grammar') return item.example;
+  if (deckType === 'travel') return item.korean;
+  return null;
+}
+function krRenderQuestion(deckType, item) {
+  if (deckType === 'words') return <div className="genkou-row">{krSplitChars(item.word).map((ch, i) => (<div className="genkou-cell" key={i}><span className="char">{ch}</span></div>))}</div>;
+  if (deckType === 'grammar') return <div className="pattern-plate"><div className="pattern jp-text">{item.pattern}</div></div>;
+  return (<div className="pattern-plate">
+    <div className="scene-tag">{item.scene}</div>
+    <div className="pattern jp-text" style={{ fontSize: 19 }}>{item.korean}</div>
+    <div className="meaning-hint">{item.pronunciation}</div>
+  </div>);
+}
+function krRenderDetail(deckType, item) {
+  if (deckType === 'words') return <div className="example">{item.example}<br/>({item.examplePronunciation})<br/>{item.exampleMeaningJp}</div>;
+  if (deckType === 'grammar') return (<React.Fragment>
+    <div className="connection-note"><strong>接続</strong> · {item.connection}</div>
+    <div className="example">{item.example}<br/>{item.exampleMeaningJp}</div>
+    <div className="korean-contrast"><strong>日本語話者向けノート</strong><br/>{item.japaneseNote}</div>
+  </React.Fragment>);
+  return <div className="connection-note">{item.note}</div>;
+}
+
+function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
+  const deckType = item.sourceDeck;
+  const [selected, setSelected] = useState(null);
+  const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
+  const getAnswer = KR_ANSWER_GETTERS[deckType];
+  const correctText = useMemo(() => getAnswer(item), [item]);
+  const options = useMemo(() => buildOptions(item, pool, getAnswer, 4), [item, pool]);
+  const speechText = useMemo(() => krSpeechText(deckType, item), [deckType, item]);
+  const answered = selected !== null;
+  const isCorrect = selected === correctText;
+
+  useEffect(() => cancelSpeech, []);
+  useEffect(() => {
+    if (deckType === 'travel' && speechText) {
+      const t = setTimeout(() => speakKorean(speechText), 500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleSelect(opt) {
+    if (answered) return;
+    const correct = opt === correctText;
+    setSelected(opt);
+    if (correct) playCorrectSound(); else playWrongSound();
+    if (speechText) setTimeout(() => speakKorean(speechText), 500);
+  }
+  function handleNext() { onResult(item.id, isCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck); }
+  function handleToggleBookmark() {
+    const next = !bookmarked;
+    setBookmarkedState(next);
+    onToggleBookmark(item, next);
+  }
+
+  return (
+    <div className="genkou-card">
+      <span className="hanko">{item.level}</span>
+      <div style={{ marginTop: 8 }}>
+        {krRenderQuestion(deckType, item)}
+        <div className="option-list">
+          {options.map((opt) => {
+            let cls = 'option-btn';
+            if (answered) { if (opt === correctText) cls += ' option-correct'; else if (opt === selected) cls += ' option-wrong'; }
+            return <button key={opt} className={cls} onClick={() => handleSelect(opt)} disabled={answered}>{opt}</button>;
+          })}
+        </div>
+        {answered && (<React.Fragment>
+          <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '正解です!' : ('不正解です。正解: ' + correctText)}</div>
+          {krRenderDetail(deckType, item)}
+          {speechText && <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>}
+          <div className="action-row">
+            <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 復習ノートに追加済み' : '☆ 復習に追加'}</button>
+            <button className="primary-btn" onClick={handleNext}>次へ</button>
+          </div>
+        </React.Fragment>)}
+      </div>
+    </div>
+  );
+}
+
+function KrDashboard({ stats, onStartStudy, emptyMessage }) {
+  if (stats.total === 0) return <div className="empty-state">{emptyMessage || <React.Fragment>この級のコンテンツはまだ準備されていません。<br/>他の級を選んでください。</React.Fragment>}</div>;
+  return (
+    <div>
+      <div className="stat-grid">
+        <div className="stat-box"><div className="num">{stats.total}</div><div className="label">全体</div></div>
+        <div className="stat-box"><div className="num">{stats.due}</div><div className="label">今日の学習</div></div>
+        <div className="stat-box"><div className="num">{stats.mastered}</div><div className="label">習熟済み</div></div>
+      </div>
+      <button className="primary-btn" disabled={stats.due === 0} onClick={onStartStudy}>{stats.due > 0 ? ('学習開始 (' + stats.due + '個)') : '今日の学習は完了しました'}</button>
+    </div>
+  );
+}
+function KrLevelPicker({ levelCounts, onSelect }) {
+  const LEVELS = ['1급', '2급', '3급', '4급', '5급', '6급'];
+  return (
+    <div>
+      <div className="empty-state" style={{ padding: '4px 4px 16px' }}>学習する級を選んでください。</div>
+      <div className="level-picker">
+        {LEVELS.map((lv) => {
+          const count = levelCounts[lv] || 0;
+          return <button key={lv} className="level-btn" disabled={count === 0} onClick={() => onSelect(lv)}><span className="level-btn-label mono">{lv}</span><span className="level-btn-count">{count > 0 ? (count + '個') : '準備中'}</span></button>;
+        })}
+      </div>
+    </div>
+  );
+}
+function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish }) {
+  const [queue, setQueue] = useState(dueItems);
+  const [doneCount, setDoneCount] = useState(0);
+  const totalCount = useMemo(() => dueItems.length, [dueItems]);
+  if (queue.length === 0) return <div className="empty-state"><p>今日学習する項目がありません 🎉</p><button className="primary-btn" onClick={onFinish}>リストへ</button></div>;
+  const current = queue[0];
+  function handleResult(itemId, quality, sourceDeck) {
+    submitReview(itemId, quality, sourceDeck);
+    setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
+    if (quality >= RATING.HARD) setDoneCount((d) => d + 1);
+  }
+  return (
+    <div>
+      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{doneCount} / {totalCount}</div>
+      <KrQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+    </div>
+  );
+}
+function KrListView({ deckType, items, onRemove }) {
+  const SCENES = ['全体', '空港', '食堂', '宿泊先', '道案内', 'ショッピング', '病院', '公共交通', '緊急事態', 'ビジネス'];
+  const [scene, setScene] = useState('全体');
+  const showSceneFilter = deckType === 'travel';
+  const filtered = showSceneFilter && scene !== '全体' ? items.filter((i) => i.scene === scene) : items;
+  function primary(i) {
+    const dt = deckType === 'review' ? i.sourceDeck : deckType;
+    if (dt === 'words') return i.word;
+    if (dt === 'grammar') return i.pattern;
+    return i.korean;
+  }
+  function secondary(i) {
+    const dt = deckType === 'review' ? i.sourceDeck : deckType;
+    if (dt === 'words') return i.meaningJp;
+    if (dt === 'grammar') return i.titleJp;
+    return i.japanese;
+  }
+  if (items.length === 0) {
+    return deckType === 'review'
+      ? <div className="empty-state">復習ノートが空です。<br/>学習中に「☆ 復習に追加」ボタンを押すとここに集まります。</div>
+      : <div className="empty-state">まだコンテンツがありません。</div>;
+  }
+  return (
+    <div>
+      {showSceneFilter && (<div className="level-tabs">{SCENES.map((s) => (<button key={s} className={scene === s ? 'active' : ''} onClick={() => setScene(s)}>{s}</button>))}</div>)}
+      {filtered.length === 0 ? <div className="empty-state">この場面の会話がありません。</div> : (
+        <div>
+          {filtered.map((i) => (
+            <div className="word-row" key={deckType === 'review' ? (i.sourceDeck + '-' + i.id) : i.id}>
+              <div className="info">
+                <div className="jp">{primary(i)}{deckType === 'review' && <span className="deck-tag" style={{ marginLeft: 6 }}>{KR_DECK_LABELS[i.sourceDeck]}</span>}</div>
+                <div className="kr">{secondary(i)}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className={'status-badge status-' + i.status}>{STATUS_LABEL[i.status]}</span>
+                {deckType === 'review' && <button className="remove-btn" onClick={() => onRemove(i)}>削除</button>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KrSection({ user }) {
+  const [deckType, setDeckType] = useState('words');
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [tab, setTab] = useState('dashboard');
+
+  const wordDeck = useSrsDeck(user, 'kr_words', VOCAB_KR);
+  const grammarDeck = useSrsDeck(user, 'kr_grammar', GRAMMAR_KR);
+  const travelDeck = useSrsDeck(user, 'kr_travel', TRAVEL_KR);
+  const decks = { words: wordDeck, grammar: grammarDeck, travel: travelDeck };
+
+  const anyLoading = wordDeck.loading || grammarDeck.loading || travelDeck.loading;
+  const anyError = wordDeck.error || grammarDeck.error || travelDeck.error;
+
+  const bookmarkedItems = useMemo(() => [
+    ...wordDeck.bookmarkedItems, ...grammarDeck.bookmarkedItems, ...travelDeck.bookmarkedItems,
+  ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, travelDeck.bookmarkedItems]);
+
+  const isReview = deckType === 'review';
+  const activeDeck = isReview ? null : decks[deckType];
+  const unscopedItems = isReview ? bookmarkedItems : activeDeck.items;
+  const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
+  const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
+  const scopedDueItems = useMemo(() => (isReview ? scopedItems : scopedItems.filter((i) => i.due)), [isReview, scopedItems]);
+  const scopedStats = useMemo(() => ({ total: scopedItems.length, due: scopedDueItems.length, mastered: scopedItems.filter((i) => i.status === 'mastered').length }), [scopedItems, scopedDueItems]);
+  const levelCounts = useMemo(() => { const c = {}; unscopedItems.forEach((i) => { c[i.level] = (c[i.level] || 0) + 1; }); return c; }, [unscopedItems]);
+
+  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); }
+  function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
+  function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
+
+  return (
+    <React.Fragment>
+      <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
+      <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
+
+      {anyLoading ? (
+        <div className="empty-state">学習データを読み込み中...</div>
+      ) : anyError ? (
+        <div className="empty-state">データを読み込めませんでした。<br/>Firestoreのセキュリティルールが公開されているか確認してください。<br/><span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>{anyError.code}</span></div>
+      ) : needsLevelPick ? (
+        <KrLevelPicker levelCounts={levelCounts} onSelect={(lv) => { setSelectedLevel(lv); setTab('dashboard'); }} />
+      ) : (
+        <React.Fragment>
+          {selectedLevel && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 級を選び直す ({selectedLevel})</button>}
+          {tab === 'dashboard' && <KrDashboard stats={scopedStats} onStartStudy={() => setTab('study')} emptyMessage={isReview ? <React.Fragment>復習ノートが空です。<br/>学習中に「☆ 復習に追加」ボタンを押してみましょう。</React.Fragment> : undefined} />}
+          {tab === 'study' && <KrStudySession dueItems={scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} />}
+          {tab === 'list' && <KrListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
+          <nav className="tab-bar">
+            <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>ホーム</button>
+            <button className={tab === 'study' ? 'active' : ''} onClick={() => setTab('study')}>学習</button>
+            <button className={tab === 'list' ? 'active' : ''} onClick={() => setTab('list')}>リスト</button>
+          </nav>
+        </React.Fragment>
+      )}
+    </React.Fragment>
+  );
+}
+
+// ==================== 로그인 폼 (이메일/비밀번호) ====================
+
+const ERROR_MESSAGES = {
+  ja: {
+    'auth/email-already-in-use': '이미 가입된 이메일입니다. 로그인을 눌러주세요.',
+    'auth/invalid-email': '이메일 형식이 올바르지 않습니다.',
+    'auth/weak-password': '비밀번호는 6자 이상이어야 합니다.',
+    'auth/user-not-found': '가입되지 않은 이메일입니다. 회원가입을 눌러주세요.',
+    'auth/wrong-password': '비밀번호가 틀렸습니다.',
+    'auth/invalid-credential': '이메일 또는 비밀번호가 올바르지 않습니다.',
+    default: '오류가 발생했습니다. 다시 시도해주세요.',
+  },
+  kr: {
+    'auth/email-already-in-use': 'すでに登録済みのメールアドレスです。ログインを押してください。',
+    'auth/invalid-email': 'メールアドレスの形式が正しくありません。',
+    'auth/weak-password': 'パスワードは6文字以上にしてください。',
+    'auth/user-not-found': '登録されていないメールアドレスです。新規登録を押してください。',
+    'auth/wrong-password': 'パスワードが間違っています。',
+    'auth/invalid-credential': 'メールアドレスまたはパスワードが正しくありません。',
+    default: 'エラーが発生しました。もう一度お試しください。',
+  },
+};
+
+function LoginForm({ mode }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  function getMessage(code) {
+    const table = ERROR_MESSAGES[mode];
+    return table[code] || table.default;
+  }
+
+  function handleSignIn() {
+    setError('');
+    setLoading(true);
+    signInWithEmail(email, password).catch((e) => setError(getMessage(e.code))).finally(() => setLoading(false));
+  }
+  function handleSignUp() {
+    setError('');
+    setLoading(true);
+    signUpWithEmail(email, password).catch((e) => setError(getMessage(e.code))).finally(() => setLoading(false));
+  }
+
+  return (
+    <div className="login-box">
+      <p>
+        {mode === 'ja'
+          ? <React.Fragment>PC와 모바일에서 학습 진도를 이어보려면<br/>이메일로 로그인하세요.</React.Fragment>
+          : <React.Fragment>パソコンとスマートフォンで学習の進み具合を引き継ぐには、<br/>メールアドレスでログインしてください。</React.Fragment>}
+      </p>
+      <input type="email" className="login-input" placeholder={mode === 'ja' ? '이메일' : 'メールアドレス'} value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input type="password" className="login-input" placeholder={mode === 'ja' ? '비밀번호 (6자 이상)' : 'パスワード（6文字以上）'} value={password} onChange={(e) => setPassword(e.target.value)} />
+      {error && <div className="login-error">{error}</div>}
+      <div className="action-row">
+        <button className="secondary-btn" onClick={handleSignUp} disabled={loading}>{mode === 'ja' ? '회원가입' : '新規登録'}</button>
+        <button className="primary-btn" onClick={handleSignIn} disabled={loading}>{mode === 'ja' ? '로그인' : 'ログイン'}</button>
+      </div>
+    </div>
+  );
+}
+
+// ==================== 최상위 App ====================
+
+const MODE_META = {
+  ja: { title: '日本語学習', subtitle: '단어 · 문법 · 한자 · 회화' },
+  kr: { title: '韓国語学習', subtitle: '単語・文法・会話' },
+};
+
+function App() {
+  const [user, setUser] = useState(undefined);
+  const [mode, setMode] = useState('ja');
+
+  useEffect(() => {
+    const unsub = subscribeToAuth(setUser);
+    return () => unsub();
+  }, []);
+
+  const meta = MODE_META[mode];
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <h1 className="jp-text">{meta.title}</h1>
+          <div className="subtitle">{meta.subtitle}</div>
+        </div>
+        {user && (
+          <button onClick={signOutUser} style={{ background: 'none', border: 'none', fontSize: 12, color: 'var(--ink-soft)', cursor: 'pointer' }}>
+            {mode === 'ja' ? '로그아웃' : 'ログアウト'}
+          </button>
+        )}
+      </header>
+
+      <div className="deck-switch" style={{ marginBottom: 18 }}>
+        <button className={mode === 'ja' ? 'active' : ''} onClick={() => setMode('ja')}>日本語</button>
+        <button className={mode === 'kr' ? 'active' : ''} onClick={() => setMode('kr')}>한국어</button>
+      </div>
+
+      {user === undefined ? (
+        <div className="empty-state">{mode === 'ja' ? '불러오는 중...' : '読み込み中...'}</div>
+      ) : user === null ? (
+        <LoginForm mode={mode} />
+      ) : mode === 'ja' ? (
+        <JaSection user={user} />
+      ) : (
+        <KrSection user={user} />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
+<script>
+  (function () {
+    var source = document.getElementById('app-source').textContent;
+    var result = Babel.transform(source, {
+      presets: [['react', { runtime: 'classic' }]],
+    });
+    var script = document.createElement('script');
+    script.textContent = result.code;
+    document.body.appendChild(script);
+  })();
+</script>
+</body>
+</html>
