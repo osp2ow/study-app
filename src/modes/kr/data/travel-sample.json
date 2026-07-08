@@ -1,0 +1,146 @@
+[
+  {
+    "id": "t-001",
+    "scene": "空港",
+    "level": "1급",
+    "korean": "여권 부탁드립니다.",
+    "pronunciation": "여꿘 부탁드림니다.",
+    "japanese": "パスポートをお願いします。",
+    "note": "入国審査で最初に言われる/使うフレーズ"
+  },
+  {
+    "id": "t-002",
+    "scene": "空港",
+    "level": "1급",
+    "korean": "짐은 어디에 있나요?",
+    "pronunciation": "지믄 어디에 인나요?",
+    "japanese": "荷物はどこにありますか。",
+    "note": "手荷物受取所を探すとき"
+  },
+  {
+    "id": "t-003",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "메뉴 좀 보여주세요.",
+    "pronunciation": "메뉴 좀 보여주세요.",
+    "japanese": "メニューを見せてください。",
+    "note": "席についた直後に"
+  },
+  {
+    "id": "t-004",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "이거 주세요.",
+    "pronunciation": "이거 주세요.",
+    "japanese": "これをください。",
+    "note": "メニューを指差しながら使える"
+  },
+  {
+    "id": "t-005",
+    "scene": "食堂",
+    "level": "1급",
+    "korean": "계산해 주세요.",
+    "pronunciation": "계산해 주세요.",
+    "japanese": "お会計をお願いします。",
+    "note": "食事の後に"
+  },
+  {
+    "id": "t-006",
+    "scene": "宿泊先",
+    "level": "1급",
+    "korean": "체크인 하고 싶어요.",
+    "pronunciation": "체크인 하고 시퍼요.",
+    "japanese": "チェックインしたいです。",
+    "note": "フロント到着時"
+  },
+  {
+    "id": "t-007",
+    "scene": "宿泊先",
+    "level": "2급",
+    "korean": "와이파이 비밀번호가 뭐예요?",
+    "pronunciation": "와이파이 비밀버노가 뭐예요?",
+    "japanese": "Wi-Fiのパスワードは何ですか。",
+    "note": "チェックイン直後に聞くとよい"
+  },
+  {
+    "id": "t-008",
+    "scene": "道案内",
+    "level": "1급",
+    "korean": "여기가 어디예요?",
+    "pronunciation": "여기가 어디예요?",
+    "japanese": "ここはどこですか。",
+    "note": "地図を見せながら聞くとより正確"
+  },
+  {
+    "id": "t-009",
+    "scene": "道案内",
+    "level": "1급",
+    "korean": "역까지 어떻게 가요?",
+    "pronunciation": "역까지 어떠케 가요?",
+    "japanese": "駅までどう行きますか。",
+    "note": "道を尋ねる基本表現"
+  },
+  {
+    "id": "t-010",
+    "scene": "ショッピング",
+    "level": "1급",
+    "korean": "이거 얼마예요?",
+    "pronunciation": "이거 얼마예요?",
+    "japanese": "これはいくらですか。",
+    "note": "買い物の基本表現"
+  },
+  {
+    "id": "t-011",
+    "scene": "ショッピング",
+    "level": "2급",
+    "korean": "다른 색 있어요?",
+    "pronunciation": "다른 색 이써요?",
+    "japanese": "他の色はありますか。",
+    "note": "服や小物を選ぶときに便利"
+  },
+  {
+    "id": "t-012",
+    "scene": "病院",
+    "level": "2급",
+    "korean": "몸이 안 좋아요.",
+    "pronunciation": "모미 안 조아요.",
+    "japanese": "体調が悪いです。",
+    "note": "体調不良を伝える基本表現"
+  },
+  {
+    "id": "t-013",
+    "scene": "病院",
+    "level": "2급",
+    "korean": "근처에 약국 있어요?",
+    "pronunciation": "근처에 약꾹 이써요?",
+    "japanese": "近くに薬局はありますか。",
+    "note": "薬を探すときに"
+  },
+  {
+    "id": "t-014",
+    "scene": "公共交通",
+    "level": "2급",
+    "korean": "이 버스 시청 가요?",
+    "pronunciation": "이 버스 시청 가요?",
+    "japanese": "このバスは市庁に行きますか。",
+    "note": "路線が不安なときの確認用"
+  },
+  {
+    "id": "t-015",
+    "scene": "公共交通",
+    "level": "1급",
+    "korean": "다음 역이 어디예요?",
+    "pronunciation": "다음 여기 어디예요?",
+    "japanese": "次の駅はどこですか。",
+    "note": "降りる駅を逃さないために"
+  },
+  {
+    "id": "t-016",
+    "scene": "緊急事態",
+    "level": "1급",
+    "korean": "도와주세요.",
+    "pronunciation": "도와주세요.",
+    "japanese": "助けてください。",
+    "note": "緊急時に最初に使う言葉"
+  }
+]
