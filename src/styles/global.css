@@ -606,3 +606,27 @@ body {
   font-weight: 500;
   color: var(--ink);
 }
+
+.login-input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--paper-line);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--indigo);
+}
+
+.login-error {
+  color: var(--vermillion);
+  font-size: 12px;
+  margin: 4px 0 12px;
+  text-align: left;
+}
