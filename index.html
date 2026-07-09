@@ -430,6 +430,17 @@ body {
   cursor: default;
 }
 
+.tile-btn ruby {
+  ruby-position: over;
+}
+
+.tile-btn rt {
+  font-size: 10px;
+  color: inherit;
+  opacity: 0.75;
+  font-weight: 500;
+}
+
 .action-row {
   display: flex;
   gap: 8px;
@@ -4717,14 +4728,32 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "저는 학생입니다.",
     "tiles": [
-      "私",
-      "は",
-      "学生",
-      "です"
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "学生",
+        "reading": "がくせい"
+      },
+      {
+        "text": "です",
+        "reading": "です"
+      }
     ],
     "distractors": [
-      "先生",
-      "を"
+      {
+        "text": "先生",
+        "reading": "せんせい"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      }
     ],
     "reading": "わたしはがくせいです"
   },
@@ -4733,14 +4762,32 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "내일 학교에 갑니다.",
     "tiles": [
-      "明日",
-      "学校",
-      "に",
-      "行きます"
+      {
+        "text": "明日",
+        "reading": "あした"
+      },
+      {
+        "text": "学校",
+        "reading": "がっこう"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "行きます",
+        "reading": "いきます"
+      }
     ],
     "distractors": [
-      "で",
-      "病院"
+      {
+        "text": "で",
+        "reading": "で"
+      },
+      {
+        "text": "病院",
+        "reading": "びょういん"
+      }
     ],
     "reading": "あしたがっこうにいきます"
   },
@@ -4749,14 +4796,32 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "이것은 책입니다.",
     "tiles": [
-      "これ",
-      "は",
-      "本",
-      "です"
+      {
+        "text": "これ",
+        "reading": "これ"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "本",
+        "reading": "ほん"
+      },
+      {
+        "text": "です",
+        "reading": "です"
+      }
     ],
     "distractors": [
-      "あれ",
-      "雑誌"
+      {
+        "text": "あれ",
+        "reading": "あれ"
+      },
+      {
+        "text": "雑誌",
+        "reading": "ざっし"
+      }
     ],
     "reading": "これはほんです"
   },
@@ -4765,15 +4830,36 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "오늘은 날씨가 좋습니다.",
     "tiles": [
-      "今日",
-      "は",
-      "天気",
-      "が",
-      "いいです"
+      {
+        "text": "今日",
+        "reading": "きょう"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "天気",
+        "reading": "てんき"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "いいです",
+        "reading": "いいです"
+      }
     ],
     "distractors": [
-      "悪いです",
-      "明日"
+      {
+        "text": "悪いです",
+        "reading": "わるいです"
+      },
+      {
+        "text": "明日",
+        "reading": "あした"
+      }
     ],
     "reading": "きょうはてんきがいいです"
   },
@@ -4782,16 +4868,40 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "저는 매일 한국어를 공부합니다.",
     "tiles": [
-      "私",
-      "は",
-      "毎日",
-      "韓国語",
-      "を",
-      "勉強します"
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "毎日",
+        "reading": "まいにち"
+      },
+      {
+        "text": "韓国語",
+        "reading": "かんこくご"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "勉強します",
+        "reading": "べんきょうします"
+      }
     ],
     "distractors": [
-      "日本語",
-      "見ます"
+      {
+        "text": "日本語",
+        "reading": "にほんご"
+      },
+      {
+        "text": "見ます",
+        "reading": "みます"
+      }
     ],
     "reading": "わたしはまいにちかんこくごをべんきょうします"
   },
@@ -4800,15 +4910,36 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "친구와 영화를 봤습니다.",
     "tiles": [
-      "友達",
-      "と",
-      "映画",
-      "を",
-      "見ました"
+      {
+        "text": "友達",
+        "reading": "ともだち"
+      },
+      {
+        "text": "と",
+        "reading": "と"
+      },
+      {
+        "text": "映画",
+        "reading": "えいが"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "見ました",
+        "reading": "みました"
+      }
     ],
     "distractors": [
-      "聞きました",
-      "音楽"
+      {
+        "text": "聞きました",
+        "reading": "ききました"
+      },
+      {
+        "text": "音楽",
+        "reading": "おんがく"
+      }
     ],
     "reading": "ともだちとえいがをみました"
   },
@@ -4817,16 +4948,40 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "이 가게는 커피가 맛있습니다.",
     "tiles": [
-      "この",
-      "店",
-      "は",
-      "コーヒー",
-      "が",
-      "おいしいです"
+      {
+        "text": "この",
+        "reading": "この"
+      },
+      {
+        "text": "店",
+        "reading": "みせ"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "コーヒー",
+        "reading": "コーヒー"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "おいしいです",
+        "reading": "おいしいです"
+      }
     ],
     "distractors": [
-      "まずいです",
-      "お茶"
+      {
+        "text": "まずいです",
+        "reading": "まずいです"
+      },
+      {
+        "text": "お茶",
+        "reading": "おちゃ"
+      }
     ],
     "reading": "このみせはコーヒーがおいしいです"
   },
@@ -4835,15 +4990,36 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "저는 일본에 가고 싶습니다.",
     "tiles": [
-      "私",
-      "は",
-      "日本",
-      "に",
-      "行きたいです"
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "日本",
+        "reading": "にほん"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "行きたいです",
+        "reading": "いきたいです"
+      }
     ],
     "distractors": [
-      "来たいです",
-      "韓国"
+      {
+        "text": "来たいです",
+        "reading": "きたいです"
+      },
+      {
+        "text": "韓国",
+        "reading": "かんこく"
+      }
     ],
     "reading": "わたしはにほんにいきたいです"
   },
@@ -4852,14 +5028,32 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "창문을 열어 주세요.",
     "tiles": [
-      "窓",
-      "を",
-      "開けて",
-      "ください"
+      {
+        "text": "窓",
+        "reading": "まど"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "開けて",
+        "reading": "あけて"
+      },
+      {
+        "text": "ください",
+        "reading": "ください"
+      }
     ],
     "distractors": [
-      "閉めて",
-      "ドア"
+      {
+        "text": "閉めて",
+        "reading": "しめて"
+      },
+      {
+        "text": "ドア",
+        "reading": "ドア"
+      }
     ],
     "reading": "まどをあけてください"
   },
@@ -4868,14 +5062,32 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "어제 친구를 만났습니다.",
     "tiles": [
-      "昨日",
-      "友達",
-      "に",
-      "会いました"
+      {
+        "text": "昨日",
+        "reading": "きのう"
+      },
+      {
+        "text": "友達",
+        "reading": "ともだち"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "会いました",
+        "reading": "あいました"
+      }
     ],
     "distractors": [
-      "今日",
-      "先生"
+      {
+        "text": "今日",
+        "reading": "きょう"
+      },
+      {
+        "text": "先生",
+        "reading": "せんせい"
+      }
     ],
     "reading": "きのうともだちにあいました"
   },
@@ -4884,14 +5096,32 @@ const SENTENCE_JA = [
     "level": "N5",
     "meaning": "이 가방은 비쌉니다.",
     "tiles": [
-      "この",
-      "かばん",
-      "は",
-      "高いです"
+      {
+        "text": "この",
+        "reading": "この"
+      },
+      {
+        "text": "かばん",
+        "reading": "かばん"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "高いです",
+        "reading": "たかいです"
+      }
     ],
     "distractors": [
-      "安いです",
-      "靴"
+      {
+        "text": "安いです",
+        "reading": "やすいです"
+      },
+      {
+        "text": "靴",
+        "reading": "くつ"
+      }
     ],
     "reading": "このかばんはたかいです"
   },
@@ -4900,16 +5130,40 @@ const SENTENCE_JA = [
     "level": "N4",
     "meaning": "그는 매일 아침 운동을 합니다.",
     "tiles": [
-      "彼",
-      "は",
-      "毎朝",
-      "運動",
-      "を",
-      "します"
+      {
+        "text": "彼",
+        "reading": "かれ"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "毎朝",
+        "reading": "まいあさ"
+      },
+      {
+        "text": "運動",
+        "reading": "うんどう"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "します",
+        "reading": "します"
+      }
     ],
     "distractors": [
-      "毎晩",
-      "勉強"
+      {
+        "text": "毎晩",
+        "reading": "まいばん"
+      },
+      {
+        "text": "勉強",
+        "reading": "べんきょう"
+      }
     ],
     "reading": "かれはまいあさうんどうをします"
   },
@@ -4918,16 +5172,40 @@ const SENTENCE_JA = [
     "level": "N4",
     "meaning": "여기서 사진을 찍어도 됩니까?",
     "tiles": [
-      "ここ",
-      "で",
-      "写真",
-      "を",
-      "撮っても",
-      "いいですか"
+      {
+        "text": "ここ",
+        "reading": "ここ"
+      },
+      {
+        "text": "で",
+        "reading": "で"
+      },
+      {
+        "text": "写真",
+        "reading": "しゃしん"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "撮っても",
+        "reading": "とっても"
+      },
+      {
+        "text": "いいですか",
+        "reading": "いいですか"
+      }
     ],
     "distractors": [
-      "だめですか",
-      "動画"
+      {
+        "text": "だめですか",
+        "reading": "だめですか"
+      },
+      {
+        "text": "動画",
+        "reading": "どうが"
+      }
     ],
     "reading": "ここでしゃしんをとってもいいですか"
   },
@@ -4936,14 +5214,32 @@ const SENTENCE_JA = [
     "level": "N4",
     "meaning": "시간이 없어서 서두릅니다.",
     "tiles": [
-      "時間",
-      "が",
-      "ないから",
-      "急ぎます"
+      {
+        "text": "時間",
+        "reading": "じかん"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "ないから",
+        "reading": "ないから"
+      },
+      {
+        "text": "急ぎます",
+        "reading": "いそぎます"
+      }
     ],
     "distractors": [
-      "あるから",
-      "休みます"
+      {
+        "text": "あるから",
+        "reading": "あるから"
+      },
+      {
+        "text": "休みます",
+        "reading": "やすみます"
+      }
     ],
     "reading": "じかんがないからいそぎます"
   },
@@ -4952,15 +5248,36 @@ const SENTENCE_JA = [
     "level": "N4",
     "meaning": "그는 한국어를 잘합니다.",
     "tiles": [
-      "彼",
-      "は",
-      "韓国語",
-      "が",
-      "上手です"
+      {
+        "text": "彼",
+        "reading": "かれ"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "韓国語",
+        "reading": "かんこくご"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "上手です",
+        "reading": "じょうずです"
+      }
     ],
     "distractors": [
-      "下手です",
-      "日本語"
+      {
+        "text": "下手です",
+        "reading": "へたです"
+      },
+      {
+        "text": "日本語",
+        "reading": "にほんご"
+      }
     ],
     "reading": "かれはかんこくごがじょうずです"
   }
@@ -7574,7 +7891,7 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   );
 }
 function JaSentenceCard({ item, onResult, onToggleBookmark }) {
-  const [pool, setPool] = useState(() => shuffle([...item.tiles, ...(item.distractors || [])].map((t, i) => ({ id: i, text: t }))));
+  const [pool, setPool] = useState(() => shuffle([...item.tiles, ...(item.distractors || [])].map((t, i) => ({ id: i, text: t.text, reading: t.reading }))));
   const [placed, setPlaced] = useState([]);
   const [checked, setChecked] = useState(false);
   const [wasCorrect, setWasCorrect] = useState(false);
@@ -7582,11 +7899,18 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
 
   useEffect(() => cancelSpeech, []);
 
+  function renderTileLabel(t) {
+    if (t.reading && t.reading !== t.text) {
+      return <ruby>{t.text}<rt>{t.reading}</rt></ruby>;
+    }
+    return t.text;
+  }
+
   function placeTile(tile) {
     if (checked) return;
     setPool((prev) => prev.filter((t) => t.id !== tile.id));
     setPlaced((prev) => [...prev, tile]);
-    speakJapanese(tile.text);
+    speakJapanese(tile.reading || tile.text);
   }
   function removeTile(tile) {
     if (checked) return;
@@ -7594,14 +7918,15 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
     setPool((prev) => [...prev, tile]);
   }
   const isComplete = placed.length === item.tiles.length;
+  const correctTextJoined = item.tiles.map((t) => t.text).join('|');
 
   function handleCheck() {
-    const correct = placed.map((t) => t.text).join('|') === item.tiles.join('|');
+    const correct = placed.map((t) => t.text).join('|') === correctTextJoined;
     setChecked(true);
     setWasCorrect(correct);
     if (correct) {
       playCorrectSound();
-      setTimeout(() => speakJapanese(item.reading || item.tiles.join('')), 500);
+      setTimeout(() => speakJapanese(item.reading || item.tiles.map((t) => t.text).join('')), 500);
     } else {
       playWrongSound();
     }
@@ -7629,13 +7954,13 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
           {placed.map((t) => {
             let cls = 'tile-btn placed jp-text';
             if (checked) cls += wasCorrect ? ' tile-correct' : ' tile-wrong';
-            return <button key={t.id} className={cls} onClick={() => removeTile(t)} disabled={checked}>{t.text}</button>;
+            return <button key={t.id} className={cls} onClick={() => removeTile(t)} disabled={checked}>{renderTileLabel(t)}</button>;
           })}
         </div>
 
         <div className="sentence-pool-row">
           {pool.map((t) => (
-            <button key={t.id} className="tile-btn jp-text" onClick={() => placeTile(t)} disabled={checked}>{t.text}</button>
+            <button key={t.id} className="tile-btn jp-text" onClick={() => placeTile(t)} disabled={checked}>{renderTileLabel(t)}</button>
           ))}
         </div>
 
@@ -7644,7 +7969,7 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
         ) : (
           <React.Fragment>
             <div className={'feedback ' + (wasCorrect ? 'feedback-correct' : 'feedback-wrong')}>{wasCorrect ? '정답입니다!' : '오답입니다.'}</div>
-            <div className="example">정답: <span className="jp-text">{item.tiles.join('')}</span>{item.reading && (<React.Fragment><br/>({item.reading})</React.Fragment>)}</div>
+            <div className="example">정답: <span className="jp-text">{item.tiles.map((t) => t.text).join('')}</span>{item.reading && (<React.Fragment><br/>({item.reading})</React.Fragment>)}</div>
             <button className="replay-btn" onClick={() => speakJapanese(item.reading || item.tiles.join(''))}>🔊 다시 듣기</button>
             <div className="action-row">
               <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
@@ -7667,7 +7992,7 @@ function JaListView({ deckType, items, onRemove }) {
     if (dt === 'words') return i.word;
     if (dt === 'grammar') return i.pattern;
     if (dt === 'kanji') return i.char;
-    if (dt === 'sentence') return i.tiles.join('');
+    if (dt === 'sentence') return i.tiles.map((t) => t.text).join('');
     return i.japanese;
   }
   function secondary(i) {
