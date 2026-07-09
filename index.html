@@ -443,9 +443,9 @@ body {
 
 /* AI 회화 채팅 화면 */
 .mic-btn {
-  width: 46px;
+  width: 46px !important;
   height: 46px;
-  flex: 0 0 46px;
+  flex: 0 0 46px !important;
   border-radius: 50%;
   border: 1.5px solid var(--indigo);
   background: #fffdf8;
@@ -555,15 +555,15 @@ body {
 }
 
 .chat-input {
-  flex: 1 1 auto;
+  flex: 1 1 0% !important;
   min-width: 0;
   width: auto !important;
   margin-bottom: 0 !important;
 }
 
 .chat-send-btn {
-  flex: 0 0 auto;
-  width: auto;
+  flex: 0 0 auto !important;
+  width: auto !important;
   padding: 14px 18px;
   margin-top: 0;
   white-space: nowrap;
