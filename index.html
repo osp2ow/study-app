@@ -445,7 +445,7 @@ body {
 .mic-btn {
   width: 46px;
   height: 46px;
-  flex-shrink: 0;
+  flex: 0 0 46px;
   border-radius: 50%;
   border: 1.5px solid var(--indigo);
   background: #fffdf8;
@@ -507,7 +507,6 @@ body {
   border: 1px solid var(--paper-line);
   color: var(--ink);
   border-bottom-left-radius: 3px;
-  padding-right: 34px;
 }
 
 .chat-loading {
@@ -515,29 +514,55 @@ body {
   color: var(--ink-soft);
 }
 
+.chat-translation {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--paper-line);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.chat-bubble-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 .chat-replay {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 13px;
   opacity: 0.7;
+  padding: 0;
+}
+
+.chat-translate-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--indigo);
+  padding: 0;
 }
 
 .chat-input-row {
   display: flex;
   gap: 8px;
   align-items: center;
+  width: 100%;
 }
 
 .chat-input {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
   margin-bottom: 0 !important;
 }
 
 .chat-send-btn {
+  flex: 0 0 auto;
   width: auto;
   padding: 14px 18px;
   margin-top: 0;
@@ -8160,21 +8185,37 @@ function buildSystemPrompt(mode, level, scenario) {
   if (mode === 'ja') {
     let p = '당신은 한국인 일본어 학습자와 대화 연습을 하는 친절한 일본어 회화 파트너입니다. ' +
       'JLPT ' + level + ' 수준에 맞는 어휘와 문법만 사용해서 반드시 일본어로만 대답하세요. ' +
-      '답변은 1~3문장으로 짧게 하세요. 사용자의 문장에 문법이나 단어 실수가 있으면, ' +
-      '대화를 자연스럽게 이어가면서 답변 끝에 괄호로 한국어로 부드럽게 고쳐주세요.';
+      '답변은 1~3문장으로 짧게 하세요.';
     if (scenario && scenario.role) {
       p += ' 지금은 역할극 상황입니다. 당신은 "' + scenario.role + '" 역할을 맡아 자연스럽게 연기해주세요.';
     }
+    p += ' 반드시 아래 형식으로만 답변하고 그 외 다른 텍스트는 절대 쓰지 마세요:\n' +
+      'MAIN||(일본어 답변만, 다른 언어 섞지 말 것)\n' +
+      'TRANS||(위 답변의 한국어 번역. 사용자 문장에 문법이나 단어 실수가 있었다면 여기에 짧고 부드럽게 고쳐서 덧붙이기)';
     return p;
   }
   let p = 'あなたは日本人の韓国語学習者と会話練習をする親切な韓国語会話パートナーです。' +
     'TOPIK ' + level + 'レベルに合う語彙・文法だけを使って、必ず韓国語だけで答えてください。' +
-    '返答は1〜3文程度で短くしてください。ユーザーの文に文法や単語の間違いがあれば、' +
-    '会話を自然に続けながら、返答の最後にかっこで日本語で優しく直してあげてください。';
+    '返答は1〜3文程度で短くしてください。';
   if (scenario && scenario.role) {
     p += ' 今はロールプレイの状況です。あなたは「' + scenario.role + '」の役を自然に演じてください。';
   }
+  p += ' 必ず下記の形式だけで答えて、それ以外のテキストは絶対に書かないでください:\n' +
+    'MAIN||(韓国語の返答のみ、他の言語を混ぜないこと)\n' +
+    'TRANS||(上の返答の日本語訳。ユーザーの文に文法や単語の間違いがあれば、ここに短く優しく直して付け加える)';
   return p;
+}
+
+function parseAiReply(raw) {
+  const mainMatch = raw.match(/MAIN\|\|([\s\S]*?)(?=\n?TRANS\|\||$)/);
+  const transMatch = raw.match(/TRANS\|\|([\s\S]*)/);
+  if (mainMatch) {
+    return {
+      text: mainMatch[1].trim(),
+      translation: transMatch ? transMatch[1].trim() : null,
+    };
+  }
+  return { text: raw.trim(), translation: null };
 }
 
 function AiChatSection({ mode }) {
@@ -8183,6 +8224,7 @@ function AiChatSection({ mode }) {
   const [level, setLevel] = useState(levels[0]);
   const [scenarioId, setScenarioId] = useState('free');
   const [messages, setMessages] = useState([]);
+  const [shownTranslations, setShownTranslations] = useState(() => new Set());
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
@@ -8217,9 +8259,10 @@ function AiChatSection({ mode }) {
         }),
       });
       const data = await res.json();
-      const reply = data.reply || data.error || (mode === 'ja' ? '(응답을 받지 못했습니다)' : '(返信を受け取れませんでした)');
-      setMessages((prev) => [...prev, { role: 'model', text: reply }]);
-      setTimeout(() => speak(reply), 300);
+      const rawReply = data.reply || data.error || (mode === 'ja' ? '(응답을 받지 못했습니다)' : '(返信を受け取れませんでした)');
+      const parsed = parseAiReply(rawReply);
+      setMessages((prev) => [...prev, { role: 'model', text: parsed.text, translation: parsed.translation }]);
+      setTimeout(() => speak(parsed.text), 300);
     } catch (e) {
       setMessages((prev) => [...prev, { role: 'model', text: mode === 'ja' ? '오류가 발생했습니다. 다시 시도해주세요.' : 'エラーが発生しました。もう一度お試しください。' }]);
     } finally {
@@ -8299,8 +8342,28 @@ function AiChatSection({ mode }) {
         {messages.map((m, i) => (
           <div key={i} className={'chat-bubble ' + (m.role === 'user' ? 'chat-user' : 'chat-ai')}>
             <span className="jp-text">{m.text}</span>
+            {m.role === 'model' && m.translation && shownTranslations.has(i) && (
+              <div className="chat-translation">{m.translation}</div>
+            )}
             {m.role === 'model' && (
-              <button className="chat-replay" onClick={() => speak(m.text)}>🔊</button>
+              <div className="chat-bubble-actions">
+                <button className="chat-replay" onClick={() => speak(m.text)}>🔊</button>
+                {m.translation && (
+                  <button
+                    className="chat-translate-btn"
+                    onClick={() => {
+                      setShownTranslations((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(i)) next.delete(i);
+                        else next.add(i);
+                        return next;
+                      });
+                    }}
+                  >
+                    {shownTranslations.has(i) ? (mode === 'ja' ? '번역 숨기기' : '訳を隠す') : (mode === 'ja' ? '🔤 번역' : '🔤 訳')}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         ))}
