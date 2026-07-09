@@ -867,8 +867,9 @@ function playCorrectSound() {
   const ctx = getAudioCtx();
   if (!ctx) return;
   const now = ctx.currentTime;
-  playNote(ctx, 880, now, 0.11, 'sine', 0.22);
-  playNote(ctx, 1318.51, now + 0.1, 0.16, 'sine', 0.22);
+  // "띵동" 초인종 벨소리 - 높은음(띵) 다음 낮은음(동), 살짝 겹치며 은은하게 울리는 느낌
+  playNote(ctx, 1318.51, now, 0.35, 'sine', 0.24); // 띵 (E6)
+  playNote(ctx, 1046.50, now + 0.16, 0.45, 'sine', 0.24); // 동 (C6)
 }
 function playWrongSound() {
   const ctx = getAudioCtx();
