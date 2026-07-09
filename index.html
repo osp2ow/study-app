@@ -441,6 +441,109 @@ body {
   font-weight: 500;
 }
 
+/* AI 회화 채팅 화면 */
+.mic-btn {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--indigo);
+  background: #fffdf8;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mic-btn.recording {
+  background: var(--vermillion);
+  border-color: var(--vermillion);
+  animation: mic-pulse 1s infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(156, 59, 46, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(156, 59, 46, 0); }
+}
+
+.chat-recording {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.chat-window {
+  height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  background: #fffdf8;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+}
+
+.chat-user {
+  align-self: flex-end;
+  background: var(--indigo);
+  color: #fffdf8;
+  border-bottom-right-radius: 3px;
+}
+
+.chat-ai {
+  align-self: flex-start;
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  color: var(--ink);
+  border-bottom-left-radius: 3px;
+  padding-right: 34px;
+}
+
+.chat-loading {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.chat-replay {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chat-input {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.chat-send-btn {
+  width: auto;
+  padding: 14px 18px;
+  margin-top: 0;
+  white-space: nowrap;
+}
+
 .action-row {
   display: flex;
   gap: 8px;
@@ -747,7 +850,11 @@ body {
 -->
 <script type="text/plain" id="app-source">
 
-const { useState, useEffect, useMemo, useCallback } = React;
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+// ==================== AI 회화 연습 - Cloudflare Worker(Gemini 프록시) 주소 ====================
+// Worker 배포 후 여기에 본인 Worker 주소를 넣으세요. 비워두면 "AI 회화" 화면에 안내 문구가 뜹니다.
+const AI_WORKER_URL = 'https://ancient-mouse-c47study-app.osp2ow.workers.dev/';
 
 // ==================== Firebase 초기화 (compat SDK, 빌드 도구 불필요) ====================
 const firebaseConfig = {
@@ -8032,6 +8139,205 @@ function JaListView({ deckType, items, onRemove }) {
   );
 }
 
+const AI_SCENARIOS = {
+  ja: [
+    { id: 'free', label: '자유 대화', role: null },
+    { id: 'cafe', label: '카페', role: '카페 직원' },
+    { id: 'airport', label: '공항', role: '공항 직원' },
+    { id: 'phone', label: '전화통화', role: '전화 상대방' },
+    { id: 'friend', label: '친구', role: '친한 친구' },
+  ],
+  kr: [
+    { id: 'free', label: '自由会話', role: null },
+    { id: 'cafe', label: 'カフェ', role: 'カフェの店員' },
+    { id: 'airport', label: '空港', role: '空港のスタッフ' },
+    { id: 'phone', label: '電話', role: '電話の相手' },
+    { id: 'friend', label: '友達', role: '親しい友達' },
+  ],
+};
+
+function buildSystemPrompt(mode, level, scenario) {
+  if (mode === 'ja') {
+    let p = '당신은 한국인 일본어 학습자와 대화 연습을 하는 친절한 일본어 회화 파트너입니다. ' +
+      'JLPT ' + level + ' 수준에 맞는 어휘와 문법만 사용해서 반드시 일본어로만 대답하세요. ' +
+      '답변은 1~3문장으로 짧게 하세요. 사용자의 문장에 문법이나 단어 실수가 있으면, ' +
+      '대화를 자연스럽게 이어가면서 답변 끝에 괄호로 한국어로 부드럽게 고쳐주세요.';
+    if (scenario && scenario.role) {
+      p += ' 지금은 역할극 상황입니다. 당신은 "' + scenario.role + '" 역할을 맡아 자연스럽게 연기해주세요.';
+    }
+    return p;
+  }
+  let p = 'あなたは日本人の韓国語学習者と会話練習をする親切な韓国語会話パートナーです。' +
+    'TOPIK ' + level + 'レベルに合う語彙・文法だけを使って、必ず韓国語だけで答えてください。' +
+    '返答は1〜3文程度で短くしてください。ユーザーの文に文法や単語の間違いがあれば、' +
+    '会話を自然に続けながら、返答の最後にかっこで日本語で優しく直してあげてください。';
+  if (scenario && scenario.role) {
+    p += ' 今はロールプレイの状況です。あなたは「' + scenario.role + '」の役を自然に演じてください。';
+  }
+  return p;
+}
+
+function AiChatSection({ mode }) {
+  const levels = mode === 'ja' ? ['N5', 'N4', 'N3', 'N2', 'N1'] : ['1급', '2급', '3급', '4급', '5급', '6급'];
+  const scenarios = AI_SCENARIOS[mode];
+  const [level, setLevel] = useState(levels[0]);
+  const [scenarioId, setScenarioId] = useState('free');
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  const speak = mode === 'ja' ? speakJapanese : speakKorean;
+  const scenario = scenarios.find((s) => s.id === scenarioId);
+
+  async function sendMessage(overrideText) {
+    const text = (overrideText !== undefined ? overrideText : input).trim();
+    if (!text || loading) return;
+    if (!AI_WORKER_URL) {
+      setMessages((prev) => [...prev, { role: 'user', text }, { role: 'model', text: mode === 'ja' ? '⚠️ 아직 AI 서버 주소가 설정되지 않았습니다. AI_WORKER_URL을 채워주세요.' : '⚠️ まだAIサーバーのアドレスが設定されていません。AI_WORKER_URLを入力してください。' }]);
+      setInput('');
+      return;
+    }
+    const userMsg = { role: 'user', text };
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
+    setInput('');
+    setLoading(true);
+    try {
+      const res = await fetch(AI_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: buildSystemPrompt(mode, level, scenario),
+          messages: nextMessages.map((m) => ({ role: m.role, text: m.text })),
+        }),
+      });
+      const data = await res.json();
+      const reply = data.reply || data.error || (mode === 'ja' ? '(응답을 받지 못했습니다)' : '(返信を受け取れませんでした)');
+      setMessages((prev) => [...prev, { role: 'model', text: reply }]);
+      setTimeout(() => speak(reply), 300);
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: 'model', text: mode === 'ja' ? '오류가 발생했습니다. 다시 시도해주세요.' : 'エラーが発生しました。もう一度お試しください。' }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  const [recording, setRecording] = useState(false);
+  const recognitionRef = useRef(null);
+  const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  function startRecording() {
+    if (!speechSupported || recording || loading) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SR();
+    recognition.lang = mode === 'ja' ? 'ja-JP' : 'ko-KR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      sendMessage(transcript);
+    };
+    recognition.onerror = () => setRecording(false);
+    recognition.onend = () => setRecording(false);
+    recognitionRef.current = recognition;
+    setRecording(true);
+    recognition.start();
+  }
+  function stopRecording() {
+    if (recognitionRef.current) recognitionRef.current.stop();
+    setRecording(false);
+  }
+
+  return (
+    <div>
+      <div className="level-tabs">
+        {levels.map((lv) => (
+          <button key={lv} className={level === lv ? 'active' : ''} onClick={() => setLevel(lv)}>{lv}</button>
+        ))}
+      </div>
+      <div className="level-tabs">
+        {scenarios.map((s) => (
+          <button key={s.id} className={scenarioId === s.id ? 'active' : ''} onClick={() => setScenarioId(s.id)}>{s.label}</button>
+        ))}
+      </div>
+
+      {!AI_WORKER_URL && (
+        <div className="banner" style={{ marginTop: 0 }}>
+          {mode === 'ja'
+            ? 'AI 회화는 별도 서버(Cloudflare Worker) 설정이 필요합니다. 설정 전까지는 체험만 가능합니다.'
+            : 'AI会話には別途サーバー(Cloudflare Worker)の設定が必要です。設定前は体験のみ可能です。'}
+        </div>
+      )}
+
+      {!speechSupported && (
+        <div className="banner" style={{ marginTop: 0 }}>
+          {mode === 'ja'
+            ? '이 브라우저는 음성 인식을 지원하지 않아요. 텍스트로 입력해주세요. (Chrome/Edge 권장)'
+            : 'このブラウザは音声認識に対応していません。テキストで入力してください。（Chrome/Edge推奨）'}
+        </div>
+      )}
+
+      <div className="chat-window" ref={scrollRef}>
+        {messages.length === 0 && (
+          <div className="empty-state" style={{ padding: '30px 16px' }}>
+            {mode === 'ja' ? '마이크 버튼을 눌러 말하거나, 메시지를 입력해보세요!' : 'マイクボタンを押して話すか、メッセージを入力してみましょう!'}
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={'chat-bubble ' + (m.role === 'user' ? 'chat-user' : 'chat-ai')}>
+            <span className="jp-text">{m.text}</span>
+            {m.role === 'model' && (
+              <button className="chat-replay" onClick={() => speak(m.text)}>🔊</button>
+            )}
+          </div>
+        ))}
+        {loading && <div className="chat-bubble chat-ai chat-loading">···</div>}
+        {recording && (
+          <div className="chat-bubble chat-user chat-recording">
+            🎙️ {mode === 'ja' ? '듣고 있어요...' : '聞いています...'}
+          </div>
+        )}
+      </div>
+
+      <div className="chat-input-row">
+        {speechSupported && (
+          <button
+            className={'mic-btn' + (recording ? ' recording' : '')}
+            onClick={recording ? stopRecording : startRecording}
+            disabled={loading}
+            title={mode === 'ja' ? '마이크로 말하기' : 'マイクで話す'}
+          >
+            {recording ? '⏹️' : '🎤'}
+          </button>
+        )}
+        <input
+          className="login-input chat-input"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={mode === 'ja' ? '메시지 입력 또는 마이크로 말하기...' : 'メッセージ入力またはマイクで話す...'}
+        />
+        <button className="primary-btn chat-send-btn" onClick={() => sendMessage()} disabled={loading}>
+          {mode === 'ja' ? '전송' : '送信'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function JaSection({ user, onActivity }) {
   const [deckType, setDeckType] = useState('words');
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -8053,8 +8359,9 @@ function JaSection({ user, onActivity }) {
   ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, kanjiDeck.bookmarkedItems, travelDeck.bookmarkedItems, sentenceDeck.bookmarkedItems]);
 
   const isReview = deckType === 'review';
-  const activeDeck = isReview ? null : decks[deckType];
-  const unscopedItems = isReview ? bookmarkedItems : activeDeck.items;
+  const isAiChat = deckType === 'ai_chat';
+  const activeDeck = (isReview || isAiChat) ? null : decks[deckType];
+  const unscopedItems = isReview ? bookmarkedItems : (activeDeck ? activeDeck.items : []);
   const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
   const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
   const scopedDueItems = useMemo(() => (isReview ? scopedItems : scopedItems.filter((i) => i.due)), [isReview, scopedItems]);
@@ -8069,8 +8376,11 @@ function JaSection({ user, onActivity }) {
     <React.Fragment>
       <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
       <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
+      <button className={'review-bar ' + (isAiChat ? 'active' : '')} style={{ borderColor: 'var(--indigo)', color: isAiChat ? '#fffdf8' : 'var(--indigo)', background: isAiChat ? 'var(--indigo)' : 'transparent' }} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
 
-      {anyLoading ? (
+      {isAiChat ? (
+        <AiChatSection mode="ja" />
+      ) : anyLoading ? (
         <div className="empty-state">학습 데이터 불러오는 중...</div>
       ) : anyError ? (
         <div className="empty-state">데이터를 불러오지 못했습니다.<br/>Firestore 보안 규칙이 게시되어 있는지 확인해주세요.<br/><span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>{anyError.code}</span></div>
@@ -8391,8 +8701,9 @@ function KrSection({ user, onActivity }) {
   ], [wordDeck.bookmarkedItems, grammarDeck.bookmarkedItems, travelDeck.bookmarkedItems, sentenceDeck.bookmarkedItems]);
 
   const isReview = deckType === 'review';
-  const activeDeck = isReview ? null : decks[deckType];
-  const unscopedItems = isReview ? bookmarkedItems : activeDeck.items;
+  const isAiChat = deckType === 'ai_chat';
+  const activeDeck = (isReview || isAiChat) ? null : decks[deckType];
+  const unscopedItems = isReview ? bookmarkedItems : (activeDeck ? activeDeck.items : []);
   const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
   const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
   const scopedDueItems = useMemo(() => (isReview ? scopedItems : scopedItems.filter((i) => i.due)), [isReview, scopedItems]);
@@ -8407,8 +8718,11 @@ function KrSection({ user, onActivity }) {
     <React.Fragment>
       <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
       <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
+      <button className={'review-bar ' + (isAiChat ? 'active' : '')} style={{ borderColor: 'var(--indigo)', color: isAiChat ? '#fffdf8' : 'var(--indigo)', background: isAiChat ? 'var(--indigo)' : 'transparent' }} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
 
-      {anyLoading ? (
+      {isAiChat ? (
+        <AiChatSection mode="kr" />
+      ) : anyLoading ? (
         <div className="empty-state">学習データを読み込み中...</div>
       ) : anyError ? (
         <div className="empty-state">データを読み込めませんでした。<br/>Firestoreのセキュリティルールが公開されているか確認してください。<br/><span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>{anyError.code}</span></div>
