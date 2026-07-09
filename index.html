@@ -890,7 +890,7 @@ function speakJapanese(text) {
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
-  utter.rate = 1.08;
+  utter.rate = 0.85;
   utter.pitch = 1.15;
   const voice = cachedVoiceJa || pickVoiceJa();
   if (voice) utter.voice = voice;
@@ -917,7 +917,7 @@ function speakKorean(text) {
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ko-KR';
-  utter.rate = 1.08;
+  utter.rate = 0.85;
   utter.pitch = 1.15;
   const voice = cachedVoiceKr || pickVoiceKr();
   if (voice) utter.voice = voice;
@@ -7586,6 +7586,7 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
     if (checked) return;
     setPool((prev) => prev.filter((t) => t.id !== tile.id));
     setPlaced((prev) => [...prev, tile]);
+    speakJapanese(tile.text);
   }
   function removeTile(tile) {
     if (checked) return;
@@ -7598,8 +7599,12 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
     const correct = placed.map((t) => t.text).join('|') === item.tiles.join('|');
     setChecked(true);
     setWasCorrect(correct);
-    if (correct) playCorrectSound(); else playWrongSound();
-    setTimeout(() => speakJapanese(item.reading || item.tiles.join('')), 400);
+    if (correct) {
+      playCorrectSound();
+      setTimeout(() => speakJapanese(item.reading || item.tiles.join('')), 500);
+    } else {
+      playWrongSound();
+    }
   }
   function handleNext() {
     onResult(item.id, wasCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck);
@@ -7922,6 +7927,7 @@ function KrSentenceCard({ item, onResult, onToggleBookmark }) {
     if (checked) return;
     setPool((prev) => prev.filter((t) => t.id !== tile.id));
     setPlaced((prev) => [...prev, tile]);
+    speakKorean(tile.text);
   }
   function removeTile(tile) {
     if (checked) return;
@@ -7934,8 +7940,12 @@ function KrSentenceCard({ item, onResult, onToggleBookmark }) {
     const correct = placed.map((t) => t.text).join('|') === item.tiles.join('|');
     setChecked(true);
     setWasCorrect(correct);
-    if (correct) playCorrectSound(); else playWrongSound();
-    setTimeout(() => speakKorean(item.reading || item.tiles.join(' ')), 400);
+    if (correct) {
+      playCorrectSound();
+      setTimeout(() => speakKorean(item.reading || item.tiles.join(' ')), 500);
+    } else {
+      playWrongSound();
+    }
   }
   function handleNext() {
     onResult(item.id, wasCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck);
