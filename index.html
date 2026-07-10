@@ -531,6 +531,16 @@ body {
   color: var(--ink-soft);
 }
 
+.chat-correction {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #f1ead6;
+  border-left: 3px solid var(--gold);
+  border-radius: 2px;
+  font-size: 12px;
+  color: var(--ink);
+}
+
 .chat-bubble-actions {
   display: flex;
   gap: 10px;
@@ -669,20 +679,21 @@ body {
 .review-bar {
   display: block;
   width: 100%;
-  padding: 11px;
-  margin-bottom: 18px;
-  border: 1.5px dashed var(--gold);
+  padding: 13px;
+  margin-bottom: 12px;
+  border: 2px solid var(--gold);
   border-radius: var(--radius);
-  background: transparent;
-  color: var(--gold);
-  font-weight: 700;
-  font-size: 13px;
+  background: var(--gold);
+  color: #fffdf8;
+  font-weight: 800;
+  font-size: 14px;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(176, 141, 63, 0.3);
 }
 
 .review-bar.active {
-  background: var(--gold);
-  border-style: solid;
+  border-color: var(--vermillion);
+  box-shadow: 0 0 0 2px var(--vermillion) inset;
   color: #fffdf8;
 }
 
@@ -6207,6 +6218,592 @@ const SENTENCE_JA = [
       }
     ],
     "reading": "かれはかんこくごがじょうずです"
+  },
+  {
+    "id": "s-016",
+    "level": "N5",
+    "meaning": "저는 커피를 마시고 싶습니다.",
+    "tiles": [
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "コーヒー",
+        "reading": "コーヒー"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "飲みたいです",
+        "reading": "のみたいです"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "お茶",
+        "reading": "おちゃ"
+      },
+      {
+        "text": "食べたいです",
+        "reading": "たべたいです"
+      }
+    ],
+    "reading": "わたしはコーヒーをのみたいです"
+  },
+  {
+    "id": "s-017",
+    "level": "N5",
+    "meaning": "오늘은 학교에 안 갑니다.",
+    "tiles": [
+      {
+        "text": "今日",
+        "reading": "きょう"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "学校",
+        "reading": "がっこう"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "行きません",
+        "reading": "いきません"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "行きます",
+        "reading": "いきます"
+      },
+      {
+        "text": "会社",
+        "reading": "かいしゃ"
+      }
+    ],
+    "reading": "きょうはがっこうにいきません"
+  },
+  {
+    "id": "s-018",
+    "level": "N5",
+    "meaning": "이것은 제 것이 아닙니다.",
+    "tiles": [
+      {
+        "text": "これ",
+        "reading": "これ"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "の",
+        "reading": "の"
+      },
+      {
+        "text": "じゃありません",
+        "reading": "じゃありません"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "です",
+        "reading": "です"
+      },
+      {
+        "text": "あなた",
+        "reading": "あなた"
+      }
+    ],
+    "reading": "これはわたしのじゃありません"
+  },
+  {
+    "id": "s-019",
+    "level": "N5",
+    "meaning": "내일은 바쁩니다.",
+    "tiles": [
+      {
+        "text": "明日",
+        "reading": "あした"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "忙しいです",
+        "reading": "いそがしいです"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "暇です",
+        "reading": "ひまです"
+      },
+      {
+        "text": "今日",
+        "reading": "きょう"
+      }
+    ],
+    "reading": "あしたはいそがしいです"
+  },
+  {
+    "id": "s-020",
+    "level": "N5",
+    "meaning": "이 근처에 은행이 있습니다.",
+    "tiles": [
+      {
+        "text": "この",
+        "reading": "この"
+      },
+      {
+        "text": "近く",
+        "reading": "ちかく"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "銀行",
+        "reading": "ぎんこう"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "あります",
+        "reading": "あります"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "ありません",
+        "reading": "ありません"
+      },
+      {
+        "text": "病院",
+        "reading": "びょういん"
+      }
+    ],
+    "reading": "このちかくにぎんこうがあります"
+  },
+  {
+    "id": "s-021",
+    "level": "N4",
+    "meaning": "저는 매일 아침 신문을 읽습니다.",
+    "tiles": [
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "毎朝",
+        "reading": "まいあさ"
+      },
+      {
+        "text": "新聞",
+        "reading": "しんぶん"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "読みます",
+        "reading": "よみます"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "雑誌",
+        "reading": "ざっし"
+      },
+      {
+        "text": "書きます",
+        "reading": "かきます"
+      }
+    ],
+    "reading": "わたしはまいあさしんぶんをよみます"
+  },
+  {
+    "id": "s-022",
+    "level": "N4",
+    "meaning": "비가 오기 때문에 우산을 가져갑니다.",
+    "tiles": [
+      {
+        "text": "雨",
+        "reading": "あめ"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "降る",
+        "reading": "ふる"
+      },
+      {
+        "text": "から",
+        "reading": "から"
+      },
+      {
+        "text": "傘",
+        "reading": "かさ"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "持って行きます",
+        "reading": "もっていきます"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "晴れる",
+        "reading": "はれる"
+      },
+      {
+        "text": "忘れます",
+        "reading": "わすれます"
+      }
+    ],
+    "reading": "あめがふるからかさをもっていきます"
+  },
+  {
+    "id": "s-023",
+    "level": "N4",
+    "meaning": "이 문제는 저에게는 너무 어렵습니다.",
+    "tiles": [
+      {
+        "text": "この",
+        "reading": "この"
+      },
+      {
+        "text": "問題",
+        "reading": "もんだい"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "私",
+        "reading": "わたし"
+      },
+      {
+        "text": "には",
+        "reading": "には"
+      },
+      {
+        "text": "難しすぎます",
+        "reading": "むずかしすぎます"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "簡単すぎます",
+        "reading": "かんたんすぎます"
+      },
+      {
+        "text": "あなた",
+        "reading": "あなた"
+      }
+    ],
+    "reading": "このもんだいはわたしにはむずかしすぎます"
+  },
+  {
+    "id": "s-024",
+    "level": "N4",
+    "meaning": "다음 역에서 내려 주세요.",
+    "tiles": [
+      {
+        "text": "次",
+        "reading": "つぎ"
+      },
+      {
+        "text": "の",
+        "reading": "の"
+      },
+      {
+        "text": "駅",
+        "reading": "えき"
+      },
+      {
+        "text": "で",
+        "reading": "で"
+      },
+      {
+        "text": "降りて",
+        "reading": "おりて"
+      },
+      {
+        "text": "ください",
+        "reading": "ください"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "乗って",
+        "reading": "のって"
+      },
+      {
+        "text": "最初",
+        "reading": "さいしょ"
+      }
+    ],
+    "reading": "つぎのえきでおりてください"
+  },
+  {
+    "id": "s-025",
+    "level": "N4",
+    "meaning": "이 컴퓨터는 사용하기 편리합니다.",
+    "tiles": [
+      {
+        "text": "この",
+        "reading": "この"
+      },
+      {
+        "text": "パソコン",
+        "reading": "パソコン"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "使いやすいです",
+        "reading": "つかいやすいです"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "使いにくいです",
+        "reading": "つかいにくいです"
+      },
+      {
+        "text": "あのパソコン",
+        "reading": "あのパソコン"
+      }
+    ],
+    "reading": "このパソコンはつかいやすいです"
+  },
+  {
+    "id": "s-026",
+    "level": "N3",
+    "meaning": "그는 열심히 공부한 결과 합격했습니다.",
+    "tiles": [
+      {
+        "text": "彼",
+        "reading": "かれ"
+      },
+      {
+        "text": "は",
+        "reading": "は"
+      },
+      {
+        "text": "一生懸命",
+        "reading": "いっしょうけんめい"
+      },
+      {
+        "text": "勉強した",
+        "reading": "べんきょうした"
+      },
+      {
+        "text": "結果",
+        "reading": "けっか"
+      },
+      {
+        "text": "合格しました",
+        "reading": "ごうかくしました"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "失敗しました",
+        "reading": "しっぱいしました"
+      },
+      {
+        "text": "彼女",
+        "reading": "かのじょ"
+      }
+    ],
+    "reading": "かれはいっしょうけんめいべんきょうしたけっかごうかくしました"
+  },
+  {
+    "id": "s-027",
+    "level": "N3",
+    "meaning": "창문이 열려 있습니다.",
+    "tiles": [
+      {
+        "text": "窓",
+        "reading": "まど"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "開いて",
+        "reading": "あいて"
+      },
+      {
+        "text": "います",
+        "reading": "います"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "閉まって",
+        "reading": "しまって"
+      },
+      {
+        "text": "ドア",
+        "reading": "ドア"
+      }
+    ],
+    "reading": "まどがあいています"
+  },
+  {
+    "id": "s-028",
+    "level": "N3",
+    "meaning": "선생님 덕분에 시험에 합격했습니다.",
+    "tiles": [
+      {
+        "text": "先生",
+        "reading": "せんせい"
+      },
+      {
+        "text": "の",
+        "reading": "の"
+      },
+      {
+        "text": "おかげで",
+        "reading": "おかげで"
+      },
+      {
+        "text": "試験",
+        "reading": "しけん"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "合格しました",
+        "reading": "ごうかくしました"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "せいで",
+        "reading": "せいで"
+      },
+      {
+        "text": "友達",
+        "reading": "ともだち"
+      }
+    ],
+    "reading": "せんせいのおかげでしけんにごうかくしました"
+  },
+  {
+    "id": "s-029",
+    "level": "N2",
+    "meaning": "상황에 따라 대응이 달라집니다.",
+    "tiles": [
+      {
+        "text": "状況",
+        "reading": "じょうきょう"
+      },
+      {
+        "text": "に",
+        "reading": "に"
+      },
+      {
+        "text": "応じて",
+        "reading": "おうじて"
+      },
+      {
+        "text": "対応",
+        "reading": "たいおう"
+      },
+      {
+        "text": "が",
+        "reading": "が"
+      },
+      {
+        "text": "変わります",
+        "reading": "かわります"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "同じです",
+        "reading": "おなじです"
+      },
+      {
+        "text": "結果",
+        "reading": "けっか"
+      }
+    ],
+    "reading": "じょうきょうにおうじてたいおうがかわります"
+  },
+  {
+    "id": "s-030",
+    "level": "N1",
+    "meaning": "목표를 달성하기 위해 노력하고 있습니다.",
+    "tiles": [
+      {
+        "text": "目標",
+        "reading": "もくひょう"
+      },
+      {
+        "text": "を",
+        "reading": "を"
+      },
+      {
+        "text": "達成すべく",
+        "reading": "たっせいすべく"
+      },
+      {
+        "text": "努力しています",
+        "reading": "どりょくしています"
+      }
+    ],
+    "distractors": [
+      {
+        "text": "諦めています",
+        "reading": "あきらめています"
+      },
+      {
+        "text": "問題",
+        "reading": "もんだい"
+      }
+    ],
+    "reading": "もくひょうをたっせいすべくどりょくしています"
   }
 ];
 
@@ -9171,8 +9768,8 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
   const [selected, setSelected] = useState(null);
   const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
   const getAnswer = JA_ANSWER_GETTERS[deckType];
-  const correctText = useMemo(() => getAnswer(item), [item]);
-  const options = useMemo(() => buildOptions(item, pool, getAnswer, 4), [item, pool]);
+  const correctText = useMemo(() => getAnswer(item), [item.id]);
+  const options = useMemo(() => buildOptions(item, pool, getAnswer, 4), [item.id]);
   const speechText = useMemo(() => jaSpeechText(deckType, item), [deckType, item]);
   const answered = selected !== null;
   const isCorrect = selected === correctText;
@@ -9205,6 +9802,9 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
       <span className="hanko">{item.level}</span>
       <div style={{ marginTop: 8 }}>
         {jaRenderQuestion(deckType, item)}
+        {speechText && !answered && (
+          <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>
+        )}
         <div className="option-list">
           {options.map((opt) => {
             let cls = 'option-btn';
@@ -9447,10 +10047,17 @@ function buildSystemPrompt(mode, level, scenario) {
     if (scenario && scenario.role) {
       p += ' 지금은 역할극 상황입니다. 당신은 "' + scenario.role + '" 역할을 맡아 자연스럽게 연기해주세요.';
     }
-    p += ' 반드시 아래 형식으로만 답변하고 그 외 다른 텍스트는 절대 쓰지 마세요:\n' +
-      'USER||(사용자가 방금 보낸 문장을 자연스러운 한국어로 번역한 것)\n' +
-      'MAIN||(답변 - 보통은 일본어. 사용자가 한국어로 도움을 요청했다면 이 부분도 한국어로)\n' +
-      'TRANS||(MAIN이 일본어라면 그 한국어 번역을, 한국어로 답했다면 그 내용을 자연스러운 일본어로 다시 써서 적기. 사용자 문장에 문법이나 단어 실수가 있었다면 짧고 부드럽게 고쳐서 덧붙이기)';
+    p += ' 반드시 아래 4줄 형식으로만 답변하고 그 외 다른 텍스트는 절대 쓰지 마세요. ' +
+      '각 줄의 언어 지정을 엄격하게 지키세요 - 절대 어기지 마세요:\n' +
+      'USER||(사용자가 방금 보낸 문장 전체를 자연스러운 한국어로 번역. 이 줄은 반드시 한국어로만 작성. 일본어 절대 금지)\n' +
+      'MAIN||(회화 답변. 보통은 일본어로만 작성. 사용자가 한국어로 도움을 요청한 경우에만 이 부분도 한국어로)\n' +
+      'TRANS||(MAIN 내용 전체를 자연스러운 한국어로 번역. 이 줄은 반드시 한국어로만 작성. 일본어 절대 금지. MAIN이 이미 한국어였다면 이 줄은 그 내용을 자연스러운 일본어로 다시 쓰기)\n' +
+      'CORRECTION||(사용자 문장에 문법이나 단어 실수가 있었다면 한국어로 짧고 부드럽게 고쳐주기. 실수가 없었다면 "특별히 고칠 부분 없어요!"라고 한국어로 쓰기. 이 줄은 반드시 한국어로만 작성)\n\n' +
+      '예시(사용자가 "私は学生てす"라고 오타 섞인 일본어를 보냈을 때):\n' +
+      'USER||저는 학생이에요\n' +
+      'MAIN||そうなんですね！何を勉強していますか？\n' +
+      'TRANS||그렇군요! 무엇을 공부하고 있어요?\n' +
+      'CORRECTION||"てす"는 "です"의 오타예요. "私は学生です"가 맞는 표현이에요!';
     return p;
   }
   let p = 'あなたは日本人の韓国語学習者と会話練習をする親切な韓国語会話パートナーです。' +
@@ -9461,25 +10068,34 @@ function buildSystemPrompt(mode, level, scenario) {
   if (scenario && scenario.role) {
     p += ' 今はロールプレイの状況です。あなたは「' + scenario.role + '」の役を自然に演じてください。';
   }
-  p += ' 必ず下記の形式だけで答えて、それ以外のテキストは絶対に書かないでください:\n' +
-    'USER||(ユーザーが今送った文を自然な日本語に訳したもの)\n' +
-    'MAIN||(返答 - 通常は韓国語。ユーザーが日本語で助けを求めた場合はこの部分も日本語で)\n' +
-    'TRANS||(MAINが韓国語ならその日本語訳を、日本語で答えたならその内容を自然な韓国語で書き直して記載。ユーザーの文に文法や単語の間違いがあれば、短く優しく直して付け加える)';
+  p += ' 必ず下記の4行の形式だけで答えて、それ以外のテキストは絶対に書かないでください。' +
+    '各行の言語指定を厳密に守ってください - 絶対に違反しないこと:\n' +
+    'USER||(ユーザーが今送った文全体を自然な日本語に翻訳。この行は必ず日本語のみで書くこと。韓国語は絶対禁止)\n' +
+    'MAIN||(会話の返答。通常は韓国語のみで書く。ユーザーが日本語で助けを求めた場合のみ、この部分も日本語で)\n' +
+    'TRANS||(MAINの内容全体を自然な日本語に翻訳。この行は必ず日本語のみで書くこと。韓国語は絶対禁止。MAINがすでに日本語だった場合は、その内容を自然な韓国語で書き直すこと)\n' +
+    'CORRECTION||(ユーザーの文に文法や単語の間違いがあれば、日本語で短く優しく直してあげる。間違いがなければ「特に直すところはありません！」と日本語で書く。この行は必ず日本語のみで書くこと)\n\n' +
+    '例(ユーザーが「저는 학생 이에요」とスペースミスのある韓国語を送った場合):\n' +
+    'USER||私は学生です\n' +
+    'MAIN||そうなんですね！何を勉強していますか？\n' +
+    'TRANS||そうなんですね！何を勉強していますか？\n' +
+    'CORRECTION||「학생 이에요」は「학생이에요」とスペースなしで書くのが正しいです！';
   return p;
 }
 
 function parseAiReply(raw) {
   const userMatch = raw.match(/USER\|\|([\s\S]*?)(?=\n?MAIN\|\||$)/);
   const mainMatch = raw.match(/MAIN\|\|([\s\S]*?)(?=\n?TRANS\|\||$)/);
-  const transMatch = raw.match(/TRANS\|\|([\s\S]*)/);
+  const transMatch = raw.match(/TRANS\|\|([\s\S]*?)(?=\n?CORRECTION\|\||$)/);
+  const correctionMatch = raw.match(/CORRECTION\|\|([\s\S]*)/);
   if (mainMatch) {
     return {
       userTranslation: userMatch ? userMatch[1].trim() : null,
       text: mainMatch[1].trim(),
       translation: transMatch ? transMatch[1].trim() : null,
+      correction: correctionMatch ? correctionMatch[1].trim() : null,
     };
   }
-  return { userTranslation: null, text: raw.trim(), translation: null };
+  return { userTranslation: null, text: raw.trim(), translation: null, correction: null };
 }
 
 function AiChatSection({ mode }) {
@@ -9548,7 +10164,7 @@ function AiChatSection({ mode }) {
             break;
           }
         }
-        return [...updated, { role: 'model', text: parsed.text, translation: parsed.translation }];
+        return [...updated, { role: 'model', text: parsed.text, translation: parsed.translation, correction: parsed.correction }];
       });
       playAiVoice(parsed.text);
     } catch (e) {
@@ -9568,27 +10184,23 @@ function AiChatSection({ mode }) {
   const [recording, setRecording] = useState(false);
   const recognitionRef = useRef(null);
   const recordingRef = useRef(false);
-  const finalTranscriptRef = useRef('');
+  const finalTranscriptRef = useRef(''); // 지금까지 확정된 전체 텍스트(세션 재시작을 넘어 계속 유지)
+  const baseTranscriptRef = useRef(''); // 이전 인식 세션들에서 확정된 텍스트
   const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
-  function startRecording() {
-    if (!speechSupported || recordingRef.current || loading) return;
-    finalTranscriptRef.current = '';
-    setInput('');
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SR();
-    recognition.lang = sttLang === 'target' ? targetLangCode : nativeLangCode;
-    // 말이 잠깐 끊겨도(더듬거려도) 계속 듣고, 사용자가 마이크를 다시 눌러야 전송됨
-    recognition.continuous = true;
-    recognition.interimResults = true;
+  function attachRecognitionHandlers(recognition) {
     recognition.onresult = (event) => {
+      // 매번 이번 세션의 전체 결과를 처음부터 다시 계산 - resultIndex 누락/중복 버그 방지
+      let sessionFinal = '';
       let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) finalTranscriptRef.current += transcript;
+        if (event.results[i].isFinal) sessionFinal += transcript;
         else interim += transcript;
       }
-      setInput((finalTranscriptRef.current + interim).trim());
+      const combined = (baseTranscriptRef.current + sessionFinal).trim();
+      finalTranscriptRef.current = combined;
+      setInput((combined + interim).trim());
     };
     recognition.onerror = (e) => {
       if (e.error === 'no-speech' || e.error === 'aborted') return;
@@ -9596,11 +10208,36 @@ function AiChatSection({ mode }) {
       setRecording(false);
     };
     recognition.onend = () => {
-      // 브라우저가 일정 시간 후 자동으로 세션을 끊는 경우, 사용자가 아직 멈추지 않았다면 이어서 계속 들음
+      // 브라우저가 일정 시간 후 자동으로 세션을 끊는 경우, 사용자가 아직 멈추지 않았다면
+      // 지금까지 확정된 내용을 base에 반영하고 새 세션을 이어서 시작 (긴 문장이 잘리지 않도록)
       if (recordingRef.current) {
-        try { recognition.start(); } catch (e) {}
+        baseTranscriptRef.current = finalTranscriptRef.current;
+        try {
+          const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+          const next = new SR();
+          next.lang = recognition.lang;
+          next.continuous = true;
+          next.interimResults = true;
+          attachRecognitionHandlers(next);
+          recognitionRef.current = next;
+          next.start();
+        } catch (e) {}
       }
     };
+  }
+
+  function startRecording() {
+    if (!speechSupported || recordingRef.current || loading) return;
+    finalTranscriptRef.current = '';
+    baseTranscriptRef.current = '';
+    setInput('');
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SR();
+    recognition.lang = sttLang === 'target' ? targetLangCode : nativeLangCode;
+    // 말이 잠깐 끊겨도(더듬거려도) 계속 듣고, 사용자가 마이크를 다시 눌러야 전송됨
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    attachRecognitionHandlers(recognition);
     recognitionRef.current = recognition;
     recordingRef.current = true;
     setRecording(true);
@@ -9610,7 +10247,7 @@ function AiChatSection({ mode }) {
     recordingRef.current = false;
     setRecording(false);
     if (recognitionRef.current) {
-      // stop() 이후에도 늦게 도착하는 onresult가 입력창을 다시 채우는 것을 방지
+      // stop() 이후에도 늦게 도착하는 이벤트가 입력창을 다시 채우는 것을 방지
       recognitionRef.current.onresult = null;
       recognitionRef.current.onend = null;
       recognitionRef.current.stop();
@@ -9660,6 +10297,9 @@ function AiChatSection({ mode }) {
             <span className="jp-text">{m.text}</span>
             {m.translation && shownTranslations.has(i) && (
               <div className="chat-translation">{m.translation}</div>
+            )}
+            {m.correction && !/특별히|特に/.test(m.correction) && (
+              <div className="chat-correction">✏️ {m.correction}</div>
             )}
             <div className="chat-bubble-actions">
               {m.role === 'model' && (
@@ -9841,8 +10481,8 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
   const [selected, setSelected] = useState(null);
   const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
   const getAnswer = KR_ANSWER_GETTERS[deckType];
-  const correctText = useMemo(() => getAnswer(item), [item]);
-  const options = useMemo(() => buildOptions(item, pool, getAnswer, 4), [item, pool]);
+  const correctText = useMemo(() => getAnswer(item), [item.id]);
+  const options = useMemo(() => buildOptions(item, pool, getAnswer, 4), [item.id]);
   const speechText = useMemo(() => krSpeechText(deckType, item), [deckType, item]);
   const answered = selected !== null;
   const isCorrect = selected === correctText;
@@ -9875,6 +10515,9 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
       <span className="hanko">{item.level}</span>
       <div style={{ marginTop: 8 }}>
         {krRenderQuestion(deckType, item)}
+        {speechText && !answered && (
+          <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>
+        )}
         <div className="option-list">
           {options.map((opt) => {
             let cls = 'option-btn';
