@@ -473,40 +473,49 @@ body {
 }
 
 .chat-window {
-  height: 360px;
+  height: 380px;
   overflow-y: auto;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius);
-  background: #fffdf8;
-  padding: 12px;
-  margin-bottom: 10px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbfaf7 0%, #f1efe8 100%);
+  border: 1px solid rgba(43, 43, 40, 0.06);
+  box-shadow: inset 0 1px 4px rgba(43, 43, 40, 0.05);
+  padding: 16px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .chat-bubble {
-  max-width: 80%;
-  padding: 10px 14px;
-  border-radius: 14px;
+  max-width: 78%;
+  padding: 11px 15px;
+  border-radius: 18px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   position: relative;
+  box-shadow: 0 1px 3px rgba(43, 43, 40, 0.1);
+  animation: chat-pop-in 0.18s ease-out;
+}
+
+@keyframes chat-pop-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .chat-user {
   align-self: flex-end;
-  background: var(--indigo);
+  background: linear-gradient(135deg, #234a60, var(--indigo));
   color: #fffdf8;
-  border-bottom-right-radius: 3px;
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 2px 8px rgba(27, 58, 75, 0.28);
 }
 
 .chat-ai {
   align-self: flex-start;
-  background: var(--paper);
-  border: 1px solid var(--paper-line);
+  background: #ffffff;
+  border: 1px solid rgba(43, 43, 40, 0.07);
   color: var(--ink);
-  border-bottom-left-radius: 3px;
+  border-bottom-left-radius: 6px;
 }
 
 .chat-loading {
@@ -555,6 +564,40 @@ body {
 .chat-user .chat-translation {
   border-top-color: rgba(255, 253, 248, 0.35);
   color: rgba(255, 253, 248, 0.85);
+}
+
+.stt-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stt-lang-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.stt-lang-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--paper-line);
+  background: #fffdf8;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stt-lang-btn.active {
+  background: var(--indigo);
+  border-color: var(--indigo);
+  color: #fffdf8;
+}
+
+.stt-lang-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .chat-input-row {
@@ -982,7 +1025,7 @@ async function speakWithGemini(text, fallbackSpeak) {
       console.warn('[Gemini TTS] 오디오 재생 실패, 브라우저 음성으로 대체:', e);
       fallbackSpeak(text);
     };
-    audio.play().catch((err) => {
+    await audio.play().catch((err) => {
       console.warn('[Gemini TTS] play() 실패, 브라우저 음성으로 대체:', err);
       fallbackSpeak(text);
     });
@@ -9446,6 +9489,16 @@ function AiChatSection({ mode }) {
   const [scenarioId, setScenarioId] = useState('free');
   const [messages, setMessages] = useState([]);
   const [shownTranslations, setShownTranslations] = useState(() => new Set());
+  const [ttsBusy, setTtsBusy] = useState(false);
+
+  async function playAiVoice(text) {
+    setTtsBusy(true);
+    try {
+      await speakWithGemini(text, speak);
+    } finally {
+      setTtsBusy(false);
+    }
+  }
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
@@ -9455,6 +9508,11 @@ function AiChatSection({ mode }) {
   }, [messages, loading]);
 
   const speak = mode === 'ja' ? speakJapanese : speakKorean;
+  const targetLangCode = mode === 'ja' ? 'ja-JP' : 'ko-KR';
+  const nativeLangCode = mode === 'ja' ? 'ko-KR' : 'ja-JP';
+  const targetLangLabel = mode === 'ja' ? '日本語' : '한국어';
+  const nativeLangLabel = mode === 'ja' ? '한국어' : '日本語';
+  const [sttLang, setSttLang] = useState('target'); // 'target' | 'native' - 지금 마이크가 어느 언어를 인식할지
   const scenario = scenarios.find((s) => s.id === scenarioId);
 
   async function sendMessage(overrideText) {
@@ -9492,7 +9550,7 @@ function AiChatSection({ mode }) {
         }
         return [...updated, { role: 'model', text: parsed.text, translation: parsed.translation }];
       });
-      setTimeout(() => speakWithGemini(parsed.text, speak), 300);
+      playAiVoice(parsed.text);
     } catch (e) {
       setMessages((prev) => [...prev, { role: 'model', text: mode === 'ja' ? '오류가 발생했습니다. 다시 시도해주세요.' : 'エラーが発生しました。もう一度お試しください。' }]);
     } finally {
@@ -9519,7 +9577,7 @@ function AiChatSection({ mode }) {
     setInput('');
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SR();
-    recognition.lang = mode === 'ja' ? 'ja-JP' : 'ko-KR';
+    recognition.lang = sttLang === 'target' ? targetLangCode : nativeLangCode;
     // 말이 잠깐 끊겨도(더듬거려도) 계속 듣고, 사용자가 마이크를 다시 눌러야 전송됨
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -9605,7 +9663,7 @@ function AiChatSection({ mode }) {
             )}
             <div className="chat-bubble-actions">
               {m.role === 'model' && (
-                <button className="chat-replay" onClick={() => speakWithGemini(m.text, speak)}>🔊</button>
+                <button className="chat-replay" onClick={() => playAiVoice(m.text)} disabled={ttsBusy}>{ttsBusy ? '⏳' : '🔊'}</button>
               )}
               {m.translation && (
                 <button
@@ -9633,13 +9691,33 @@ function AiChatSection({ mode }) {
         )}
       </div>
 
+      {speechSupported && (
+        <div className="stt-lang-row">
+          <span className="stt-lang-label">{mode === 'ja' ? '🎤 인식 언어:' : '🎤 認識言語:'}</span>
+          <button
+            className={'stt-lang-btn' + (sttLang === 'target' ? ' active' : '')}
+            onClick={() => setSttLang('target')}
+            disabled={recording}
+          >
+            {targetLangLabel}
+          </button>
+          <button
+            className={'stt-lang-btn' + (sttLang === 'native' ? ' active' : '')}
+            onClick={() => setSttLang('native')}
+            disabled={recording}
+          >
+            {nativeLangLabel}
+          </button>
+        </div>
+      )}
+
       <div className="chat-input-row">
         {speechSupported && (
           <button
             className={'mic-btn' + (recording ? ' recording' : '')}
             onClick={recording ? stopRecording : startRecording}
             disabled={loading}
-            title={mode === 'ja' ? '마이크로 말하기' : 'マイクで話す'}
+            title={(mode === 'ja' ? '마이크로 말하기 - ' : 'マイクで話す - ') + (sttLang === 'target' ? targetLangLabel : nativeLangLabel)}
           >
             {recording ? '⏹️' : '🎤'}
           </button>
