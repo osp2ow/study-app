@@ -547,6 +547,16 @@ body {
   padding: 0;
 }
 
+.chat-user .chat-translate-btn {
+  color: #fffdf8;
+  text-decoration: underline;
+}
+
+.chat-user .chat-translation {
+  border-top-color: rgba(255, 253, 248, 0.35);
+  color: rgba(255, 253, 248, 0.85);
+}
+
 .chat-input-row {
   display: flex;
   gap: 8px;
@@ -7524,6 +7534,226 @@ const VOCAB_KR = [
     "example": "너무 걱정하지 마세요.",
     "examplePronunciation": "너무 걱쩡하지 마세요.",
     "exampleMeaningJp": "あまり心配しないでください。"
+  },
+  {
+    "id": "w-126",
+    "word": "완전",
+    "pronunciation": "완전",
+    "meaningJp": "めっちゃ、超（強調）",
+    "level": "2급",
+    "tag": "일상",
+    "example": "이거 완전 맛있어요.",
+    "examplePronunciation": "이거 완전 마시써요.",
+    "exampleMeaningJp": "これめっちゃ美味しいです。"
+  },
+  {
+    "id": "w-127",
+    "word": "대박",
+    "pronunciation": "대박",
+    "meaningJp": "すごい、やばい",
+    "level": "2급",
+    "tag": "일상",
+    "example": "대박, 진짜요?",
+    "examplePronunciation": "대박, 진짜요?",
+    "exampleMeaningJp": "やばい、本当ですか？"
+  },
+  {
+    "id": "w-128",
+    "word": "그냥",
+    "pronunciation": "그냥",
+    "meaningJp": "ただ、なんとなく",
+    "level": "2급",
+    "tag": "일상",
+    "example": "그냥 집에 있었어요.",
+    "examplePronunciation": "그냥 지베 이써써요.",
+    "exampleMeaningJp": "ただ家にいました。"
+  },
+  {
+    "id": "w-129",
+    "word": "아무튼",
+    "pronunciation": "아무튼",
+    "meaningJp": "とにかく",
+    "level": "2급",
+    "tag": "일상",
+    "example": "아무튼 조심하세요.",
+    "examplePronunciation": "아무튼 조심하세요.",
+    "exampleMeaningJp": "とにかく気をつけてください。"
+  },
+  {
+    "id": "w-130",
+    "word": "혹시",
+    "pronunciation": "혹씨",
+    "meaningJp": "もしかして",
+    "level": "2급",
+    "tag": "일상",
+    "example": "혹시 시간 있어요?",
+    "examplePronunciation": "혹씨 시간 이써요?",
+    "exampleMeaningJp": "もしかして時間ありますか？"
+  },
+  {
+    "id": "w-131",
+    "word": "살짝",
+    "pronunciation": "살짝",
+    "meaningJp": "ちょっと、少し",
+    "level": "2급",
+    "tag": "일상",
+    "example": "살짝 매워요.",
+    "examplePronunciation": "살짝 매워요.",
+    "exampleMeaningJp": "ちょっと辛いです。"
+  },
+  {
+    "id": "w-132",
+    "word": "거의",
+    "pronunciation": "거의",
+    "meaningJp": "ほとんど",
+    "level": "2급",
+    "tag": "일상",
+    "example": "거의 다 끝났어요.",
+    "examplePronunciation": "거의 다 끈나써요.",
+    "exampleMeaningJp": "ほとんど終わりました。"
+  },
+  {
+    "id": "w-133",
+    "word": "원래",
+    "pronunciation": "월래",
+    "meaningJp": "元々",
+    "level": "2급",
+    "tag": "일상",
+    "example": "원래 이런 성격이에요.",
+    "examplePronunciation": "월래 이런 성겨기에요.",
+    "exampleMeaningJp": "元々こういう性格です。"
+  },
+  {
+    "id": "w-134",
+    "word": "별로",
+    "pronunciation": "별로",
+    "meaningJp": "あまり（〜ない）",
+    "level": "2급",
+    "tag": "일상",
+    "example": "별로 안 좋아해요.",
+    "examplePronunciation": "별로 안 조아해요.",
+    "exampleMeaningJp": "あまり好きじゃないです。"
+  },
+  {
+    "id": "w-135",
+    "word": "딱",
+    "pronunciation": "딱",
+    "meaningJp": "ぴったり、ちょうど",
+    "level": "2급",
+    "tag": "일상",
+    "example": "이거 딱이에요.",
+    "examplePronunciation": "이거 따기에요.",
+    "exampleMeaningJp": "これぴったりです。"
+  },
+  {
+    "id": "w-136",
+    "word": "좀",
+    "pronunciation": "좀",
+    "meaningJp": "ちょっと（조금의 준말）",
+    "level": "1급",
+    "tag": "일상",
+    "example": "이거 좀 도와주세요.",
+    "examplePronunciation": "이거 좀 도와주세요.",
+    "exampleMeaningJp": "これちょっと手伝ってください。"
+  },
+  {
+    "id": "w-137",
+    "word": "실은",
+    "pronunciation": "시른",
+    "meaningJp": "実は",
+    "level": "2급",
+    "tag": "일상",
+    "example": "실은 저도 몰랐어요.",
+    "examplePronunciation": "시른 저도 몰라써요.",
+    "exampleMeaningJp": "実は私も知りませんでした。"
+  },
+  {
+    "id": "w-138",
+    "word": "어쩐지",
+    "pronunciation": "어쩐지",
+    "meaningJp": "どうりで",
+    "level": "3급",
+    "tag": "일상",
+    "example": "어쩐지 이상하더라고요.",
+    "examplePronunciation": "어쩐지 이상하더라고요.",
+    "exampleMeaningJp": "どうりでおかしいと思いました。"
+  },
+  {
+    "id": "w-139",
+    "word": "다행이다",
+    "pronunciation": "다행이다",
+    "meaningJp": "よかった（安心）",
+    "level": "2급",
+    "tag": "일상",
+    "example": "안 다쳐서 다행이에요.",
+    "examplePronunciation": "안 다처서 다행이에요.",
+    "exampleMeaningJp": "怪我しなくてよかったです。"
+  },
+  {
+    "id": "w-140",
+    "word": "상관없다",
+    "pronunciation": "상과넙따",
+    "meaningJp": "構わない",
+    "level": "3급",
+    "tag": "일상",
+    "example": "저는 상관없어요.",
+    "examplePronunciation": "저는 상과넙써요.",
+    "exampleMeaningJp": "私は構いません。"
+  },
+  {
+    "id": "w-141",
+    "word": "아쉽다",
+    "pronunciation": "아쉽따",
+    "meaningJp": "残念だ",
+    "level": "2급",
+    "tag": "일상",
+    "example": "못 가서 아쉬워요.",
+    "examplePronunciation": "몯 가서 아쉬워요.",
+    "exampleMeaningJp": "行けなくて残念です。"
+  },
+  {
+    "id": "w-142",
+    "word": "부럽다",
+    "pronunciation": "부럽따",
+    "meaningJp": "うらやましい",
+    "level": "2급",
+    "tag": "일상",
+    "example": "정말 부러워요.",
+    "examplePronunciation": "정말 부러워요.",
+    "exampleMeaningJp": "本当にうらやましいです。"
+  },
+  {
+    "id": "w-143",
+    "word": "신기하다",
+    "pronunciation": "신기하다",
+    "meaningJp": "不思議だ、面白い",
+    "level": "2급",
+    "tag": "일상",
+    "example": "신기하네요!",
+    "examplePronunciation": "신기하네요!",
+    "exampleMeaningJp": "不思議ですね！"
+  },
+  {
+    "id": "w-144",
+    "word": "어색하다",
+    "pronunciation": "어새카다",
+    "meaningJp": "気まずい、ぎこちない",
+    "level": "3급",
+    "tag": "일상",
+    "example": "조금 어색해요.",
+    "examplePronunciation": "조금 어새캐요.",
+    "exampleMeaningJp": "少し気まずいです。"
+  },
+  {
+    "id": "w-145",
+    "word": "당황하다",
+    "pronunciation": "당황하다",
+    "meaningJp": "戸惑う、慌てる",
+    "level": "3급",
+    "tag": "일상",
+    "example": "갑자기 물어봐서 당황했어요.",
+    "examplePronunciation": "갑짜기 무러봐서 당황해써요.",
+    "exampleMeaningJp": "急に聞かれて戸惑いました。"
   }
 ];
 const GRAMMAR_KR = [
@@ -7876,6 +8106,86 @@ const GRAMMAR_KR = [
     "example": "나이가 듦에 따라 생각이 바뀌어요.",
     "exampleMeaningJp": "年を取るにしたがって考えが変わります。",
     "japaneseNote": "日本語の「~にしたがって」に対応する、格式のある比例表現です。"
+  },
+  {
+    "id": "g-036",
+    "level": "2급",
+    "pattern": "~잖아(요)",
+    "titleJp": "確認・念押し表現(~じゃないですか)",
+    "connection": "動詞・形容詞語幹 + 잖아(요)",
+    "example": "오늘 제 생일이잖아요.",
+    "exampleMeaningJp": "今日、私の誕生日じゃないですか。",
+    "japaneseNote": "相手も知っているはずのことを念押しして言う、会話で非常によく使う表現です。日本語の「~じゃないですか」に近い感覚です。"
+  },
+  {
+    "id": "g-037",
+    "level": "2급",
+    "pattern": "~거든(요)",
+    "titleJp": "理由説明表現(~んですよ)",
+    "connection": "動詞・形容詞語幹 + 거든(요)",
+    "example": "저는 매운 음식을 못 먹거든요.",
+    "exampleMeaningJp": "私、辛い食べ物が食べられないんですよ。",
+    "japaneseNote": "相手が知らない情報や理由を教えてあげる時に使う、くだけた会話表現です。"
+  },
+  {
+    "id": "g-038",
+    "level": "1급",
+    "pattern": "~네요",
+    "titleJp": "感嘆・気づき表現(~ですね)",
+    "connection": "動詞・形容詞語幹 + 네요",
+    "example": "오늘 날씨 좋네요.",
+    "exampleMeaningJp": "今日、天気いいですね。",
+    "japaneseNote": "今気づいたことに対する感嘆を表す表現で、日本語の「~ですね」とほぼ同じ感覚で使えます。"
+  },
+  {
+    "id": "g-039",
+    "level": "3급",
+    "pattern": "~던데(요)",
+    "titleJp": "回想・背景説明表現(~だったんですけど)",
+    "connection": "動詞・形容詞語幹 + 던데(요)",
+    "example": "어제 가 보니까 사람이 많던데요.",
+    "exampleMeaningJp": "昨日行ってみたら、人が多かったんですけど。",
+    "japaneseNote": "過去に自分が直接経験したことを、少し驚きや余韻を込めて伝える時に使います。"
+  },
+  {
+    "id": "g-040",
+    "level": "3급",
+    "pattern": "~(으)ㄹ걸요",
+    "titleJp": "柔らかい推測表現(~と思いますよ)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄹ걸요／パッチム有:을걸요)",
+    "example": "아마 지금은 문 닫았을걸요.",
+    "exampleMeaningJp": "多分今はもう閉まっていると思いますよ。",
+    "japaneseNote": "確信はないが自分の考えを柔らかく伝える推測表現です。"
+  },
+  {
+    "id": "g-041",
+    "level": "2급",
+    "pattern": "~구나 / ~군요",
+    "titleJp": "新事実の気づき表現(~なんだ/~なんですね)",
+    "connection": "動詞・形容詞語幹 + 구나(반말)／군요(높임)",
+    "example": "아, 그래서 안 왔구나.",
+    "exampleMeaningJp": "あ、それで来なかったんだ。",
+    "japaneseNote": "それまで知らなかった事実に気づいた瞬間に使う表現。日本語の「~なんだ」に近い感覚です。"
+  },
+  {
+    "id": "g-042",
+    "level": "3급",
+    "pattern": "~다니까(요)",
+    "titleJp": "繰り返し強調表現(~って言ってるでしょ)",
+    "connection": "動詞・形容詞語幹 + 다니까(요)",
+    "example": "괜찮다니까요, 걱정하지 마세요.",
+    "exampleMeaningJp": "大丈夫だって言ってるじゃないですか、心配しないでください。",
+    "japaneseNote": "すでに言ったことを、少しじれったさを込めて繰り返し強調する時に使う会話表現です。"
+  },
+  {
+    "id": "g-043",
+    "level": "2급",
+    "pattern": "~(으)ㄹ 텐데",
+    "titleJp": "予想・懸念表現(~だろうに、~と思うけど)",
+    "connection": "動詞・形容詞語幹(パッチム無:ㄹ텐데／パッチム有:을텐데)",
+    "example": "많이 힘들 텐데 괜찮아요?",
+    "exampleMeaningJp": "かなり大変だと思うけど、大丈夫ですか。",
+    "japaneseNote": "相手の状況を推測しながら気遣う時によく使われる、あたたかみのある表現です。"
   }
 ];
 const TRAVEL_KR = [
@@ -8202,6 +8512,168 @@ const TRAVEL_KR = [
     "pronunciation": "예야글 하고 시퍼요.",
     "japanese": "予約をしたいです。",
     "note": "病院・美容室など予約が必要な場所全般で使える"
+  },
+  {
+    "id": "t2-001",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "진짜요?",
+    "pronunciation": "진짜요?",
+    "japanese": "本当ですか。",
+    "note": "놀랐을 때 쓰는 기본 리액션"
+  },
+  {
+    "id": "t2-002",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "대박이다!",
+    "pronunciation": "대바기다!",
+    "japanese": "やばい！すごい！",
+    "note": "놀랍거나 대단할 때 쓰는 감탄사(캐주얼)"
+  },
+  {
+    "id": "t2-003",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "헐, 진짜요?",
+    "pronunciation": "헐, 진짜요?",
+    "japanese": "えっ、マジですか。",
+    "note": "매우 놀랐을 때(친한 사이에서 편하게)"
+  },
+  {
+    "id": "t2-004",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "그러게요.",
+    "pronunciation": "그러게요.",
+    "japanese": "そうですね（同意）。",
+    "note": "상대 말에 동감할 때"
+  },
+  {
+    "id": "t2-005",
+    "scene": "日常会話",
+    "level": "3급",
+    "korean": "그건 그렇고.",
+    "pronunciation": "그건 그러코.",
+    "japanese": "それはそうと。",
+    "note": "화제를 자연스럽게 바꿀 때"
+  },
+  {
+    "id": "t2-006",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "아 맞다!",
+    "pronunciation": "아 맏따!",
+    "japanese": "あ、そうだ！",
+    "note": "뭔가 갑자기 생각났을 때"
+  },
+  {
+    "id": "t2-007",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "어떡하지?",
+    "pronunciation": "어떠카지?",
+    "japanese": "どうしよう。",
+    "note": "곤란하거나 걱정될 때"
+  },
+  {
+    "id": "t2-008",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "잠깐만요.",
+    "pronunciation": "잠깐만요.",
+    "japanese": "ちょっと待ってください。",
+    "note": "상대를 잠시 멈추게 할 때"
+  },
+  {
+    "id": "t2-009",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "괜찮아요, 됐어요.",
+    "pronunciation": "괜차나요, 돼써요.",
+    "japanese": "大丈夫です、もういいです。",
+    "note": "정중하게 사양하거나 괜찮다고 할 때"
+  },
+  {
+    "id": "t2-010",
+    "scene": "日常会話",
+    "level": "3급",
+    "korean": "그럴 수도 있죠.",
+    "pronunciation": "그럴 수도 읻쬬.",
+    "japanese": "そういうこともありますよね。",
+    "note": "상대를 다독이거나 이해할 때"
+  },
+  {
+    "id": "t2-011",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "말도 안 돼요.",
+    "pronunciation": "말도 안 돼요.",
+    "japanese": "あり得ないです。",
+    "note": "믿기지 않는 일에 대한 반응"
+  },
+  {
+    "id": "t2-012",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "저도 그렇게 생각해요.",
+    "pronunciation": "저도 그러케 생가캐요.",
+    "japanese": "私もそう思います。",
+    "note": "상대 의견에 동의할 때"
+  },
+  {
+    "id": "t2-013",
+    "scene": "日常会話",
+    "level": "3급",
+    "korean": "무슨 말인지 알아요.",
+    "pronunciation": "무슨 마린지 아라요.",
+    "japanese": "言いたいことは分かります。",
+    "note": "공감을 표현할 때"
+  },
+  {
+    "id": "t2-014",
+    "scene": "日常会話",
+    "level": "2급",
+    "korean": "아니 근데.",
+    "pronunciation": "아니 근데.",
+    "japanese": "いや、でも。",
+    "note": "반박하거나 화제를 전환할 때(캐주얼)"
+  },
+  {
+    "id": "t2-015",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "오랜만이에요!",
+    "pronunciation": "오랜마니에요!",
+    "japanese": "お久しぶりです！",
+    "note": "오랜만에 만났을 때"
+  },
+  {
+    "id": "t2-016",
+    "scene": "日常会話",
+    "level": "1급",
+    "korean": "잘 지냈어요?",
+    "pronunciation": "잘 지내써요?",
+    "japanese": "元気にしていましたか。",
+    "note": "안부를 물을 때"
+  },
+  {
+    "id": "t2-017",
+    "scene": "電話",
+    "level": "2급",
+    "korean": "잘 안 들려요.",
+    "pronunciation": "자란 들려요.",
+    "japanese": "よく聞こえません。",
+    "note": "통화 음질이 안 좋을 때"
+  },
+  {
+    "id": "t2-018",
+    "scene": "約束",
+    "level": "2급",
+    "korean": "조금 늦을 것 같아요.",
+    "pronunciation": "조금 느즐 걷 가타요.",
+    "japanese": "少し遅れそうです。",
+    "note": "약속에 늦을 것 같을 때 미리 알리는 표현"
   }
 ];
 const SENTENCE_KR = [
@@ -8925,6 +9397,7 @@ function buildSystemPrompt(mode, level, scenario) {
       p += ' 지금은 역할극 상황입니다. 당신은 "' + scenario.role + '" 역할을 맡아 자연스럽게 연기해주세요.';
     }
     p += ' 반드시 아래 형식으로만 답변하고 그 외 다른 텍스트는 절대 쓰지 마세요:\n' +
+      'USER||(사용자가 방금 보낸 문장을 자연스러운 한국어로 번역한 것)\n' +
       'MAIN||(답변 - 보통은 일본어. 사용자가 한국어로 도움을 요청했다면 이 부분도 한국어로)\n' +
       'TRANS||(MAIN이 일본어라면 그 한국어 번역을, 한국어로 답했다면 그 내용을 자연스러운 일본어로 다시 써서 적기. 사용자 문장에 문법이나 단어 실수가 있었다면 짧고 부드럽게 고쳐서 덧붙이기)';
     return p;
@@ -8938,21 +9411,24 @@ function buildSystemPrompt(mode, level, scenario) {
     p += ' 今はロールプレイの状況です。あなたは「' + scenario.role + '」の役を自然に演じてください。';
   }
   p += ' 必ず下記の形式だけで答えて、それ以外のテキストは絶対に書かないでください:\n' +
+    'USER||(ユーザーが今送った文を自然な日本語に訳したもの)\n' +
     'MAIN||(返答 - 通常は韓国語。ユーザーが日本語で助けを求めた場合はこの部分も日本語で)\n' +
     'TRANS||(MAINが韓国語ならその日本語訳を、日本語で答えたならその内容を自然な韓国語で書き直して記載。ユーザーの文に文法や単語の間違いがあれば、短く優しく直して付け加える)';
   return p;
 }
 
 function parseAiReply(raw) {
+  const userMatch = raw.match(/USER\|\|([\s\S]*?)(?=\n?MAIN\|\||$)/);
   const mainMatch = raw.match(/MAIN\|\|([\s\S]*?)(?=\n?TRANS\|\||$)/);
   const transMatch = raw.match(/TRANS\|\|([\s\S]*)/);
   if (mainMatch) {
     return {
+      userTranslation: userMatch ? userMatch[1].trim() : null,
       text: mainMatch[1].trim(),
       translation: transMatch ? transMatch[1].trim() : null,
     };
   }
-  return { text: raw.trim(), translation: null };
+  return { userTranslation: null, text: raw.trim(), translation: null };
 }
 
 function AiChatSection({ mode }) {
@@ -8998,7 +9474,16 @@ function AiChatSection({ mode }) {
       const data = await res.json();
       const rawReply = data.reply || data.error || (mode === 'ja' ? '(응답을 받지 못했습니다)' : '(返信を受け取れませんでした)');
       const parsed = parseAiReply(rawReply);
-      setMessages((prev) => [...prev, { role: 'model', text: parsed.text, translation: parsed.translation }]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        for (let i = updated.length - 1; i >= 0; i--) {
+          if (updated[i].role === 'user' && updated[i].translation === undefined) {
+            updated[i] = { ...updated[i], translation: parsed.userTranslation };
+            break;
+          }
+        }
+        return [...updated, { role: 'model', text: parsed.text, translation: parsed.translation }];
+      });
       setTimeout(() => speakWithGemini(parsed.text, speak), 300);
     } catch (e) {
       setMessages((prev) => [...prev, { role: 'model', text: mode === 'ja' ? '오류가 발생했습니다. 다시 시도해주세요.' : 'エラーが発生しました。もう一度お試しください。' }]);
@@ -9059,10 +9544,13 @@ function AiChatSection({ mode }) {
     recordingRef.current = false;
     setRecording(false);
     if (recognitionRef.current) {
+      // stop() 이후에도 늦게 도착하는 onresult가 입력창을 다시 채우는 것을 방지
+      recognitionRef.current.onresult = null;
       recognitionRef.current.onend = null;
       recognitionRef.current.stop();
     }
     const text = (finalTranscriptRef.current || input).trim();
+    setInput('');
     if (text) sendMessage(text);
   }
 
@@ -9104,29 +9592,29 @@ function AiChatSection({ mode }) {
         {messages.map((m, i) => (
           <div key={i} className={'chat-bubble ' + (m.role === 'user' ? 'chat-user' : 'chat-ai')}>
             <span className="jp-text">{m.text}</span>
-            {m.role === 'model' && m.translation && shownTranslations.has(i) && (
+            {m.translation && shownTranslations.has(i) && (
               <div className="chat-translation">{m.translation}</div>
             )}
-            {m.role === 'model' && (
-              <div className="chat-bubble-actions">
+            <div className="chat-bubble-actions">
+              {m.role === 'model' && (
                 <button className="chat-replay" onClick={() => speakWithGemini(m.text, speak)}>🔊</button>
-                {m.translation && (
-                  <button
-                    className="chat-translate-btn"
-                    onClick={() => {
-                      setShownTranslations((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(i)) next.delete(i);
-                        else next.add(i);
-                        return next;
-                      });
-                    }}
-                  >
-                    {shownTranslations.has(i) ? (mode === 'ja' ? '번역 숨기기' : '訳を隠す') : (mode === 'ja' ? '🔤 번역' : '🔤 訳')}
-                  </button>
-                )}
-              </div>
-            )}
+              )}
+              {m.translation && (
+                <button
+                  className="chat-translate-btn"
+                  onClick={() => {
+                    setShownTranslations((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(i)) next.delete(i);
+                      else next.add(i);
+                      return next;
+                    });
+                  }}
+                >
+                  {shownTranslations.has(i) ? (mode === 'ja' ? '번역 숨기기' : '訳を隠す') : (mode === 'ja' ? '🔤 번역' : '🔤 訳')}
+                </button>
+              )}
+            </div>
           </div>
         ))}
         {loading && <div className="chat-bubble chat-ai chat-loading">···</div>}
