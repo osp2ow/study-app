@@ -9745,7 +9745,7 @@ function useUserStats(user) {
 }
 
 // ==================== 실제 Firestore 연동 SRS 훅 (모든 덱 공용) ====================
-function useSrsDeck(user, deckType, firestoreName, masterList) {
+function useSrsDeck(user, deckType, firestoreName, masterList, retryKey) {
   const [progress, setProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [seeded, setSeeded] = useState(false);
@@ -9773,7 +9773,7 @@ function useSrsDeck(user, deckType, firestoreName, masterList) {
       }
     );
     return () => unsub();
-  }, [uid, firestoreName]);
+  }, [uid, firestoreName, retryKey]);
 
   useEffect(() => {
     if (!uid || loading || seeded || error) return;
@@ -10560,15 +10560,23 @@ function JaSection({ user, onActivity, onFocusChange }) {
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [studyAll, setStudyAll] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const [showRetry, setShowRetry] = useState(false);
 
-  const wordDeck = useSrsDeck(user, 'words', 'ja_words', VOCAB_JA);
-  const grammarDeck = useSrsDeck(user, 'grammar', 'ja_grammar', GRAMMAR_JA);
-  const kanjiDeck = useSrsDeck(user, 'kanji', 'ja_kanji', KANJI_JA);
-  const travelDeck = useSrsDeck(user, 'travel', 'ja_travel', TRAVEL_JA);
-  const sentenceDeck = useSrsDeck(user, 'sentence', 'ja_sentence', SENTENCE_JA);
+  const wordDeck = useSrsDeck(user, 'words', 'ja_words', VOCAB_JA, retryKey);
+  const grammarDeck = useSrsDeck(user, 'grammar', 'ja_grammar', GRAMMAR_JA, retryKey);
+  const kanjiDeck = useSrsDeck(user, 'kanji', 'ja_kanji', KANJI_JA, retryKey);
+  const travelDeck = useSrsDeck(user, 'travel', 'ja_travel', TRAVEL_JA, retryKey);
+  const sentenceDeck = useSrsDeck(user, 'sentence', 'ja_sentence', SENTENCE_JA, retryKey);
   const decks = { words: wordDeck, grammar: grammarDeck, kanji: kanjiDeck, travel: travelDeck, sentence: sentenceDeck };
 
   const anyLoading = wordDeck.loading || grammarDeck.loading || kanjiDeck.loading || travelDeck.loading || sentenceDeck.loading;
+
+  useEffect(() => {
+    if (!anyLoading) { setShowRetry(false); return; }
+    const t = setTimeout(() => setShowRetry(true), 8000);
+    return () => clearTimeout(t);
+  }, [anyLoading, retryKey]);
   const anyError = wordDeck.error || grammarDeck.error || kanjiDeck.error || travelDeck.error || sentenceDeck.error;
 
   const bookmarkedItems = useMemo(() => [
@@ -10610,7 +10618,15 @@ function JaSection({ user, onActivity, onFocusChange }) {
       {isAiChat ? (
         <AiChatSection mode="ja" />
       ) : anyLoading ? (
-        <div className="empty-state">학습 데이터 불러오는 중...</div>
+        <div className="empty-state">
+          학습 데이터 불러오는 중...
+          {showRetry && (
+            <div style={{ marginTop: 18 }}>
+              <p style={{ fontSize: 13, marginBottom: 12 }}>시간이 오래 걸리고 있어요. 네트워크 상태를 확인하고 다시 시도해보세요.</p>
+              <button className="primary-btn" onClick={() => { setShowRetry(false); setRetryKey((k) => k + 1); }}>다시 시도</button>
+            </div>
+          )}
+        </div>
       ) : anyError ? (
         <div className="empty-state">데이터를 불러오지 못했습니다.<br/>Firestore 보안 규칙이 게시되어 있는지 확인해주세요.<br/><span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>{anyError.code}</span></div>
       ) : needsLevelPick ? (
@@ -10928,14 +10944,22 @@ function KrSection({ user, onActivity, onFocusChange }) {
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [studyAll, setStudyAll] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const [showRetry, setShowRetry] = useState(false);
 
-  const wordDeck = useSrsDeck(user, 'words', 'kr_words', VOCAB_KR);
-  const grammarDeck = useSrsDeck(user, 'grammar', 'kr_grammar', GRAMMAR_KR);
-  const travelDeck = useSrsDeck(user, 'travel', 'kr_travel', TRAVEL_KR);
-  const sentenceDeck = useSrsDeck(user, 'sentence', 'kr_sentence', SENTENCE_KR);
+  const wordDeck = useSrsDeck(user, 'words', 'kr_words', VOCAB_KR, retryKey);
+  const grammarDeck = useSrsDeck(user, 'grammar', 'kr_grammar', GRAMMAR_KR, retryKey);
+  const travelDeck = useSrsDeck(user, 'travel', 'kr_travel', TRAVEL_KR, retryKey);
+  const sentenceDeck = useSrsDeck(user, 'sentence', 'kr_sentence', SENTENCE_KR, retryKey);
   const decks = { words: wordDeck, grammar: grammarDeck, travel: travelDeck, sentence: sentenceDeck };
 
   const anyLoading = wordDeck.loading || grammarDeck.loading || travelDeck.loading || sentenceDeck.loading;
+
+  useEffect(() => {
+    if (!anyLoading) { setShowRetry(false); return; }
+    const t = setTimeout(() => setShowRetry(true), 8000);
+    return () => clearTimeout(t);
+  }, [anyLoading, retryKey]);
   const anyError = wordDeck.error || grammarDeck.error || travelDeck.error || sentenceDeck.error;
 
   const bookmarkedItems = useMemo(() => [
@@ -10977,7 +11001,15 @@ function KrSection({ user, onActivity, onFocusChange }) {
       {isAiChat ? (
         <AiChatSection mode="kr" />
       ) : anyLoading ? (
-        <div className="empty-state">学習データを読み込み中...</div>
+        <div className="empty-state">
+          学習データを読み込み中...
+          {showRetry && (
+            <div style={{ marginTop: 18 }}>
+              <p style={{ fontSize: 13, marginBottom: 12 }}>時間がかかっています。ネットワーク状態を確認してもう一度お試しください。</p>
+              <button className="primary-btn" onClick={() => { setShowRetry(false); setRetryKey((k) => k + 1); }}>再試行</button>
+            </div>
+          )}
+        </div>
       ) : anyError ? (
         <div className="empty-state">データを読み込めませんでした。<br/>Firestoreのセキュリティルールが公開されているか確認してください。<br/><span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>{anyError.code}</span></div>
       ) : needsLevelPick ? (
