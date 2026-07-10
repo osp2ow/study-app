@@ -9708,16 +9708,21 @@ const STATUS_LABEL = { new: '신규/新規', learning: '학습중/学習中', du
 
 // ==================== 유저 전체 통계 (XP / 연속학습 스트릭 - 듀오링고 스타일) ====================
 function useUserStats(user) {
-  const [stats, setStats] = useState({ xp: 0, streak: 0, lastStudyDate: null });
+  const [stats, setStats] = useState({ xp: 0, streak: 0, lastStudyDate: null, preferredMode: null });
   const uid = user ? user.uid : null;
 
   useEffect(() => {
-    if (!uid) { setStats({ xp: 0, streak: 0, lastStudyDate: null }); return; }
+    if (!uid) { setStats({ xp: 0, streak: 0, lastStudyDate: null, preferredMode: null }); return; }
     const ref = db.collection('users').doc(uid);
     const unsub = ref.onSnapshot(
       (snap) => {
         const data = snap.data() || {};
-        setStats({ xp: data.xp || 0, streak: data.streak || 0, lastStudyDate: data.lastStudyDate || null });
+        setStats({
+          xp: data.xp || 0,
+          streak: data.streak || 0,
+          lastStudyDate: data.lastStudyDate || null,
+          preferredMode: data.preferredMode || null,
+        });
       },
       (err) => console.error('유저 통계 구독 오류:', err.code, err.message)
     );
@@ -9735,13 +9740,19 @@ function useUserStats(user) {
         nextStreak = prev.lastStudyDate === yesterdayStr ? nextStreak + 1 : 1;
       }
       const nextXp = (prev.xp || 0) + (correct ? 10 : 2);
-      const next = { xp: nextXp, streak: nextStreak, lastStudyDate: todayStr };
-      ref.set(next, { merge: true });
+      const next = { ...prev, xp: nextXp, streak: nextStreak, lastStudyDate: todayStr };
+      ref.set({ xp: nextXp, streak: nextStreak, lastStudyDate: todayStr }, { merge: true });
       return next;
     });
   }, [uid]);
 
-  return { xp: stats.xp, streak: stats.streak, recordActivity };
+  const setPreferredMode = useCallback((m) => {
+    if (!uid) return;
+    setStats((prev) => ({ ...prev, preferredMode: m }));
+    db.collection('users').doc(uid).set({ preferredMode: m }, { merge: true });
+  }, [uid]);
+
+  return { xp: stats.xp, streak: stats.streak, preferredMode: stats.preferredMode, recordActivity, setPreferredMode };
 }
 
 // ==================== 실제 Firestore 연동 SRS 훅 (모든 덱 공용) ====================
@@ -11104,6 +11115,7 @@ const MODE_META = {
 function App() {
   const [user, setUser] = useState(undefined);
   const [mode, setMode] = useState('ja');
+  const [modeInitialized, setModeInitialized] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const userStats = useUserStats(user);
 
@@ -11111,6 +11123,20 @@ function App() {
     const unsub = subscribeToAuth(setUser);
     return () => unsub();
   }, []);
+
+  // 계정에 저장된 마지막 학습 언어를 불러와서 최초 1회만 자동 적용
+  useEffect(() => {
+    if (!modeInitialized && userStats.preferredMode) {
+      setMode(userStats.preferredMode);
+      setModeInitialized(true);
+    }
+  }, [userStats.preferredMode, modeInitialized]);
+
+  function handleModeChange(next) {
+    setMode(next);
+    setModeInitialized(true);
+    userStats.setPreferredMode(next);
+  }
 
   const meta = MODE_META[mode];
 
@@ -11137,8 +11163,8 @@ function App() {
 
       {!focusMode && (
         <div className="deck-switch" style={{ marginBottom: 18 }}>
-          <button className={mode === 'ja' ? 'active' : ''} onClick={() => setMode('ja')}>日本語</button>
-          <button className={mode === 'kr' ? 'active' : ''} onClick={() => setMode('kr')}>한국어</button>
+          <button className={mode === 'ja' ? 'active' : ''} onClick={() => handleModeChange('ja')}>日本語</button>
+          <button className={mode === 'kr' ? 'active' : ''} onClick={() => handleModeChange('kr')}>한국어</button>
         </div>
       )}
 
