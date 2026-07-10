@@ -518,6 +518,18 @@ body {
   border-bottom-left-radius: 6px;
 }
 
+.retry-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  background: #f3dbd6;
+  border: 1px solid var(--vermillion);
+  border-radius: 999px;
+  color: var(--vermillion);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .chat-loading {
   font-weight: 700;
   color: var(--ink-soft);
@@ -9860,19 +9872,25 @@ function JaLevelPicker({ levelCounts, onSelect }) {
 }
 function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish, onActivity }) {
   const [queue, setQueue] = useState(dueItems);
-  const [doneCount, setDoneCount] = useState(0);
-  const totalCount = useMemo(() => dueItems.length, [dueItems]);
+  const [correctSet, setCorrectSet] = useState(() => new Set());
+  const [wrongSet, setWrongSet] = useState(() => new Set());
+  const [totalCount] = useState(() => dueItems.length); // 세션 시작 시점에 고정 - 중간에 due 상태가 바뀌어도 흔들리지 않도록
   if (queue.length === 0) return <div className="empty-state"><p>오늘 학습할 항목이 없습니다 🎉</p><button className="primary-btn" onClick={onFinish}>목록으로</button></div>;
   const current = queue[0];
+  const currentKey = current.id + current.sourceDeck;
+  const isRetry = wrongSet.has(currentKey) && !correctSet.has(currentKey);
   function handleResult(itemId, quality, sourceDeck) {
     submitReview(itemId, quality, sourceDeck);
     if (onActivity) onActivity(quality >= RATING.HARD);
+    const key = itemId + sourceDeck;
+    if (quality >= RATING.HARD) setCorrectSet((prev) => new Set(prev).add(key));
+    else setWrongSet((prev) => new Set(prev).add(key));
     setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
-    if (quality >= RATING.HARD) setDoneCount((d) => d + 1);
   }
   return (
     <div>
-      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{doneCount} / {totalCount}</div>
+      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
+      {isRetry && <div className="retry-badge">🔄 재도전! 아까 틀렸던 문제예요</div>}
       {current.sourceDeck === 'sentence'
         ? <JaSentenceCard key={current.id + current.sourceDeck} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
         : <JaQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
@@ -10573,19 +10591,25 @@ function KrLevelPicker({ levelCounts, onSelect }) {
 }
 function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFinish, onActivity }) {
   const [queue, setQueue] = useState(dueItems);
-  const [doneCount, setDoneCount] = useState(0);
-  const totalCount = useMemo(() => dueItems.length, [dueItems]);
+  const [correctSet, setCorrectSet] = useState(() => new Set());
+  const [wrongSet, setWrongSet] = useState(() => new Set());
+  const [totalCount] = useState(() => dueItems.length); // 세션 시작 시점에 고정 - 중간에 due 상태가 바뀌어도 흔들리지 않도록
   if (queue.length === 0) return <div className="empty-state"><p>今日学習する項目がありません 🎉</p><button className="primary-btn" onClick={onFinish}>リストへ</button></div>;
   const current = queue[0];
+  const currentKey = current.id + current.sourceDeck;
+  const isRetry = wrongSet.has(currentKey) && !correctSet.has(currentKey);
   function handleResult(itemId, quality, sourceDeck) {
     submitReview(itemId, quality, sourceDeck);
     if (onActivity) onActivity(quality >= RATING.HARD);
+    const key = itemId + sourceDeck;
+    if (quality >= RATING.HARD) setCorrectSet((prev) => new Set(prev).add(key));
+    else setWrongSet((prev) => new Set(prev).add(key));
     setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
-    if (quality >= RATING.HARD) setDoneCount((d) => d + 1);
   }
   return (
     <div>
-      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{doneCount} / {totalCount}</div>
+      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
+      {isRetry && <div className="retry-badge">🔄 リトライ！さっき間違えた問題です</div>}
       {current.sourceDeck === 'sentence'
         ? <KrSentenceCard key={current.id + current.sourceDeck} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
         : <KrQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
