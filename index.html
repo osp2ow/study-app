@@ -633,6 +633,26 @@ body {
   color: #fffdf8;
 }
 
+.ai-chat-bar {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin-bottom: 18px;
+  border: 2px solid var(--indigo);
+  border-radius: var(--radius);
+  background: var(--indigo);
+  color: #fffdf8;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(27, 58, 75, 0.3);
+}
+
+.ai-chat-bar.active {
+  border-color: var(--vermillion);
+  box-shadow: 0 0 0 2px var(--vermillion) inset;
+}
+
 /* 복습노트 목록에서 원본 덱 표시/제거 버튼 */
 .deck-tag {
   display: inline-block;
@@ -880,6 +900,79 @@ const { useState, useEffect, useMemo, useCallback, useRef } = React;
 // ==================== AI 회화 연습 - Cloudflare Worker(Gemini 프록시) 주소 ====================
 // Worker 배포 후 여기에 본인 Worker 주소를 넣으세요. 비워두면 "AI 회화" 화면에 안내 문구가 뜹니다.
 const AI_WORKER_URL = 'https://ancient-mouse-c47study-app.osp2ow.workers.dev/';
+
+// Gemini TTS는 원시 PCM 오디오를 base64로 돌려주므로, 브라우저에서 재생 가능하도록
+// WAV 헤더를 씌워준다. (24kHz, mono, 16bit 가정 - Gemini TTS 기본 출력 포맷)
+function pcmBase64ToWavBlob(base64, sampleRate, numChannels, bitsPerSample) {
+  sampleRate = sampleRate || 24000;
+  numChannels = numChannels || 1;
+  bitsPerSample = bitsPerSample || 16;
+
+  const binary = atob(base64);
+  const len = binary.length;
+  const buffer = new ArrayBuffer(44 + len);
+  const view = new DataView(buffer);
+
+  function writeString(offset, str) {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  }
+
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + len, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeString(36, 'data');
+  view.setUint32(40, len, true);
+
+  const bytes = new Uint8Array(buffer, 44);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+let currentAiAudio = null;
+
+// AI 회화 답변을 Gemini 음성으로 읽어준다. 실패(할당량 초과 등)하면 조용히 브라우저 음성으로 대체.
+async function speakWithGemini(text, fallbackSpeak) {
+  if (!text || !AI_WORKER_URL) {
+    fallbackSpeak(text);
+    return;
+  }
+  if (currentAiAudio) {
+    currentAiAudio.pause();
+    currentAiAudio = null;
+  }
+  try {
+    const res = await fetch(AI_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'tts', text }),
+    });
+    const data = await res.json();
+    if (!data.audioBase64) {
+      fallbackSpeak(text);
+      return;
+    }
+    const blob = pcmBase64ToWavBlob(data.audioBase64, 24000, 1, 16);
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAiAudio = audio;
+    audio.onerror = () => fallbackSpeak(text);
+    audio.play().catch(() => fallbackSpeak(text));
+  } catch (e) {
+    fallbackSpeak(text);
+  }
+}
 
 // ==================== Firebase 초기화 (compat SDK, 빌드 도구 불필요) ====================
 const firebaseConfig = {
@@ -2482,6 +2575,226 @@ const VOCAB_JA = [
     "example": "努力は不可欠です。",
     "exampleReading": "どりょくはふかけつです。",
     "exampleMeaning": "노력은 불가결합니다."
+  },
+  {
+    "id": "v2-001",
+    "word": "財布",
+    "reading": "さいふ",
+    "meaning": "지갑",
+    "level": "N5",
+    "tag": "일상",
+    "example": "財布をなくしました。",
+    "exampleReading": "さいふをなくしました。",
+    "exampleMeaning": "지갑을 잃어버렸습니다."
+  },
+  {
+    "id": "v2-002",
+    "word": "眼鏡",
+    "reading": "めがね",
+    "meaning": "안경",
+    "level": "N5",
+    "tag": "일상",
+    "example": "眼鏡をかけています。",
+    "exampleReading": "めがねをかけています。",
+    "exampleMeaning": "안경을 쓰고 있습니다."
+  },
+  {
+    "id": "v2-003",
+    "word": "傘",
+    "reading": "かさ",
+    "meaning": "우산",
+    "level": "N5",
+    "tag": "일상",
+    "example": "傘を持っていきます。",
+    "exampleReading": "かさをもっていきます。",
+    "exampleMeaning": "우산을 가지고 갑니다."
+  },
+  {
+    "id": "v2-004",
+    "word": "教室",
+    "reading": "きょうしつ",
+    "meaning": "교실",
+    "level": "N5",
+    "tag": "일상",
+    "example": "教室で勉強します。",
+    "exampleReading": "きょうしつでべんきょうします。",
+    "exampleMeaning": "교실에서 공부합니다."
+  },
+  {
+    "id": "v2-005",
+    "word": "引っ越す",
+    "reading": "ひっこす",
+    "meaning": "이사하다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "来月引っ越します。",
+    "exampleReading": "らいげつひっこします。",
+    "exampleMeaning": "다음 달에 이사합니다."
+  },
+  {
+    "id": "v2-006",
+    "word": "掃除する",
+    "reading": "そうじする",
+    "meaning": "청소하다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "部屋を掃除します。",
+    "exampleReading": "へやをそうじします。",
+    "exampleMeaning": "방을 청소합니다."
+  },
+  {
+    "id": "v2-007",
+    "word": "電池",
+    "reading": "でんち",
+    "meaning": "건전지",
+    "level": "N4",
+    "tag": "일상",
+    "example": "電池がなくなりました。",
+    "exampleReading": "でんちがなくなりました。",
+    "exampleMeaning": "건전지가 다 됐습니다."
+  },
+  {
+    "id": "v2-008",
+    "word": "修理する",
+    "reading": "しゅうりする",
+    "meaning": "수리하다",
+    "level": "N4",
+    "tag": "일상",
+    "example": "自転車を修理します。",
+    "exampleReading": "じてんしゃをしゅうりします。",
+    "exampleMeaning": "자전거를 수리합니다."
+  },
+  {
+    "id": "v2-009",
+    "word": "印象",
+    "reading": "いんしょう",
+    "meaning": "인상",
+    "level": "N3",
+    "tag": "일상",
+    "example": "いい印象を持ちました。",
+    "exampleReading": "いいいんしょうをもちました。",
+    "exampleMeaning": "좋은 인상을 받았습니다."
+  },
+  {
+    "id": "v2-010",
+    "word": "存在",
+    "reading": "そんざい",
+    "meaning": "존재",
+    "level": "N3",
+    "tag": "일상",
+    "example": "存在を忘れていました。",
+    "exampleReading": "そんざいをわすれていました。",
+    "exampleMeaning": "존재를 잊고 있었습니다."
+  },
+  {
+    "id": "v2-011",
+    "word": "意欲",
+    "reading": "いよく",
+    "meaning": "의욕",
+    "level": "N3",
+    "tag": "일상",
+    "example": "意欲的に取り組みます。",
+    "exampleReading": "いよくてきにとりくみます。",
+    "exampleMeaning": "의욕적으로 임합니다."
+  },
+  {
+    "id": "v2-012",
+    "word": "制度",
+    "reading": "せいど",
+    "meaning": "제도",
+    "level": "N3",
+    "tag": "일상",
+    "example": "新しい制度が始まりました。",
+    "exampleReading": "あたらしいせいどがはじまりました。",
+    "exampleMeaning": "새로운 제도가 시작되었습니다."
+  },
+  {
+    "id": "v2-013",
+    "word": "対策",
+    "reading": "たいさく",
+    "meaning": "대책",
+    "level": "N2",
+    "tag": "일상",
+    "example": "対策を考えます。",
+    "exampleReading": "たいさくをかんがえます。",
+    "exampleMeaning": "대책을 생각합니다."
+  },
+  {
+    "id": "v2-014",
+    "word": "分野",
+    "reading": "ぶんや",
+    "meaning": "분야",
+    "level": "N2",
+    "tag": "일상",
+    "example": "この分野に詳しいです。",
+    "exampleReading": "このぶんやにくわしいです。",
+    "exampleMeaning": "이 분야에 정통합니다."
+  },
+  {
+    "id": "v2-015",
+    "word": "見解",
+    "reading": "けんかい",
+    "meaning": "견해",
+    "level": "N2",
+    "tag": "일상",
+    "example": "私の見解を述べます。",
+    "exampleReading": "わたしのけんかいをのべます。",
+    "exampleMeaning": "제 견해를 말씀드리겠습니다."
+  },
+  {
+    "id": "v2-016",
+    "word": "基盤",
+    "reading": "きばん",
+    "meaning": "기반",
+    "level": "N2",
+    "tag": "일상",
+    "example": "経済の基盤を築きます。",
+    "exampleReading": "けいざいのきばんをきずきます。",
+    "exampleMeaning": "경제 기반을 다집니다."
+  },
+  {
+    "id": "v2-017",
+    "word": "遂行",
+    "reading": "すいこう",
+    "meaning": "수행",
+    "level": "N1",
+    "tag": "일상",
+    "example": "任務を遂行します。",
+    "exampleReading": "にんむをすいこうします。",
+    "exampleMeaning": "임무를 수행합니다."
+  },
+  {
+    "id": "v2-018",
+    "word": "是正",
+    "reading": "ぜせい",
+    "meaning": "시정",
+    "level": "N1",
+    "tag": "일상",
+    "example": "問題点を是正します。",
+    "exampleReading": "もんだいてんをぜせいします。",
+    "exampleMeaning": "문제점을 시정합니다."
+  },
+  {
+    "id": "v2-019",
+    "word": "潜在的",
+    "reading": "せんざいてき",
+    "meaning": "잠재적",
+    "level": "N1",
+    "tag": "일상",
+    "example": "潜在的な危険があります。",
+    "exampleReading": "せんざいてきなきけんがあります。",
+    "exampleMeaning": "잠재적인 위험이 있습니다."
+  },
+  {
+    "id": "v2-020",
+    "word": "円滑",
+    "reading": "えんかつ",
+    "meaning": "원활",
+    "level": "N1",
+    "tag": "일상",
+    "example": "円滑に進めます。",
+    "exampleReading": "えんかつにすすめます。",
+    "exampleMeaning": "원활하게 진행합니다."
   }
 ];
 const GRAMMAR_JA = [
@@ -3133,6 +3446,116 @@ const GRAMMAR_JA = [
     "exampleReading": "みるにたえないこうけいでした。",
     "exampleMeaning": "차마 볼 수 없는 광경이었습니다.",
     "koreanNote": "'차마 ~할 수 없다'와 대응. 感謝にたえない(감사해 마지않다)처럼 강한 긍정 감정에도 쓰입니다."
+  },
+  {
+    "id": "g2-001",
+    "level": "N5",
+    "pattern": "〜前に",
+    "title": "순서 표현(~하기 전에, 명사 접속)",
+    "connection": "명사 + の + 前に",
+    "example": "食事の前に手を洗います。",
+    "exampleReading": "しょくじのまえにてをあらいます。",
+    "exampleMeaning": "식사 전에 손을 씻습니다。",
+    "koreanNote": "동사 뒤에 붙는 まえに는 이미 배웠는데, 명사에 붙일 때는 の가 필요합니다."
+  },
+  {
+    "id": "g2-002",
+    "level": "N5",
+    "pattern": "〜ので",
+    "title": "이유 표현(~이기 때문에, 명사/な형용사 접속 주의)",
+    "connection": "명사+な/な형용사어간+な + ので",
+    "example": "静かなので、よく眠れます。",
+    "exampleReading": "しずかなので、よくねむれます。",
+    "exampleMeaning": "조용해서 잘 잘 수 있습니다.",
+    "koreanNote": "동사·い형용사에는 그대로 붙지만, 명사와 な형용사 뒤에는 な가 필요한 점에 주의하세요."
+  },
+  {
+    "id": "g2-003",
+    "level": "N4",
+    "pattern": "〜し、〜し",
+    "title": "열거 표현(~하고 ~하고)",
+    "connection": "동사·형용사 보통형 + し",
+    "example": "安いし、おいしいし、また来たいです。",
+    "exampleReading": "やすいし、おいしいし、またきたいです。",
+    "exampleMeaning": "싸고 맛있어서 또 오고 싶습니다.",
+    "koreanNote": "이유나 상황을 여러 개 나열할 때 쓰는 표현으로, 한국어의 '~하고 ~하고'와 비슷한 느낌입니다."
+  },
+  {
+    "id": "g2-004",
+    "level": "N4",
+    "pattern": "〜たら",
+    "title": "조건 표현(~하면, 완료 후 조건)",
+    "connection": "동사 た형 + ら",
+    "example": "家に着いたら、電話します。",
+    "exampleReading": "いえについたら、でんわします。",
+    "exampleMeaning": "집에 도착하면 전화하겠습니다.",
+    "koreanNote": "동작이 끝난 뒤를 조건으로 삼는 표현으로, 일회성 사건에 자주 사용됩니다."
+  },
+  {
+    "id": "g2-005",
+    "level": "N3",
+    "pattern": "〜まま",
+    "title": "상태 유지 표현(~한 채로)",
+    "connection": "동사 た형/명사+の + まま",
+    "example": "靴を履いたまま入らないでください。",
+    "exampleReading": "くつをはいたままはいらないでください。",
+    "exampleMeaning": "신발을 신은 채로 들어가지 마세요.",
+    "koreanNote": "한국어 '~한 채로'와 정확히 대응하는 상태 지속 표현입니다."
+  },
+  {
+    "id": "g2-006",
+    "level": "N3",
+    "pattern": "〜おかげで",
+    "title": "긍정적 이유 표현(~덕분에)",
+    "connection": "명사+の/동사 보통형 + おかげで",
+    "example": "先生のおかげで合格しました。",
+    "exampleReading": "せんせいのおかげでごうかくしました。",
+    "exampleMeaning": "선생님 덕분에 합격했습니다.",
+    "koreanNote": "한국어 '덕분에'와 정확히 대응되어 이해가 쉽습니다."
+  },
+  {
+    "id": "g2-007",
+    "level": "N2",
+    "pattern": "〜に応じて",
+    "title": "대응 표현(~에 따라)",
+    "connection": "명사 + に応じて",
+    "example": "状況に応じて対応します。",
+    "exampleReading": "じょうきょうにおうじてたいおうします。",
+    "exampleMeaning": "상황에 따라 대응합니다.",
+    "koreanNote": "によって보다 '상황에 맞춰 대응한다'는 뉘앙스가 강합니다."
+  },
+  {
+    "id": "g2-008",
+    "level": "N2",
+    "pattern": "〜きり",
+    "title": "단절 표현(~한 채로, 그 후 계속)",
+    "connection": "동사 た형 + きり",
+    "example": "彼は国へ帰ったきり、連絡がありません。",
+    "exampleReading": "かれはくにへかえったきり、れんらくがありません。",
+    "exampleMeaning": "그는 고국에 돌아간 채로 연락이 없습니다.",
+    "koreanNote": "한 동작 이후 상태가 계속되고 다른 일이 일어나지 않았음을 강조합니다."
+  },
+  {
+    "id": "g2-009",
+    "level": "N1",
+    "pattern": "〜べく",
+    "title": "목적 표현(~하기 위해, 문어체)",
+    "connection": "동사 사전형 + べく",
+    "example": "目標を達成すべく努力しています。",
+    "exampleReading": "もくひょうをたっせいすべくどりょくしています。",
+    "exampleMeaning": "목표를 달성하기 위해 노력하고 있습니다.",
+    "koreanNote": "ために보다 격식 있고 결의를 담은 문어체 목적 표현입니다."
+  },
+  {
+    "id": "g2-010",
+    "level": "N1",
+    "pattern": "〜てはばからない",
+    "title": "강한 주장 표현(거리낌 없이 ~하다)",
+    "connection": "동사 て형 + はばからない",
+    "example": "彼は自分が正しいと言ってはばからない。",
+    "exampleReading": "かれはじぶんがただしいといってはばからない。",
+    "exampleMeaning": "그는 자신이 옳다고 거리낌 없이 말한다.",
+    "koreanNote": "주로 부정적인 뉘앙스로, 스스럼없이 강하게 주장하는 모습을 표현할 때 씁니다."
   }
 ];
 const KANJI_JA = [
@@ -4428,6 +4851,226 @@ const KANJI_JA = [
         "meaning": "유도"
       }
     ]
+  },
+  {
+    "id": "k2-001",
+    "level": "N5",
+    "char": "駅",
+    "onyomi": "エキ",
+    "kunyomi": "-",
+    "meaning": "역",
+    "koreanSound": "역(驛)",
+    "note": "음독 'エキ'와 한국 한자음 '역'은 다르지만, 駅(역)이라는 단어로 자주 접하게 되는 상용한자입니다.",
+    "examples": [
+      {
+        "word": "駅前",
+        "reading": "えきまえ",
+        "meaning": "역 앞"
+      },
+      {
+        "word": "駅員",
+        "reading": "えきいん",
+        "meaning": "역무원"
+      }
+    ]
+  },
+  {
+    "id": "k2-002",
+    "level": "N5",
+    "char": "車",
+    "onyomi": "シャ",
+    "kunyomi": "くるま",
+    "meaning": "차, 수레",
+    "koreanSound": "차(車)",
+    "note": "음독 'シャ'와 한국 한자음 '차'는 다르지만, 훈독 くるま(구루마)는 한국어에서도 '구루마'로 차용된 단어라 익숙할 수 있어요.",
+    "examples": [
+      {
+        "word": "電車",
+        "reading": "でんしゃ",
+        "meaning": "전철"
+      },
+      {
+        "word": "車内",
+        "reading": "しゃない",
+        "meaning": "차내"
+      }
+    ]
+  },
+  {
+    "id": "k2-003",
+    "level": "N4",
+    "char": "習",
+    "onyomi": "シュウ",
+    "kunyomi": "なら(う)",
+    "meaning": "익히다, 배우다",
+    "koreanSound": "습(習)",
+    "note": "음독 'シュウ'와 한국 한자음 '습'이 유사합니다.",
+    "examples": [
+      {
+        "word": "習慣",
+        "reading": "しゅうかん",
+        "meaning": "습관"
+      },
+      {
+        "word": "練習",
+        "reading": "れんしゅう",
+        "meaning": "연습"
+      }
+    ]
+  },
+  {
+    "id": "k2-004",
+    "level": "N4",
+    "char": "働",
+    "onyomi": "ドウ",
+    "kunyomi": "はたら(く)",
+    "meaning": "일하다",
+    "koreanSound": "동(動)과 유사",
+    "note": "働은 일본에서 만든 한자(国字)라 한국 한자음이 따로 없지만, 오른쪽 부분(動)의 음이 '동'과 비슷합니다.",
+    "examples": [
+      {
+        "word": "働く",
+        "reading": "はたらく",
+        "meaning": "일하다"
+      },
+      {
+        "word": "労働",
+        "reading": "ろうどう",
+        "meaning": "노동"
+      }
+    ]
+  },
+  {
+    "id": "k2-005",
+    "level": "N3",
+    "char": "印",
+    "onyomi": "イン",
+    "kunyomi": "しるし",
+    "meaning": "도장, 표시",
+    "koreanSound": "인(印)",
+    "note": "음독 'イン'과 한국 한자음 '인'이 유사합니다.",
+    "examples": [
+      {
+        "word": "印象",
+        "reading": "いんしょう",
+        "meaning": "인상"
+      },
+      {
+        "word": "目印",
+        "reading": "めじるし",
+        "meaning": "표시, 이정표"
+      }
+    ]
+  },
+  {
+    "id": "k2-006",
+    "level": "N3",
+    "char": "存",
+    "onyomi": "ソン・ゾン",
+    "kunyomi": "-",
+    "meaning": "존재하다",
+    "koreanSound": "존(存)",
+    "note": "음독 'ソン'과 한국 한자음 '존'이 유사합니다.",
+    "examples": [
+      {
+        "word": "存在",
+        "reading": "そんざい",
+        "meaning": "존재"
+      },
+      {
+        "word": "保存",
+        "reading": "ほぞん",
+        "meaning": "보존"
+      }
+    ]
+  },
+  {
+    "id": "k2-007",
+    "level": "N2",
+    "char": "策",
+    "onyomi": "サク",
+    "kunyomi": "-",
+    "meaning": "꾀, 방책",
+    "koreanSound": "책(策)",
+    "note": "음독 'サク'는 한국 한자음 '책'과 다르지만, 対策(대책)이라는 단어로 세트 암기하면 좋습니다.",
+    "examples": [
+      {
+        "word": "対策",
+        "reading": "たいさく",
+        "meaning": "대책"
+      },
+      {
+        "word": "政策",
+        "reading": "せいさく",
+        "meaning": "정책"
+      }
+    ]
+  },
+  {
+    "id": "k2-008",
+    "level": "N2",
+    "char": "盤",
+    "onyomi": "バン",
+    "kunyomi": "-",
+    "meaning": "쟁반, 기반",
+    "koreanSound": "반(盤)",
+    "note": "음독 'バン'과 한국 한자음 '반'이 유사합니다.",
+    "examples": [
+      {
+        "word": "基盤",
+        "reading": "きばん",
+        "meaning": "기반"
+      },
+      {
+        "word": "円盤",
+        "reading": "えんばん",
+        "meaning": "원반"
+      }
+    ]
+  },
+  {
+    "id": "k2-009",
+    "level": "N1",
+    "char": "遂",
+    "onyomi": "スイ",
+    "kunyomi": "と(げる)",
+    "meaning": "이루다, 완수하다",
+    "koreanSound": "수(遂)",
+    "note": "음독 'スイ'와 한국 한자음 '수'가 유사합니다.",
+    "examples": [
+      {
+        "word": "遂行",
+        "reading": "すいこう",
+        "meaning": "수행"
+      },
+      {
+        "word": "完遂",
+        "reading": "かんすい",
+        "meaning": "완수"
+      }
+    ]
+  },
+  {
+    "id": "k2-010",
+    "level": "N1",
+    "char": "滑",
+    "onyomi": "カツ",
+    "kunyomi": "すべ(る)",
+    "meaning": "미끄럽다",
+    "koreanSound": "활(滑)",
+    "note": "음독 'カツ'와 한국 한자음 '활'이 유사합니다.",
+    "examples": [
+      {
+        "word": "円滑",
+        "reading": "えんかつ",
+        "meaning": "원활"
+      },
+      {
+        "word": "滑走路",
+        "reading": "かっそうろ",
+        "meaning": "활주로"
+      }
+    ]
   }
 ];
 const TRAVEL_JA = [
@@ -4853,6 +5496,96 @@ const TRAVEL_JA = [
     "reading": "なにとぞよろしくおねがいもうしあげます。",
     "korean": "아무쪼록 잘 부탁드립니다.",
     "note": "이메일·공식 문서 마무리에 쓰는 가장 격식 있는 인사"
+  },
+  {
+    "id": "t2-001",
+    "scene": "공항",
+    "level": "N3",
+    "japanese": "乗り換えの案内をお願いできますか。",
+    "reading": "のりかえのあんないをおねがいできますか。",
+    "korean": "환승 안내를 부탁드릴 수 있을까요?",
+    "note": "환승 게이트를 못 찾을 때"
+  },
+  {
+    "id": "t2-002",
+    "scene": "식당",
+    "level": "N3",
+    "japanese": "量を少なめにしてもらえますか。",
+    "reading": "りょうをすくなめにしてもらえますか。",
+    "korean": "양을 적게 해주실 수 있나요?",
+    "note": "양 조절이 필요할 때"
+  },
+  {
+    "id": "t2-003",
+    "scene": "숙소",
+    "level": "N3",
+    "japanese": "荷物を送っていただくことは可能ですか。",
+    "reading": "にもつをおくっていただくことはかのうですか。",
+    "korean": "짐을 보내주실 수 있나요?",
+    "note": "호텔 프런트에서 짐 배송을 부탁할 때"
+  },
+  {
+    "id": "t2-004",
+    "scene": "쇼핑",
+    "level": "N3",
+    "japanese": "他の色はありますか。",
+    "reading": "ほかのいろはありますか。",
+    "korean": "다른 색상 있나요?",
+    "note": "옷이나 물건을 고를 때"
+  },
+  {
+    "id": "t2-005",
+    "scene": "병원",
+    "level": "N3",
+    "japanese": "症状について詳しく説明していただけますか。",
+    "reading": "しょうじょうについてくわしくせつめいしていただけますか。",
+    "korean": "증상에 대해 자세히 설명해주실 수 있나요?",
+    "note": "진료 시 정중히 요청하는 표현"
+  },
+  {
+    "id": "t2-006",
+    "scene": "공항",
+    "level": "N4",
+    "japanese": "搭乗手続きはどこでしますか。",
+    "reading": "とうじょうてつづきはどこでしますか。",
+    "korean": "탑승 수속은 어디서 하나요?",
+    "note": "공항 도착 직후 확인용"
+  },
+  {
+    "id": "t2-007",
+    "scene": "길찾기",
+    "level": "N4",
+    "japanese": "この辺りに観光案内所はありますか。",
+    "reading": "このあたりにかんこうあんないじょはありますか。",
+    "korean": "이 근처에 관광 안내소가 있나요?",
+    "note": "여행 정보를 얻고 싶을 때"
+  },
+  {
+    "id": "t2-008",
+    "scene": "대중교통",
+    "level": "N4",
+    "japanese": "終電は何時ですか。",
+    "reading": "しゅうでんはなんじですか。",
+    "korean": "막차는 몇 시인가요?",
+    "note": "밤 늦게 이동할 때 필수 확인"
+  },
+  {
+    "id": "t2-009",
+    "scene": "비즈니스",
+    "level": "N2",
+    "japanese": "お忙しいところ恐れ入りますが、少しお時間よろしいでしょうか。",
+    "reading": "おいそがしいところおそれいりますが、すこしおじかんよろしいでしょうか。",
+    "korean": "바쁘신데 죄송하지만, 잠시 시간 괜찮으실까요?",
+    "note": "업무 중 정중히 말을 걸 때 쓰는 격식체"
+  },
+  {
+    "id": "t2-010",
+    "scene": "긴급상황",
+    "level": "N2",
+    "japanese": "貴重品が入ったカバンを盗まれました。",
+    "reading": "きちょうひんがはいったカバンをぬすまれました。",
+    "korean": "귀중품이 든 가방을 도난당했습니다.",
+    "note": "경찰 신고 시 상황 설명용"
   }
 ];
 const SENTENCE_JA = [
@@ -8184,25 +8917,29 @@ const AI_SCENARIOS = {
 function buildSystemPrompt(mode, level, scenario) {
   if (mode === 'ja') {
     let p = '당신은 한국인 일본어 학습자와 대화 연습을 하는 친절한 일본어 회화 파트너입니다. ' +
-      'JLPT ' + level + ' 수준에 맞는 어휘와 문법만 사용해서 반드시 일본어로만 대답하세요. ' +
+      'JLPT ' + level + ' 수준에 맞는 어휘와 문법만 사용해서 원칙적으로는 일본어로만 대답하세요. ' +
+      '단, 사용자가 한국어로 질문하거나(예: "이거 일본어로 뭐예요?", "방금 그 단어 무슨 뜻이에요?", 말이 막혀서 도움을 요청하는 경우 등) 하면, ' +
+      '그때는 예외적으로 한국어로 친절하고 명확하게 답변해서 도와주고, 그다음 다시 자연스럽게 일본어 대화로 이어가세요. ' +
       '답변은 1~3문장으로 짧게 하세요.';
     if (scenario && scenario.role) {
       p += ' 지금은 역할극 상황입니다. 당신은 "' + scenario.role + '" 역할을 맡아 자연스럽게 연기해주세요.';
     }
     p += ' 반드시 아래 형식으로만 답변하고 그 외 다른 텍스트는 절대 쓰지 마세요:\n' +
-      'MAIN||(일본어 답변만, 다른 언어 섞지 말 것)\n' +
-      'TRANS||(위 답변의 한국어 번역. 사용자 문장에 문법이나 단어 실수가 있었다면 여기에 짧고 부드럽게 고쳐서 덧붙이기)';
+      'MAIN||(답변 - 보통은 일본어. 사용자가 한국어로 도움을 요청했다면 이 부분도 한국어로)\n' +
+      'TRANS||(MAIN이 일본어라면 그 한국어 번역을, 한국어로 답했다면 그 내용을 자연스러운 일본어로 다시 써서 적기. 사용자 문장에 문법이나 단어 실수가 있었다면 짧고 부드럽게 고쳐서 덧붙이기)';
     return p;
   }
   let p = 'あなたは日本人の韓国語学習者と会話練習をする親切な韓国語会話パートナーです。' +
-    'TOPIK ' + level + 'レベルに合う語彙・文法だけを使って、必ず韓国語だけで答えてください。' +
+    'TOPIK ' + level + 'レベルに合う語彙・文法だけを使って、原則として韓国語だけで答えてください。' +
+    'ただし、ユーザーが日本語で質問したり(例:「これ韓国語で何て言いますか」「さっきの単語の意味は?」、言葉に詰まって助けを求める場合など)する時は、' +
+    'その時だけ例外的に日本語で親切に分かりやすく答えて助けてあげて、その後また自然に韓国語の会話に戻ってください。' +
     '返答は1〜3文程度で短くしてください。';
   if (scenario && scenario.role) {
     p += ' 今はロールプレイの状況です。あなたは「' + scenario.role + '」の役を自然に演じてください。';
   }
   p += ' 必ず下記の形式だけで答えて、それ以外のテキストは絶対に書かないでください:\n' +
-    'MAIN||(韓国語の返答のみ、他の言語を混ぜないこと)\n' +
-    'TRANS||(上の返答の日本語訳。ユーザーの文に文法や単語の間違いがあれば、ここに短く優しく直して付け加える)';
+    'MAIN||(返答 - 通常は韓国語。ユーザーが日本語で助けを求めた場合はこの部分も日本語で)\n' +
+    'TRANS||(MAINが韓国語ならその日本語訳を、日本語で答えたならその内容を自然な韓国語で書き直して記載。ユーザーの文に文法や単語の間違いがあれば、短く優しく直して付け加える)';
   return p;
 }
 
@@ -8262,7 +8999,7 @@ function AiChatSection({ mode }) {
       const rawReply = data.reply || data.error || (mode === 'ja' ? '(응답을 받지 못했습니다)' : '(返信を受け取れませんでした)');
       const parsed = parseAiReply(rawReply);
       setMessages((prev) => [...prev, { role: 'model', text: parsed.text, translation: parsed.translation }]);
-      setTimeout(() => speak(parsed.text), 300);
+      setTimeout(() => speakWithGemini(parsed.text, speak), 300);
     } catch (e) {
       setMessages((prev) => [...prev, { role: 'model', text: mode === 'ja' ? '오류가 발생했습니다. 다시 시도해주세요.' : 'エラーが発生しました。もう一度お試しください。' }]);
     } finally {
@@ -8279,29 +9016,54 @@ function AiChatSection({ mode }) {
 
   const [recording, setRecording] = useState(false);
   const recognitionRef = useRef(null);
+  const recordingRef = useRef(false);
+  const finalTranscriptRef = useRef('');
   const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
   function startRecording() {
-    if (!speechSupported || recording || loading) return;
+    if (!speechSupported || recordingRef.current || loading) return;
+    finalTranscriptRef.current = '';
+    setInput('');
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SR();
     recognition.lang = mode === 'ja' ? 'ja-JP' : 'ko-KR';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    // 말이 잠깐 끊겨도(더듬거려도) 계속 듣고, 사용자가 마이크를 다시 눌러야 전송됨
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      sendMessage(transcript);
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalTranscriptRef.current += transcript;
+        else interim += transcript;
+      }
+      setInput((finalTranscriptRef.current + interim).trim());
     };
-    recognition.onerror = () => setRecording(false);
-    recognition.onend = () => setRecording(false);
+    recognition.onerror = (e) => {
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      recordingRef.current = false;
+      setRecording(false);
+    };
+    recognition.onend = () => {
+      // 브라우저가 일정 시간 후 자동으로 세션을 끊는 경우, 사용자가 아직 멈추지 않았다면 이어서 계속 들음
+      if (recordingRef.current) {
+        try { recognition.start(); } catch (e) {}
+      }
+    };
     recognitionRef.current = recognition;
+    recordingRef.current = true;
     setRecording(true);
     recognition.start();
   }
   function stopRecording() {
-    if (recognitionRef.current) recognitionRef.current.stop();
+    recordingRef.current = false;
     setRecording(false);
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null;
+      recognitionRef.current.stop();
+    }
+    const text = (finalTranscriptRef.current || input).trim();
+    if (text) sendMessage(text);
   }
 
   return (
@@ -8347,7 +9109,7 @@ function AiChatSection({ mode }) {
             )}
             {m.role === 'model' && (
               <div className="chat-bubble-actions">
-                <button className="chat-replay" onClick={() => speak(m.text)}>🔊</button>
+                <button className="chat-replay" onClick={() => speakWithGemini(m.text, speak)}>🔊</button>
                 {m.translation && (
                   <button
                     className="chat-translate-btn"
@@ -8370,7 +9132,7 @@ function AiChatSection({ mode }) {
         {loading && <div className="chat-bubble chat-ai chat-loading">···</div>}
         {recording && (
           <div className="chat-bubble chat-user chat-recording">
-            🎙️ {mode === 'ja' ? '듣고 있어요...' : '聞いています...'}
+            🎙️ {mode === 'ja' ? '듣고 있어요... (다 말하면 마이크를 다시 눌러 전송)' : '聞いています...(話し終わったらもう一度マイクを押して送信)'}
           </div>
         )}
       </div>
@@ -8439,7 +9201,7 @@ function JaSection({ user, onActivity }) {
     <React.Fragment>
       <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
       <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
-      <button className={'review-bar ' + (isAiChat ? 'active' : '')} style={{ borderColor: 'var(--indigo)', color: isAiChat ? '#fffdf8' : 'var(--indigo)', background: isAiChat ? 'var(--indigo)' : 'transparent' }} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
+      <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
 
       {isAiChat ? (
         <AiChatSection mode="ja" />
@@ -8781,7 +9543,7 @@ function KrSection({ user, onActivity }) {
     <React.Fragment>
       <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
       <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
-      <button className={'review-bar ' + (isAiChat ? 'active' : '')} style={{ borderColor: 'var(--indigo)', color: isAiChat ? '#fffdf8' : 'var(--indigo)', background: isAiChat ? 'var(--indigo)' : 'transparent' }} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
+      <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
 
       {isAiChat ? (
         <AiChatSection mode="kr" />
