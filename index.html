@@ -656,6 +656,26 @@ body {
   margin-top: 0;
 }
 
+/* 정답 확인 후 "다음" 버튼을 화면 하단에 고정 - 설명이 길어도 스크롤 없이 바로 누를 수 있도록 */
+.quiz-sticky-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--paper);
+  border-top: 2px solid var(--ink);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 12px rgba(43, 43, 40, 0.1);
+  z-index: 40;
+}
+
+/* 고정바에 가려지지 않도록 카드 하단에 여백 확보 */
+.quiz-sticky-spacer {
+  height: 84px;
+}
+
 .secondary-btn {
   padding: 16px 8px;
   border: 1.5px solid var(--indigo);
@@ -9828,10 +9848,11 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
           <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '정답입니다!' : ('오답입니다. 정답: ' + correctText)}</div>
           {jaRenderDetail(deckType, item)}
           {speechText && <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>}
-          <div className="action-row">
+          <div className="action-row quiz-sticky-actions">
             <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
             <button className="primary-btn" onClick={handleNext}>다음</button>
           </div>
+          <div className="quiz-sticky-spacer" />
         </React.Fragment>)}
       </div>
     </div>
@@ -9874,6 +9895,7 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   const [queue, setQueue] = useState(dueItems);
   const [correctSet, setCorrectSet] = useState(() => new Set());
   const [wrongSet, setWrongSet] = useState(() => new Set());
+  const [attemptSeq, setAttemptSeq] = useState(0); // 같은 문제가 연속으로 다시 나와도 카드가 새로 마운트되도록
   const [totalCount] = useState(() => dueItems.length); // 세션 시작 시점에 고정 - 중간에 due 상태가 바뀌어도 흔들리지 않도록
   if (queue.length === 0) return <div className="empty-state"><p>오늘 학습할 항목이 없습니다 🎉</p><button className="primary-btn" onClick={onFinish}>목록으로</button></div>;
   const current = queue[0];
@@ -9886,14 +9908,15 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
     if (quality >= RATING.HARD) setCorrectSet((prev) => new Set(prev).add(key));
     else setWrongSet((prev) => new Set(prev).add(key));
     setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
+    setAttemptSeq((s) => s + 1);
   }
   return (
     <div>
       <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
       {isRetry && <div className="retry-badge">🔄 재도전! 아까 틀렸던 문제예요</div>}
       {current.sourceDeck === 'sentence'
-        ? <JaSentenceCard key={current.id + current.sourceDeck} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
-        : <JaQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
+        ? <JaSentenceCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+        : <JaQuizCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
     </div>
   );
 }
@@ -9978,10 +10001,11 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
             <div className={'feedback ' + (wasCorrect ? 'feedback-correct' : 'feedback-wrong')}>{wasCorrect ? '정답입니다!' : '오답입니다.'}</div>
             <div className="example">정답: <span className="jp-text">{item.tiles.map((t) => t.text).join('')}</span>{item.reading && (<React.Fragment><br/>({item.reading})</React.Fragment>)}</div>
             <button className="replay-btn" onClick={() => speakJapanese(item.reading || item.tiles.join(''))}>🔊 다시 듣기</button>
-            <div className="action-row">
+            <div className="action-row quiz-sticky-actions">
               <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
               <button className="primary-btn" onClick={handleNext}>다음</button>
             </div>
+            <div className="quiz-sticky-spacer" />
           </React.Fragment>
         )}
       </div>
@@ -10149,6 +10173,42 @@ function AiChatSection({ mode }) {
   const [sttLang, setSttLang] = useState('target'); // 'target' | 'native' - 지금 마이크가 어느 언어를 인식할지
   const scenario = scenarios.find((s) => s.id === scenarioId);
 
+  async function startConversation(scn) {
+    if (!AI_WORKER_URL) {
+      setMessages([]);
+      return;
+    }
+    setMessages([]);
+    setLoading(true);
+    try {
+      const kickoff = mode === 'ja'
+        ? '(지금 대화가 막 시작되었습니다. 사용자 발화는 아직 없습니다. 당신이 먼저 위 상황/역할에 어울리는 자연스러운 인사나 질문으로 대화를 시작하세요. 이번 턴은 USER와 CORRECTION 줄에 그냥 "-"만 쓰세요.)'
+        : '（今、会話がちょうど始まりました。ユーザーの発言はまだありません。あなたが先に、上記の状況・役割にふさわしい自然な挨拶や質問で会話を始めてください。今回はUSERとCORRECTIONの行にはただ「-」とだけ書いてください。）';
+      const res = await fetch(AI_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: buildSystemPrompt(mode, level, scn),
+          messages: [{ role: 'user', text: kickoff }],
+        }),
+      });
+      const data = await res.json();
+      const rawReply = data.reply || data.error || (mode === 'ja' ? '(응답을 받지 못했습니다)' : '(返信を受け取れませんでした)');
+      const parsed = parseAiReply(rawReply);
+      setMessages([{ role: 'model', text: parsed.text, translation: parsed.translation, correction: null }]);
+      playAiVoice(parsed.text);
+    } catch (e) {
+      // 조용히 실패 - 빈 채팅 상태로 둠 (사용자가 직접 메시지를 입력해서 시작 가능)
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    startConversation(scenario);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 화면 진입 시 기본 시나리오(자유 대화)로 한 번 시작
+
   async function sendMessage(overrideText) {
     const text = (overrideText !== undefined ? overrideText : input).trim();
     if (!text || loading) return;
@@ -10284,7 +10344,16 @@ function AiChatSection({ mode }) {
       </div>
       <div className="level-tabs">
         {scenarios.map((s) => (
-          <button key={s.id} className={scenarioId === s.id ? 'active' : ''} onClick={() => setScenarioId(s.id)}>{s.label}</button>
+          <button
+            key={s.id}
+            className={scenarioId === s.id ? 'active' : ''}
+            onClick={() => {
+              setScenarioId(s.id);
+              startConversation(s);
+            }}
+          >
+            {s.label}
+          </button>
         ))}
       </div>
 
@@ -10547,10 +10616,11 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
           <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '正解です!' : ('不正解です。正解: ' + correctText)}</div>
           {krRenderDetail(deckType, item)}
           {speechText && <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>}
-          <div className="action-row">
+          <div className="action-row quiz-sticky-actions">
             <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 復習ノートに追加済み' : '☆ 復習に追加'}</button>
             <button className="primary-btn" onClick={handleNext}>次へ</button>
           </div>
+          <div className="quiz-sticky-spacer" />
         </React.Fragment>)}
       </div>
     </div>
@@ -10593,6 +10663,7 @@ function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   const [queue, setQueue] = useState(dueItems);
   const [correctSet, setCorrectSet] = useState(() => new Set());
   const [wrongSet, setWrongSet] = useState(() => new Set());
+  const [attemptSeq, setAttemptSeq] = useState(0); // 같은 문제가 연속으로 다시 나와도 카드가 새로 마운트되도록
   const [totalCount] = useState(() => dueItems.length); // 세션 시작 시점에 고정 - 중간에 due 상태가 바뀌어도 흔들리지 않도록
   if (queue.length === 0) return <div className="empty-state"><p>今日学習する項目がありません 🎉</p><button className="primary-btn" onClick={onFinish}>リストへ</button></div>;
   const current = queue[0];
@@ -10605,14 +10676,15 @@ function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
     if (quality >= RATING.HARD) setCorrectSet((prev) => new Set(prev).add(key));
     else setWrongSet((prev) => new Set(prev).add(key));
     setQueue((prev) => { const rest = prev.slice(1); if (quality < RATING.HARD) return [...rest, prev[0]]; return rest; });
+    setAttemptSeq((s) => s + 1);
   }
   return (
     <div>
       <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
       {isRetry && <div className="retry-badge">🔄 リトライ！さっき間違えた問題です</div>}
       {current.sourceDeck === 'sentence'
-        ? <KrSentenceCard key={current.id + current.sourceDeck} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
-        : <KrQuizCard key={current.id + current.sourceDeck} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
+        ? <KrSentenceCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
+        : <KrQuizCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
     </div>
   );
 }
@@ -10689,10 +10761,11 @@ function KrSentenceCard({ item, onResult, onToggleBookmark }) {
             <div className={'feedback ' + (wasCorrect ? 'feedback-correct' : 'feedback-wrong')}>{wasCorrect ? '正解です!' : '不正解です。'}</div>
             <div className="example">正解: <span className="jp-text">{item.tiles.join(' ')}</span></div>
             <button className="replay-btn" onClick={() => speakKorean(item.reading || item.tiles.join(' '))}>🔊 もう一度聞く</button>
-            <div className="action-row">
+            <div className="action-row quiz-sticky-actions">
               <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 復習ノートに追加済み' : '☆ 復習に追加'}</button>
               <button className="primary-btn" onClick={handleNext}>次へ</button>
             </div>
+            <div className="quiz-sticky-spacer" />
           </React.Fragment>
         )}
       </div>
