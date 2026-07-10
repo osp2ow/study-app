@@ -970,6 +970,7 @@ async function speakWithGemini(text, fallbackSpeak) {
     });
     const data = await res.json();
     if (!data.audioBase64) {
+      console.warn('[Gemini TTS] 오디오 없음, 브라우저 음성으로 대체:', data.error || data);
       fallbackSpeak(text);
       return;
     }
@@ -977,9 +978,16 @@ async function speakWithGemini(text, fallbackSpeak) {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     currentAiAudio = audio;
-    audio.onerror = () => fallbackSpeak(text);
-    audio.play().catch(() => fallbackSpeak(text));
+    audio.onerror = (e) => {
+      console.warn('[Gemini TTS] 오디오 재생 실패, 브라우저 음성으로 대체:', e);
+      fallbackSpeak(text);
+    };
+    audio.play().catch((err) => {
+      console.warn('[Gemini TTS] play() 실패, 브라우저 음성으로 대체:', err);
+      fallbackSpeak(text);
+    });
   } catch (e) {
+    console.warn('[Gemini TTS] 요청 실패, 브라우저 음성으로 대체:', e);
     fallbackSpeak(text);
   }
 }
