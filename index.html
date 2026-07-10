@@ -417,6 +417,21 @@ body {
   padding: 0 2px 14px;
 }
 
+.focus-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-alt);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--indigo);
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
 .sentence-answer-row {
   min-height: 56px;
   display: flex;
@@ -10540,7 +10555,7 @@ function AiChatSection({ mode }) {
   );
 }
 
-function JaSection({ user, onActivity }) {
+function JaSection({ user, onActivity, onFocusChange }) {
   const [deckType, setDeckType] = useState('words');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
@@ -10574,11 +10589,23 @@ function JaSection({ user, onActivity }) {
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
+  const isFocused = tab === 'study' || isAiChat;
+  useEffect(() => {
+    if (onFocusChange) onFocusChange(isFocused);
+  }, [isFocused]);
+
   return (
     <React.Fragment>
-      <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
-      <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
-      <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
+      {!isFocused && (
+        <React.Fragment>
+          <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
+          <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
+          <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
+        </React.Fragment>
+      )}
+      {isFocused && (
+        <button className="focus-back-btn" onClick={() => { if (isAiChat) switchDeck('words'); else setTab('dashboard'); }}>← {JA_DECK_LABELS[deckType] || 'AI 회화'}에서 나가기</button>
+      )}
 
       {isAiChat ? (
         <AiChatSection mode="ja" />
@@ -10896,7 +10923,7 @@ function KrListView({ deckType, items, onRemove }) {
   );
 }
 
-function KrSection({ user, onActivity }) {
+function KrSection({ user, onActivity, onFocusChange }) {
   const [deckType, setDeckType] = useState('words');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
@@ -10929,11 +10956,23 @@ function KrSection({ user, onActivity }) {
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
+  const isFocused = tab === 'study' || isAiChat;
+  useEffect(() => {
+    if (onFocusChange) onFocusChange(isFocused);
+  }, [isFocused]);
+
   return (
     <React.Fragment>
-      <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
-      <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
-      <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
+      {!isFocused && (
+        <React.Fragment>
+          <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
+          <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
+          <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
+        </React.Fragment>
+      )}
+      {isFocused && (
+        <button className="focus-back-btn" onClick={() => { if (isAiChat) switchDeck('words'); else setTab('dashboard'); }}>← {KR_DECK_LABELS[deckType] || 'AI会話'}を終了</button>
+      )}
 
       {isAiChat ? (
         <AiChatSection mode="kr" />
@@ -11033,6 +11072,7 @@ const MODE_META = {
 function App() {
   const [user, setUser] = useState(undefined);
   const [mode, setMode] = useState('ja');
+  const [focusMode, setFocusMode] = useState(false);
   const userStats = useUserStats(user);
 
   useEffect(() => {
@@ -11063,19 +11103,21 @@ function App() {
         </div>
       </header>
 
-      <div className="deck-switch" style={{ marginBottom: 18 }}>
-        <button className={mode === 'ja' ? 'active' : ''} onClick={() => setMode('ja')}>日本語</button>
-        <button className={mode === 'kr' ? 'active' : ''} onClick={() => setMode('kr')}>한국어</button>
-      </div>
+      {!focusMode && (
+        <div className="deck-switch" style={{ marginBottom: 18 }}>
+          <button className={mode === 'ja' ? 'active' : ''} onClick={() => setMode('ja')}>日本語</button>
+          <button className={mode === 'kr' ? 'active' : ''} onClick={() => setMode('kr')}>한국어</button>
+        </div>
+      )}
 
       {user === undefined ? (
         <div className="empty-state">{mode === 'ja' ? '불러오는 중...' : '読み込み中...'}</div>
       ) : user === null ? (
         <LoginForm mode={mode} />
       ) : mode === 'ja' ? (
-        <JaSection user={user} onActivity={userStats.recordActivity} />
+        <JaSection user={user} onActivity={userStats.recordActivity} onFocusChange={setFocusMode} />
       ) : (
-        <KrSection user={user} onActivity={userStats.recordActivity} />
+        <KrSection user={user} onActivity={userStats.recordActivity} onFocusChange={setFocusMode} />
       )}
     </div>
   );
