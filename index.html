@@ -182,14 +182,14 @@ body {
   border: none;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  padding: 28px 20px;
+  padding: 20px 18px;
   text-align: center;
 }
 
 .genkou-square {
-  width: 116px;
-  height: 116px;
-  margin: 0 auto 18px;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 12px;
   border-radius: var(--radius);
   background: var(--indigo-soft);
   display: flex;
@@ -201,7 +201,7 @@ body {
 
 .genkou-square .char {
   font-family: 'Noto Sans JP', 'Noto Sans KR', sans-serif;
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 700;
   color: var(--indigo);
 }
@@ -314,12 +314,12 @@ body {
 .option-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .option-btn {
-  padding: 15px 18px;
+  padding: 13px 16px;
   border: none;
   border-radius: var(--radius);
   background: var(--surface-alt);
@@ -355,7 +355,7 @@ body {
 }
 
 .feedback {
-  margin-top: 16px;
+  margin-top: 10px;
   font-weight: 800;
   font-size: 15px;
   font-family: 'Baloo 2', 'Noto Sans KR', 'Noto Sans JP', sans-serif;
@@ -414,7 +414,7 @@ body {
   font-weight: 600;
   color: var(--indigo);
   cursor: pointer;
-  padding: 0 2px 14px;
+  padding: 0 2px 6px;
 }
 
 .focus-back-btn {
@@ -424,12 +424,12 @@ body {
   background: var(--surface-alt);
   border: none;
   border-radius: var(--radius-pill);
-  padding: 8px 16px;
+  padding: 6px 14px;
   font-size: 12px;
   font-weight: 700;
   color: var(--indigo);
   cursor: pointer;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .sentence-answer-row {
@@ -10014,7 +10014,7 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   }
   return (
     <div>
-      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
+      <div className="mono" style={{ marginBottom: 8, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
       {isRetry && <div className="retry-badge">🔄 재도전! 아까 틀렸던 문제예요</div>}
       {current.sourceDeck === 'sentence'
         ? <JaSentenceCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
@@ -10810,7 +10810,7 @@ function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   }
   return (
     <div>
-      <div className="mono" style={{ marginBottom: 14, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
+      <div className="mono" style={{ marginBottom: 8, fontSize: 12, color: 'var(--ink-soft)' }}>{totalCount} / {correctSet.size}</div>
       {isRetry && <div className="retry-badge">🔄 リトライ！さっき間違えた問題です</div>}
       {current.sourceDeck === 'sentence'
         ? <KrSentenceCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
