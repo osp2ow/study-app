@@ -963,6 +963,91 @@ body {
   transition: width 0.25s ease;
 }
 
+.matching-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.matching-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.matching-tile {
+  padding: 14px 8px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: center;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 52px;
+}
+
+.matching-tile.selected {
+  background: var(--indigo-soft);
+  box-shadow: 0 0 0 2px var(--indigo) inset;
+}
+
+.matching-tile.matched {
+  background: var(--moss-soft);
+  color: var(--moss-dark);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.matching-tile.wrong {
+  background: var(--vermillion-soft);
+  color: var(--vermillion-dark);
+}
+
+.course-level-header {
+  font-family: 'Baloo 2', 'Noto Sans KR', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--purple);
+  margin: 18px 4px 6px;
+}
+
+.secondary-decks-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin: 4px 4px 6px;
+  font-weight: 600;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(31, 37, 51, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-box p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+
 .deck-tag {
   display: inline-block;
   font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
@@ -10061,6 +10146,9 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
           <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '정답입니다!' : ('오답입니다. 정답: ' + correctText)}</div>
           {jaRenderDetail(deckType, item)}
           {speechText && <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>}
+          {deckType === 'words' && (item.exampleReading || item.example) && (
+            <button className="replay-btn" onClick={() => speakJapanese(item.exampleReading || item.example)}>🔊 예문 듣기</button>
+          )}
           <div className="action-row quiz-sticky-actions">
             <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
             <button className="primary-btn" onClick={handleNext}>다음</button>
@@ -10719,25 +10807,54 @@ function AiChatSection({ mode }) {
 
 // ==================== 코스(듀오링고 스타일 레벨 경로) ====================
 
-function buildCourseSteps(level, words, grammars, sentences) {
+function buildCourseSteps(words, grammars, sentences) {
   function pick(arr, n) {
-    return shuffle(arr.filter((i) => i.level === level)).slice(0, n);
+    return shuffle(arr).slice(0, n);
   }
-  const w = pick(words, 5);
+  const w = pick(words, 9);
   const g = pick(grammars, 2);
-  const s = pick(sentences, 1);
+  const s = pick(sentences, 2);
   const steps = [];
   if (w[0]) steps.push({ type: 'words', item: w[0] });
   if (w[1]) steps.push({ type: 'words', item: w[1] });
   if (g[0]) steps.push({ type: 'grammar', item: g[0] });
   if (w[2]) steps.push({ type: 'repeat', item: w[2] });
   if (w[3]) steps.push({ type: 'words', item: w[3] });
-  if (g[1]) steps.push({ type: 'grammar', item: g[1] });
   if (s[0]) steps.push({ type: 'sentence', item: s[0] });
+  if (g[1]) steps.push({ type: 'grammar', item: g[1] });
   if (w[4]) steps.push({ type: 'repeat', item: w[4] });
+  const matchItems = [w[5], w[6], w[7], w[8]].filter(Boolean);
+  if (matchItems.length >= 3) steps.push({ type: 'match', items: matchItems });
+  if (s[1]) steps.push({ type: 'sentence', item: s[1] });
   const reviewItems = [w[0], w[1], g[0]].filter(Boolean);
   if (reviewItems.length > 0) steps.push({ type: 'review', items: reviewItems });
   return steps;
+}
+
+// 레벨 하나(N5 등)의 단어를 스테이지 개수만큼 골고루 나눠서, 스테이지별로 어느 정도 통일된 소재를 반복 학습하게 함.
+// 나중에 stageCount를 늘리거나, 특정 스테이지에 수동으로 주제(예: "공항", "쇼핑")를 지정하고 싶으면
+// 이 함수를 교체하거나 STAGE_TOPIC_OVERRIDES 같은 걸 추가해서 확장 가능.
+function buildLevelStages(level, allWords, allGrammars, allSentences, stageCount) {
+  const count = stageCount || 10;
+  const lw = allWords.filter((w) => w.level === level);
+  const lg = allGrammars.filter((g) => g.level === level);
+  const ls = allSentences.filter((s) => s.level === level);
+  const stages = [];
+  for (let i = 0; i < count; i++) {
+    const wChunk = lw.filter((_, idx) => idx % count === i);
+    if (wChunk.length === 0) continue;
+    const gChunk = lg.length > 0 ? [lg[i % lg.length]] : [];
+    const sChunk = ls.length > 0 ? [ls[i % ls.length]] : [];
+    stages.push({
+      stageId: level + '-' + (i + 1),
+      level: level,
+      stageNum: i + 1,
+      words: wChunk,
+      grammar: gChunk,
+      sentences: sChunk,
+    });
+  }
+  return stages;
 }
 
 // 유저가 마이크로 따라 말한 내용을 목표 텍스트와 대략 비교(완벽한 발음 평가는 아님)
@@ -10753,7 +10870,8 @@ function roughlyMatches(said, target) {
 
 function RepeatCard({ mode, item, onNext }) {
   const speak = mode === 'ja' ? speakJapanese : speakKorean;
-  const targetText = mode === 'ja' ? (item.reading || item.word) : item.word;
+  const speakText = mode === 'ja' ? (item.reading || item.word) : item.word; // TTS 발음용
+  const matchText = item.word; // 음성인식 결과 비교용 - 음성인식은 보통 한자/원문 표기로 인식하므로 읽기(reading)가 아닌 word와 비교해야 함
   const displayText = item.word;
   const [recording, setRecording] = useState(false);
   const [result, setResult] = useState(null);
@@ -10761,7 +10879,7 @@ function RepeatCard({ mode, item, onNext }) {
   const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
   useEffect(() => {
-    const t = setTimeout(() => speak(targetText), 400);
+    const t = setTimeout(() => speak(speakText), 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -10775,7 +10893,7 @@ function RepeatCard({ mode, item, onNext }) {
     r.onresult = (e) => {
       const said = e.results[0][0].transcript;
       setHeard(said);
-      const correct = roughlyMatches(said, targetText);
+      const correct = roughlyMatches(said, matchText);
       setResult(correct ? 'correct' : 'wrong');
       if (correct) playCorrectSound(); else playWrongSound();
     };
@@ -10791,7 +10909,7 @@ function RepeatCard({ mode, item, onNext }) {
         <div className="meaning-hint">{mode === 'ja' ? '들리는 문장을 마이크로 따라 말해보세요' : '聞こえてくる文をマイクで繰り返してください'}</div>
         <div className="pattern jp-text">{displayText}</div>
       </div>
-      <button className="replay-btn" onClick={() => speak(targetText)}>🔊 {mode === 'ja' ? '다시 듣기' : 'もう一度聞く'}</button>
+      <button className="replay-btn" onClick={() => speak(speakText)}>🔊 {mode === 'ja' ? '다시 듣기' : 'もう一度聞く'}</button>
 
       {!speechSupported ? (
         <React.Fragment>
@@ -10822,15 +10940,95 @@ function RepeatCard({ mode, item, onNext }) {
   );
 }
 
-function ReviewCheckpoint({ mode, items, onNext }) {
+function MatchingCard({ mode, items, onNext }) {
+  const pairs = items.slice(0, 5);
+  const getMeaning = (i) => i.meaning || i.meaningJp || i.title || i.titleJp;
+  const leftItems = useMemo(() => shuffle(pairs.map((p, i) => ({ id: i, text: p.word || p.pattern }))), [items]);
+  const rightItems = useMemo(() => shuffle(pairs.map((p, i) => ({ id: i, text: getMeaning(p) }))), [items]);
+  const [matchedIds, setMatchedIds] = useState(() => new Set());
+  const [selectedLeft, setSelectedLeft] = useState(null);
+  const [selectedRight, setSelectedRight] = useState(null);
+  const [wrongPair, setWrongPair] = useState(null);
+
+  function checkMatch(l, r) {
+    if (l === r) {
+      setMatchedIds((prev) => {
+        const next = new Set(prev);
+        next.add(l);
+        if (next.size === pairs.length) setTimeout(onNext, 500);
+        return next;
+      });
+      setSelectedLeft(null);
+      setSelectedRight(null);
+      playCorrectSound();
+    } else {
+      setWrongPair({ l, r });
+      playWrongSound();
+      setTimeout(() => { setWrongPair(null); setSelectedLeft(null); setSelectedRight(null); }, 500);
+    }
+  }
+  function clickLeft(id) {
+    if (matchedIds.has(id) || wrongPair) return;
+    setSelectedLeft(id);
+    if (selectedRight !== null) checkMatch(id, selectedRight);
+  }
+  function clickRight(id) {
+    if (matchedIds.has(id) || wrongPair) return;
+    setSelectedRight(id);
+    if (selectedLeft !== null) checkMatch(selectedLeft, id);
+  }
+
+  return (
+    <div className="genkou-card">
+      <div className="meaning-hint" style={{ marginBottom: 14 }}>{mode === 'ja' ? '짝을 맞춰보세요' : 'ペアをタップして合わせてください'}</div>
+      <div className="matching-grid">
+        <div className="matching-col">
+          {leftItems.map((l) => (
+            <button
+              key={'l' + l.id}
+              className={'matching-tile' + (matchedIds.has(l.id) ? ' matched' : '') + (selectedLeft === l.id ? ' selected' : '') + (wrongPair && wrongPair.l === l.id ? ' wrong' : '')}
+              disabled={matchedIds.has(l.id)}
+              onClick={() => clickLeft(l.id)}
+            >
+              {l.text}
+            </button>
+          ))}
+        </div>
+        <div className="matching-col">
+          {rightItems.map((r) => (
+            <button
+              key={'r' + r.id}
+              className={'matching-tile' + (matchedIds.has(r.id) ? ' matched' : '') + (selectedRight === r.id ? ' selected' : '') + (wrongPair && wrongPair.r === r.id ? ' wrong' : '')}
+              disabled={matchedIds.has(r.id)}
+              onClick={() => clickRight(r.id)}
+            >
+              {r.text}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewCheckpoint({ mode, items, pool, onNext }) {
   const [idx, setIdx] = useState(0);
-  const [checked, setChecked] = useState(false);
+  const [selected, setSelected] = useState(null);
   const item = items[idx];
   const label = item.word || item.pattern || item.char;
-  const meaning = item.meaning || item.meaningJp || item.title || item.titleJp;
+  const getMeaning = (i) => i.meaning || i.meaningJp || i.title || i.titleJp;
+  const correctMeaning = getMeaning(item);
+
+  const options = useMemo(() => {
+    const distractors = shuffle((pool || []).filter((i) => i !== item && getMeaning(i) && getMeaning(i) !== correctMeaning))
+      .slice(0, 3)
+      .map(getMeaning);
+    return shuffle([correctMeaning, ...distractors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx]);
 
   function next() {
-    setChecked(false);
+    setSelected(null);
     if (idx + 1 >= items.length) onNext();
     else setIdx(idx + 1);
   }
@@ -10840,16 +11038,30 @@ function ReviewCheckpoint({ mode, items, onNext }) {
       <span className="hanko" style={{ background: 'var(--purple)' }}>{mode === 'ja' ? '복습' : '復習'}</span>
       <div style={{ marginTop: 12 }}>
         <div className="meaning-hint" style={{ marginBottom: 10, color: 'var(--ink-soft)' }}>
-          {mode === 'ja' ? '아까 배운 내용, 기억나세요?' : 'さっき習った内容、覚えていますか？'}
+          {mode === 'ja' ? '아까 배운 내용, 기억나세요? 뜻을 골라보세요' : 'さっき習った内容、覚えていますか？意味を選んでください'}
         </div>
         <div className="pattern-plate">
           <div className="pattern jp-text">{label}</div>
         </div>
-        {!checked ? (
-          <button className="primary-btn" onClick={() => setChecked(true)}>{mode === 'ja' ? '뜻 확인하기' : '意味を確認する'}</button>
-        ) : (
+        <div className="option-list">
+          {options.map((opt) => {
+            let cls = 'option-btn';
+            if (selected) {
+              if (opt === correctMeaning) cls += ' option-correct';
+              else if (opt === selected) cls += ' option-wrong';
+            }
+            return (
+              <button key={opt} className={cls} onClick={() => !selected && setSelected(opt)} disabled={!!selected}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+        {selected && (
           <React.Fragment>
-            <div className="example" style={{ textAlign: 'center' }}>{meaning}</div>
+            <div className={'feedback ' + (selected === correctMeaning ? 'feedback-correct' : 'feedback-wrong')}>
+              {selected === correctMeaning ? (mode === 'ja' ? '정답입니다!' : '正解です！') : (mode === 'ja' ? '정답: ' + correctMeaning : '正解: ' + correctMeaning)}
+            </div>
             <button className="primary-btn" style={{ marginTop: 14 }} onClick={next}>{mode === 'ja' ? '다음' : '次へ'}</button>
           </React.Fragment>
         )}
@@ -10891,24 +11103,59 @@ function useCourseProgress(user, mode) {
   return { completed, markComplete };
 }
 
-function CourseLevelPath({ mode, levels, completed, onSelectLevel }) {
+function CourseLevelPath({ mode, allStages, completed, onSelectStage }) {
+  const [confirmStage, setConfirmStage] = useState(null);
+  const grouped = [];
+  allStages.forEach((st) => {
+    let group = grouped.find((g) => g.level === st.level);
+    if (!group) { group = { level: st.level, stages: [] }; grouped.push(group); }
+    group.stages.push(st);
+  });
+
+  function handleClick(st, isLocked) {
+    if (isLocked) setConfirmStage(st);
+    else onSelectStage(st);
+  }
+
   return (
-    <div className="course-path">
-      {levels.map((lv, i) => {
-        const isDone = completed.includes(lv);
-        const isLocked = i > 0 && !completed.includes(levels[i - 1]);
-        return (
-          <button
-            key={lv}
-            className={'course-node' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '')}
-            disabled={isLocked}
-            onClick={() => onSelectLevel(lv)}
-          >
-            <span className="course-node-circle">{isDone ? '⭐' : isLocked ? '🔒' : (i + 1)}</span>
-            <span className="course-node-label">{lv}</span>
-          </button>
-        );
-      })}
+    <div>
+      {grouped.map((g) => (
+        <div key={g.level}>
+          <div className="course-level-header">{g.level}</div>
+          <div className="course-path">
+            {g.stages.map((st) => {
+              const globalIdx = allStages.indexOf(st);
+              const prevStage = allStages[globalIdx - 1];
+              const isDone = completed.includes(st.stageId);
+              const isLocked = globalIdx > 0 && prevStage && !completed.includes(prevStage.stageId);
+              return (
+                <button
+                  key={st.stageId}
+                  className={'course-node' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '')}
+                  onClick={() => handleClick(st, isLocked)}
+                >
+                  <span className="course-node-circle">{isDone ? '⭐' : isLocked ? '🔒' : st.stageNum}</span>
+                  <span className="course-node-label">{st.stageNum}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {confirmStage && (
+        <div className="modal-backdrop" onClick={() => setConfirmStage(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <p>{mode === 'ja'
+              ? (confirmStage.level + '-' + confirmStage.stageNum + ' 단계는 아직 잠겨있어요. 이전 단계를 안 깼는데, 그래도 시작할까요?')
+              : (confirmStage.level + '-' + confirmStage.stageNum + ' はまだロックされています。前の段階をクリアしていませんが、それでも始めますか？')}</p>
+            <div className="action-row">
+              <button className="secondary-btn" onClick={() => setConfirmStage(null)}>{mode === 'ja' ? '취소' : 'キャンセル'}</button>
+              <button className="primary-btn" onClick={() => { onSelectStage(confirmStage); setConfirmStage(null); }}>{mode === 'ja' ? '시작하기' : '始める'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -10947,7 +11194,8 @@ function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
           : <KrSentenceCard key={idx} item={{ ...step.item, sourceDeck: 'sentence' }} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
       )}
       {step.type === 'repeat' && <RepeatCard key={idx} mode={mode} item={step.item} onNext={next} />}
-      {step.type === 'review' && <ReviewCheckpoint key={idx} mode={mode} items={step.items} onNext={next} />}
+      {step.type === 'match' && <MatchingCard key={idx} mode={mode} items={step.items} onNext={next} />}
+      {step.type === 'review' && <ReviewCheckpoint key={idx} mode={mode} items={step.items} pool={[...(pool.words || []), ...(pool.grammar || [])]} onNext={next} />}
     </div>
   );
 }
@@ -10969,53 +11217,59 @@ function CourseCompleteScreen({ mode, level, onBack }) {
 
 function CourseTab({ mode, user, wordDeck, grammarDeck, sentenceDeck, levels }) {
   const courseProgress = useCourseProgress(user, mode);
-  const [activeLevel, setActiveLevel] = useState(null);
+  const [activeStage, setActiveStage] = useState(null);
   const [steps, setSteps] = useState(null);
   const [justCompleted, setJustCompleted] = useState(null);
 
   const decks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
 
-  function startLevel(level) {
-    const generated = buildCourseSteps(level, wordDeck.items, grammarDeck.items, sentenceDeck.items);
+  const allStages = useMemo(() => {
+    let result = [];
+    levels.forEach((lv) => {
+      result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, 10));
+    });
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levels, wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length]);
+
+  function startStage(stage) {
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences);
     if (generated.length === 0) return;
     setSteps(generated);
-    setActiveLevel(level);
+    setActiveStage(stage);
     setJustCompleted(null);
   }
-  function finishLevel() {
-    courseProgress.markComplete(activeLevel);
-    setJustCompleted(activeLevel);
+  function finishStage() {
+    courseProgress.markComplete(activeStage.stageId);
+    setJustCompleted(activeStage);
     setSteps(null);
   }
-  function exitLevel() {
+  function exitStage() {
     setSteps(null);
-    setActiveLevel(null);
+    setActiveStage(null);
     setJustCompleted(null);
   }
 
-  const pool = {
-    words: wordDeck.items.filter((i) => i.level === activeLevel),
-    grammar: grammarDeck.items.filter((i) => i.level === activeLevel),
-  };
+  const pool = activeStage ? { words: activeStage.words, grammar: activeStage.grammar } : { words: [], grammar: [] };
 
   if (steps) {
-    return <CourseSession mode={mode} level={activeLevel} steps={steps} pool={pool} decks={decks} onFinish={finishLevel} onExit={exitLevel} />;
+    return <CourseSession mode={mode} level={activeStage.level + '-' + activeStage.stageNum} steps={steps} pool={pool} decks={decks} onFinish={finishStage} onExit={exitStage} />;
   }
   if (justCompleted) {
-    return <CourseCompleteScreen mode={mode} level={justCompleted} onBack={() => setJustCompleted(null)} />;
+    return <CourseCompleteScreen mode={mode} level={justCompleted.level + '-' + justCompleted.stageNum} onBack={() => setJustCompleted(null)} />;
   }
   return (
     <div>
       <div className="empty-state" style={{ padding: '4px 4px 16px' }}>
-        {mode === 'ja' ? '레벨을 순서대로 완료하며 단어·문법·작문·말하기를 골고루 연습해요.' : 'レベルを順番にクリアしながら、単語・文法・作文・スピーキングをまんべんなく練習しましょう。'}
+        {mode === 'ja' ? '단계를 순서대로 완료하며 단어·문법·작문·말하기를 골고루 연습해요.' : '段階を順番にクリアしながら、単語・文法・作文・スピーキングをまんべんなく練習しましょう。'}
       </div>
-      <CourseLevelPath mode={mode} levels={levels} completed={courseProgress.completed} onSelectLevel={startLevel} />
+      <CourseLevelPath mode={mode} allStages={allStages} completed={courseProgress.completed} onSelectStage={startStage} />
     </div>
   );
 }
 
 function JaSection({ user, onActivity, onFocusChange }) {
-  const [deckType, setDeckType] = useState('words');
+  const [deckType, setDeckType] = useState('course');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [studyAll, setStudyAll] = useState(false);
@@ -11066,12 +11320,13 @@ function JaSection({ user, onActivity, onFocusChange }) {
     <React.Fragment>
       {!isFocused && (
         <React.Fragment>
-          <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
-          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 코스로 배우기</button>
+          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 코스로 배우기 (추천)</button>
           <div className="quick-actions-row">
             <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
             <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
           </div>
+          <div className="secondary-decks-label">개별 항목별로 자유롭게 학습하기</div>
+          <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
         </React.Fragment>
       )}
       {tab === 'study' && (
@@ -11203,6 +11458,9 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
           <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '正解です!' : ('不正解です。正解: ' + correctText)}</div>
           {krRenderDetail(deckType, item)}
           {speechText && <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>}
+          {deckType === 'words' && item.example && (
+            <button className="replay-btn" onClick={() => speakKorean(item.example)}>🔊 例文を聞く</button>
+          )}
           <div className="action-row quiz-sticky-actions">
             <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 復習ノートに追加済み' : '☆ 復習に追加'}</button>
             <button className="primary-btn" onClick={handleNext}>次へ</button>
@@ -11408,7 +11666,7 @@ function KrListView({ deckType, items, onRemove }) {
 }
 
 function KrSection({ user, onActivity, onFocusChange }) {
-  const [deckType, setDeckType] = useState('words');
+  const [deckType, setDeckType] = useState('course');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [studyAll, setStudyAll] = useState(false);
@@ -11458,12 +11716,13 @@ function KrSection({ user, onActivity, onFocusChange }) {
     <React.Fragment>
       {!isFocused && (
         <React.Fragment>
-          <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
-          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 コースで学ぶ</button>
+          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 コースで学ぶ（おすすめ）</button>
           <div className="quick-actions-row">
             <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
             <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
           </div>
+          <div className="secondary-decks-label">項目ごとに自由に学習する</div>
+          <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
         </React.Fragment>
       )}
       {tab === 'study' && (
