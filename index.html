@@ -283,6 +283,17 @@ body {
   font-weight: 500;
 }
 
+.repeat-meaning {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fffdf8;
+  background: rgba(255, 255, 255, 0.18);
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  margin-top: 10px;
+}
+
 .scene-tag {
   display: inline-block;
   font-size: 10px;
@@ -10364,10 +10375,8 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark, isRetry }) {
     const correct = opt === correctText;
     setSelected(opt);
     if (correct) playCorrectSound(); else playWrongSound();
-    if (correct) {
-      const exampleAudio = (deckType === 'words' || deckType === 'grammar') ? (item.exampleReading || item.example) : speechText;
-      if (exampleAudio) setTimeout(() => speakJapanese(exampleAudio), 500);
-    }
+    const exampleAudio = (deckType === 'words' || deckType === 'grammar') ? (item.exampleReading || item.example) : speechText;
+    if (exampleAudio) setTimeout(() => speakJapanese(exampleAudio), correct ? 500 : 900);
   }
   function handleNext() { onResult(item.id, isCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck); }
   function handleToggleBookmark() {
@@ -11066,19 +11075,20 @@ function buildCourseSteps(words, grammars, sentences) {
   }
   const w = pick(words, 9);
   const g = pick(grammars, 2);
-  const s = pick(sentences, 2);
+  const s = pick(sentences, 3);
   const steps = [];
   if (w[0]) steps.push({ type: 'words', item: w[0] });
   if (w[1]) steps.push({ type: 'words', item: w[1] });
   if (g[0]) steps.push({ type: 'grammar', item: g[0] });
-  if (w[2]) steps.push({ type: 'repeat', item: w[2] });
+  if (w[2]) steps.push({ type: 'repeat', item: w[2], repeatKind: 'word' });
   if (w[3]) steps.push({ type: 'words', item: w[3] });
   if (s[0]) steps.push({ type: 'sentence', item: s[0] });
   if (g[1]) steps.push({ type: 'grammar', item: g[1] });
-  if (w[4]) steps.push({ type: 'repeat', item: w[4] });
+  if (w[4]) steps.push({ type: 'repeat', item: w[4], repeatKind: 'word' });
   const matchItems = [w[5], w[6], w[7], w[8]].filter(Boolean);
   if (matchItems.length >= 3) steps.push({ type: 'match', items: matchItems });
   if (s[1]) steps.push({ type: 'sentence', item: s[1] });
+  if (s[2]) steps.push({ type: 'repeat', item: s[2], repeatKind: 'sentence' });
   const fallbackReviewItems = [w[0], w[1], g[0]].filter(Boolean);
   steps.push({ type: 'review', fallbackItems: fallbackReviewItems });
   return steps;
@@ -11121,11 +11131,14 @@ function roughlyMatches(said, target) {
   return a.includes(b.slice(0, shortLen)) || b.includes(a.slice(0, shortLen));
 }
 
-function RepeatCard({ mode, item, onNext }) {
+function RepeatCard({ mode, item, repeatKind, onNext }) {
   const speak = mode === 'ja' ? speakJapanese : speakKorean;
-  const speakText = mode === 'ja' ? (item.reading || item.word) : item.word; // TTS 발음용
-  const matchText = item.word; // 음성인식 결과 비교용 - 음성인식은 보통 한자/원문 표기로 인식하므로 읽기(reading)가 아닌 word와 비교해야 함
-  const displayText = item.word;
+  const isSentence = repeatKind === 'sentence';
+  const sentenceText = isSentence ? (item.tiles ? item.tiles.map((t) => t.text).join('') : item.word) : null;
+  const speakText = isSentence ? (item.reading || sentenceText) : (mode === 'ja' ? (item.reading || item.word) : item.word); // TTS 발음용
+  const matchText = isSentence ? sentenceText : item.word; // 음성인식 결과 비교용
+  const displayText = isSentence ? sentenceText : item.word;
+  const meaningText = isSentence ? item.meaning : (mode === 'ja' ? item.meaning : item.meaningJp);
   const [recording, setRecording] = useState(false);
   const [result, setResult] = useState(null);
   const [heard, setHeard] = useState('');
@@ -11159,8 +11172,13 @@ function RepeatCard({ mode, item, onNext }) {
   return (
     <div className="genkou-card">
       <div className="pattern-plate">
-        <div className="meaning-hint">{mode === 'ja' ? '들리는 문장을 마이크로 따라 말해보세요' : '聞こえてくる文をマイクで繰り返してください'}</div>
-        <div className="pattern jp-text">{displayText}</div>
+        <div className="meaning-hint">
+          {isSentence
+            ? (mode === 'ja' ? '들리는 문장을 마이크로 따라 말해보세요' : '聞こえてくる文をマイクで繰り返してください')
+            : (mode === 'ja' ? '들리는 단어를 마이크로 따라 말해보세요' : '聞こえてくる単語をマイクで繰り返してください')}
+        </div>
+        <div className="pattern jp-text" style={{ fontSize: isSentence ? 22 : 26 }}>{displayText}</div>
+        {meaningText && <div className="repeat-meaning">{meaningText}</div>}
       </div>
       <button className="replay-btn" onClick={() => speak(speakText)}>🔊 {mode === 'ja' ? '다시 듣기' : 'もう一度聞く'}</button>
 
@@ -11413,7 +11431,7 @@ function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
           ? <JaSentenceCard key={idx} item={{ ...step.item, sourceDeck: 'sentence' }} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
           : <KrSentenceCard key={idx} item={{ ...step.item, sourceDeck: 'sentence' }} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
       )}
-      {step.type === 'repeat' && <RepeatCard key={idx} mode={mode} item={step.item} onNext={next} />}
+      {step.type === 'repeat' && <RepeatCard key={idx} mode={mode} item={step.item} repeatKind={step.repeatKind} onNext={next} />}
       {step.type === 'match' && <MatchingCard key={idx} mode={mode} items={step.items} onNext={next} />}
       {step.type === 'review' && (
         <ReviewCheckpoint
@@ -11765,10 +11783,8 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
     const correct = opt === correctText;
     setSelected(opt);
     if (correct) playCorrectSound(); else playWrongSound();
-    if (correct) {
-      const exampleAudio = (deckType === 'words' || deckType === 'grammar') ? item.example : speechText;
-      if (exampleAudio) setTimeout(() => speakKorean(exampleAudio), 500);
-    }
+    const exampleAudio = (deckType === 'words' || deckType === 'grammar') ? item.example : speechText;
+    if (exampleAudio) setTimeout(() => speakKorean(exampleAudio), correct ? 500 : 900);
   }
   function handleNext() { onResult(item.id, isCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck); }
   function handleToggleBookmark() {
