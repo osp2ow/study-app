@@ -10484,7 +10484,10 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   );
 }
 function JaSentenceCard({ item, onResult, onToggleBookmark }) {
-  const [pool, setPool] = useState(() => shuffle([...item.tiles, ...(item.distractors || [])].map((t, i) => ({ id: i, text: t.text, reading: t.reading }))));
+  const [pool, setPool] = useState(() =>
+    shuffle([...item.tiles, ...(item.distractors || [])].map((t, i) => ({ id: i, text: t.text, reading: t.reading })))
+      .map((t, idx) => ({ ...t, orderIdx: idx }))
+  );
   const [placed, setPlaced] = useState([]);
   const [checked, setChecked] = useState(false);
   const [wasCorrect, setWasCorrect] = useState(false);
@@ -10508,7 +10511,8 @@ function JaSentenceCard({ item, onResult, onToggleBookmark }) {
   function removeTile(tile) {
     if (checked) return;
     setPlaced((prev) => prev.filter((t) => t.id !== tile.id));
-    setPool((prev) => [...prev, tile]);
+    // 원래 있던 자리(orderIdx) 기준으로 정렬해서 돌려놓기 - 맨 끝으로 가지 않도록
+    setPool((prev) => [...prev, tile].sort((a, b) => a.orderIdx - b.orderIdx));
   }
   const isComplete = placed.length === item.tiles.length;
   const correctTextJoined = item.tiles.map((t) => t.text).join('|');
@@ -11069,22 +11073,28 @@ function AiChatSection({ mode }) {
 
 // ==================== 코스(듀오링고 스타일 레벨 경로) ====================
 
-function buildCourseSteps(words, grammars, sentences) {
+function buildCourseSteps(words, grammars, sentences, kanjiList, travelList) {
   function pick(arr, n) {
     return shuffle(arr).slice(0, n);
   }
   const w = pick(words, 9);
   const g = pick(grammars, 2);
   const s = pick(sentences, 3);
+  const k = pick(kanjiList || [], 2);
+  const tv = pick(travelList || [], 2);
   const steps = [];
   if (w[0]) steps.push({ type: 'words', item: w[0] });
   if (w[1]) steps.push({ type: 'words', item: w[1] });
   if (g[0]) steps.push({ type: 'grammar', item: g[0] });
+  if (k[0]) steps.push({ type: 'kanji', item: k[0] });
   if (w[2]) steps.push({ type: 'repeat', item: w[2], repeatKind: 'word' });
   if (w[3]) steps.push({ type: 'words', item: w[3] });
+  if (tv[0]) steps.push({ type: 'travel', item: tv[0] });
   if (s[0]) steps.push({ type: 'sentence', item: s[0] });
   if (g[1]) steps.push({ type: 'grammar', item: g[1] });
+  if (k[1]) steps.push({ type: 'kanji', item: k[1] });
   if (w[4]) steps.push({ type: 'repeat', item: w[4], repeatKind: 'word' });
+  if (tv[1]) steps.push({ type: 'travel', item: tv[1] });
   const matchItems = [w[5], w[6], w[7], w[8]].filter(Boolean);
   if (matchItems.length >= 3) steps.push({ type: 'match', items: matchItems });
   if (s[1]) steps.push({ type: 'sentence', item: s[1] });
@@ -11094,20 +11104,24 @@ function buildCourseSteps(words, grammars, sentences) {
   return steps;
 }
 
-// 레벨 하나(N5 등)의 단어를 스테이지 개수만큼 골고루 나눠서, 스테이지별로 어느 정도 통일된 소재를 반복 학습하게 함.
+// 레벨 하나(N5 등)의 항목들을 스테이지 개수만큼 골고루 나눠서, 스테이지별로 어느 정도 통일된 소재를 반복 학습하게 함.
 // 나중에 stageCount를 늘리거나, 특정 스테이지에 수동으로 주제(예: "공항", "쇼핑")를 지정하고 싶으면
 // 이 함수를 교체하거나 STAGE_TOPIC_OVERRIDES 같은 걸 추가해서 확장 가능.
-function buildLevelStages(level, allWords, allGrammars, allSentences, stageCount) {
+function buildLevelStages(level, allWords, allGrammars, allSentences, allKanji, allTravel, stageCount) {
   const count = stageCount || 10;
   const lw = allWords.filter((w) => w.level === level);
   const lg = allGrammars.filter((g) => g.level === level);
   const ls = allSentences.filter((s) => s.level === level);
+  const lk = (allKanji || []).filter((k) => k.level === level);
+  const lt = (allTravel || []).filter((t) => t.level === level);
   const stages = [];
   for (let i = 0; i < count; i++) {
     const wChunk = lw.filter((_, idx) => idx % count === i);
     if (wChunk.length === 0) continue;
     const gChunk = lg.length > 0 ? [lg[i % lg.length]] : [];
     const sChunk = ls.length > 0 ? [ls[i % ls.length]] : [];
+    const kChunk = lk.length > 0 ? [lk[i % lk.length]] : [];
+    const tChunk = lt.length > 0 ? [lt[i % lt.length]] : [];
     stages.push({
       stageId: level + '-' + (i + 1),
       level: level,
@@ -11115,6 +11129,8 @@ function buildLevelStages(level, allWords, allGrammars, allSentences, stageCount
       words: wChunk,
       grammar: gChunk,
       sentences: sChunk,
+      kanji: kChunk,
+      travel: tChunk,
     });
   }
   return stages;
@@ -11421,7 +11437,7 @@ function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
       <button className="focus-back-btn" onClick={onExit}>← {mode === 'ja' ? '코스에서 나가기' : 'コースから出る'}</button>
       <div className="course-progress-bar"><div className="course-progress-fill" style={{ width: progressPct + '%' }} /></div>
 
-      {(step.type === 'words' || step.type === 'grammar') && (
+      {(step.type === 'words' || step.type === 'grammar' || step.type === 'kanji' || step.type === 'travel') && (
         mode === 'ja'
           ? <JaQuizCard key={idx} item={{ ...step.item, sourceDeck: step.type }} pool={pool[step.type] || [step.item]} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
           : <KrQuizCard key={idx} item={{ ...step.item, sourceDeck: step.type }} pool={pool[step.type] || [step.item]} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
@@ -11602,16 +11618,16 @@ function JaSection({ user, onActivity, onFocusChange }) {
   const courseProgress = useCourseProgress(user, 'ja');
   const allStages = useMemo(() => {
     let result = [];
-    JA_LEVELS.forEach((lv) => { result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, 10)); });
+    JA_LEVELS.forEach((lv) => { result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, kanjiDeck.items, travelDeck.items, 10)); });
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length]);
+  }, [wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length, kanjiDeck.items.length, travelDeck.items.length]);
   const [activeStage, setActiveStage] = useState(null);
   const [courseSteps, setCourseSteps] = useState(null);
   const [justCompletedStage, setJustCompletedStage] = useState(null);
 
   function startStage(stage) {
-    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences);
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, stage.kanji, stage.travel);
     if (generated.length === 0) return;
     setCourseSteps(generated);
     setActiveStage(stage);
@@ -11641,8 +11657,8 @@ function JaSection({ user, onActivity, onFocusChange }) {
     if (onFocusChange) onFocusChange(isFocused || screen === 'level');
   }, [isFocused, screen]);
 
-  const coursePool = activeStage ? { words: wordDeck.items.filter((i) => i.level === activeStage.level), grammar: grammarDeck.items.filter((i) => i.level === activeStage.level) } : { words: [], grammar: [] };
-  const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
+  const coursePool = activeStage ? { words: wordDeck.items.filter((i) => i.level === activeStage.level), grammar: grammarDeck.items.filter((i) => i.level === activeStage.level), kanji: kanjiDeck.items.filter((i) => i.level === activeStage.level), travel: travelDeck.items.filter((i) => i.level === activeStage.level) } : { words: [], grammar: [], kanji: [], travel: [] };
+  const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck, kanji: kanjiDeck, travel: travelDeck };
 
   if (screen === 'home') {
     return <HomeScreen mode="ja" levels={JA_LEVELS} onSelectLevel={goLevel} onOpenAiChat={openAiChat} onOpenReview={openReview} bookmarkCount={bookmarkedItems.length} />;
@@ -11692,7 +11708,6 @@ function JaSection({ user, onActivity, onFocusChange }) {
         <JaLevelPicker levelCounts={levelCounts} onSelect={(lv) => { setSelectedLevel(lv); setTab('dashboard'); }} />
       ) : (
         <React.Fragment>
-          {selectedLevel && !isReview && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 급수 다시 선택 ({selectedLevel})</button>}
           {tab === 'dashboard' && <JaDashboard stats={scopedStats} onStartStudy={(all) => { setStudyAll(!!all); setTab('study'); }} emptyMessage={isReview ? <React.Fragment>복습노트가 비어 있습니다.<br/>학습 중 "☆ 복습에 추가" 버튼을 눌러보세요.</React.Fragment> : undefined} />}
           {tab === 'study' && <JaStudySession dueItems={studyAll ? scopedItems : scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} onActivity={onActivity} />}
           {tab === 'list' && <JaListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
@@ -11889,7 +11904,10 @@ function KrStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
   );
 }
 function KrSentenceCard({ item, onResult, onToggleBookmark }) {
-  const [pool, setPool] = useState(() => shuffle([...item.tiles, ...(item.distractors || [])].map((t, i) => ({ id: i, text: t }))));
+  const [pool, setPool] = useState(() =>
+    shuffle([...item.tiles, ...(item.distractors || [])].map((t, i) => ({ id: i, text: t })))
+      .map((t, idx) => ({ ...t, orderIdx: idx }))
+  );
   const [placed, setPlaced] = useState([]);
   const [checked, setChecked] = useState(false);
   const [wasCorrect, setWasCorrect] = useState(false);
@@ -11906,7 +11924,7 @@ function KrSentenceCard({ item, onResult, onToggleBookmark }) {
   function removeTile(tile) {
     if (checked) return;
     setPlaced((prev) => prev.filter((t) => t.id !== tile.id));
-    setPool((prev) => [...prev, tile]);
+    setPool((prev) => [...prev, tile].sort((a, b) => a.orderIdx - b.orderIdx));
   }
   const isComplete = placed.length === item.tiles.length;
 
@@ -12068,16 +12086,16 @@ function KrSection({ user, onActivity, onFocusChange }) {
   const courseProgress = useCourseProgress(user, 'kr');
   const allStages = useMemo(() => {
     let result = [];
-    KR_LEVELS.forEach((lv) => { result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, 10)); });
+    KR_LEVELS.forEach((lv) => { result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, null, travelDeck.items, 10)); });
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length]);
+  }, [wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length, travelDeck.items.length]);
   const [activeStage, setActiveStage] = useState(null);
   const [courseSteps, setCourseSteps] = useState(null);
   const [justCompletedStage, setJustCompletedStage] = useState(null);
 
   function startStage(stage) {
-    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences);
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, null, stage.travel);
     if (generated.length === 0) return;
     setCourseSteps(generated);
     setActiveStage(stage);
@@ -12107,8 +12125,8 @@ function KrSection({ user, onActivity, onFocusChange }) {
     if (onFocusChange) onFocusChange(isFocused || screen === 'level');
   }, [isFocused, screen]);
 
-  const coursePool = activeStage ? { words: wordDeck.items.filter((i) => i.level === activeStage.level), grammar: grammarDeck.items.filter((i) => i.level === activeStage.level) } : { words: [], grammar: [] };
-  const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
+  const coursePool = activeStage ? { words: wordDeck.items.filter((i) => i.level === activeStage.level), grammar: grammarDeck.items.filter((i) => i.level === activeStage.level), travel: travelDeck.items.filter((i) => i.level === activeStage.level) } : { words: [], grammar: [], travel: [] };
+  const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck, travel: travelDeck };
 
   if (screen === 'home') {
     return <HomeScreen mode="kr" levels={KR_LEVELS} onSelectLevel={goLevel} onOpenAiChat={openAiChat} onOpenReview={openReview} bookmarkCount={bookmarkedItems.length} />;
@@ -12158,7 +12176,6 @@ function KrSection({ user, onActivity, onFocusChange }) {
         <KrLevelPicker levelCounts={levelCounts} onSelect={(lv) => { setSelectedLevel(lv); setTab('dashboard'); }} />
       ) : (
         <React.Fragment>
-          {selectedLevel && !isReview && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 級を選び直す ({selectedLevel})</button>}
           {tab === 'dashboard' && <KrDashboard stats={scopedStats} onStartStudy={(all) => { setStudyAll(!!all); setTab('study'); }} emptyMessage={isReview ? <React.Fragment>復習ノートが空です。<br/>学習中に「☆ 復習に追加」ボタンを押してみましょう。</React.Fragment> : undefined} />}
           {tab === 'study' && <KrStudySession dueItems={studyAll ? scopedItems : scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} onActivity={onActivity} />}
           {tab === 'list' && <KrListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
