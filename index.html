@@ -896,10 +896,87 @@ body {
 
 .course-path {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 0 20px;
+  gap: 14px;
+  padding: 10px 4px 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.course-path-horizontal {
+  display: flex;
+  gap: 14px;
+  padding: 10px 4px 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-ai-btn {
+  font-size: 17px !important;
+  padding: 22px !important;
+  margin-bottom: 20px !important;
+}
+
+.home-level-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.home-level-card {
+  padding: 26px 10px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.home-level-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.home-level-badge {
+  font-family: 'Baloo 2', 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--indigo);
+}
+
+.home-review-link {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-dark);
+  cursor: pointer;
+}
+
+.level-deck-pills-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 4px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.level-deck-pill {
+  flex: 0 0 auto;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  color: var(--indigo);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .course-node {
@@ -911,6 +988,7 @@ body {
   border: none;
   cursor: pointer;
   padding: 6px;
+  flex: 0 0 auto;
 }
 
 .course-node-circle {
@@ -11103,63 +11181,6 @@ function useCourseProgress(user, mode) {
   return { completed, markComplete };
 }
 
-function CourseLevelPath({ mode, allStages, completed, onSelectStage }) {
-  const [confirmStage, setConfirmStage] = useState(null);
-  const grouped = [];
-  allStages.forEach((st) => {
-    let group = grouped.find((g) => g.level === st.level);
-    if (!group) { group = { level: st.level, stages: [] }; grouped.push(group); }
-    group.stages.push(st);
-  });
-
-  function handleClick(st, isLocked) {
-    if (isLocked) setConfirmStage(st);
-    else onSelectStage(st);
-  }
-
-  return (
-    <div>
-      {grouped.map((g) => (
-        <div key={g.level}>
-          <div className="course-level-header">{g.level}</div>
-          <div className="course-path">
-            {g.stages.map((st) => {
-              const globalIdx = allStages.indexOf(st);
-              const prevStage = allStages[globalIdx - 1];
-              const isDone = completed.includes(st.stageId);
-              const isLocked = globalIdx > 0 && prevStage && !completed.includes(prevStage.stageId);
-              return (
-                <button
-                  key={st.stageId}
-                  className={'course-node' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '')}
-                  onClick={() => handleClick(st, isLocked)}
-                >
-                  <span className="course-node-circle">{isDone ? '⭐' : isLocked ? '🔒' : st.stageNum}</span>
-                  <span className="course-node-label">{st.stageNum}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
-      {confirmStage && (
-        <div className="modal-backdrop" onClick={() => setConfirmStage(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <p>{mode === 'ja'
-              ? (confirmStage.level + '-' + confirmStage.stageNum + ' 단계는 아직 잠겨있어요. 이전 단계를 안 깼는데, 그래도 시작할까요?')
-              : (confirmStage.level + '-' + confirmStage.stageNum + ' はまだロックされています。前の段階をクリアしていませんが、それでも始めますか？')}</p>
-            <div className="action-row">
-              <button className="secondary-btn" onClick={() => setConfirmStage(null)}>{mode === 'ja' ? '취소' : 'キャンセル'}</button>
-              <button className="primary-btn" onClick={() => { onSelectStage(confirmStage); setConfirmStage(null); }}>{mode === 'ja' ? '시작하기' : '始める'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
   const [idx, setIdx] = useState(0);
   const step = steps[idx];
@@ -11215,66 +11236,105 @@ function CourseCompleteScreen({ mode, level, onBack }) {
   );
 }
 
-function CourseTab({ mode, user, wordDeck, grammarDeck, sentenceDeck, levels }) {
-  const courseProgress = useCourseProgress(user, mode);
-  const [activeStage, setActiveStage] = useState(null);
-  const [steps, setSteps] = useState(null);
-  const [justCompleted, setJustCompleted] = useState(null);
-
-  const decks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
-
-  const allStages = useMemo(() => {
-    let result = [];
-    levels.forEach((lv) => {
-      result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, 10));
-    });
-    return result;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levels, wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length]);
-
-  function startStage(stage) {
-    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences);
-    if (generated.length === 0) return;
-    setSteps(generated);
-    setActiveStage(stage);
-    setJustCompleted(null);
-  }
-  function finishStage() {
-    courseProgress.markComplete(activeStage.stageId);
-    setJustCompleted(activeStage);
-    setSteps(null);
-  }
-  function exitStage() {
-    setSteps(null);
-    setActiveStage(null);
-    setJustCompleted(null);
-  }
-
-  const pool = activeStage ? { words: activeStage.words, grammar: activeStage.grammar } : { words: [], grammar: [] };
-
-  if (steps) {
-    return <CourseSession mode={mode} level={activeStage.level + '-' + activeStage.stageNum} steps={steps} pool={pool} decks={decks} onFinish={finishStage} onExit={exitStage} />;
-  }
-  if (justCompleted) {
-    return <CourseCompleteScreen mode={mode} level={justCompleted.level + '-' + justCompleted.stageNum} onBack={() => setJustCompleted(null)} />;
-  }
+// 메인 홈 화면 - AI 회화 + 급수 목록, 딱 이 두 가지만
+function HomeScreen({ mode, levels, onSelectLevel, onOpenAiChat, onOpenReview, bookmarkCount }) {
   return (
     <div>
-      <div className="empty-state" style={{ padding: '4px 4px 16px' }}>
-        {mode === 'ja' ? '단계를 순서대로 완료하며 단어·문법·작문·말하기를 골고루 연습해요.' : '段階を順番にクリアしながら、単語・文法・作文・スピーキングをまんべんなく練習しましょう。'}
+      <button className="ai-chat-bar home-ai-btn" onClick={onOpenAiChat}>
+        🤖 {mode === 'ja' ? 'AI 회화' : 'AI会話'}
+      </button>
+      <div className="home-level-grid">
+        {levels.map((lv) => (
+          <button key={lv} className="home-level-card" onClick={() => onSelectLevel(lv)}>
+            <span className="home-level-badge">{lv}</span>
+          </button>
+        ))}
       </div>
-      <CourseLevelPath mode={mode} allStages={allStages} completed={courseProgress.completed} onSelectStage={startStage} />
+      <button className="home-review-link" onClick={onOpenReview}>
+        ★ {mode === 'ja' ? '복습노트' : '復習ノート'}{bookmarkCount > 0 ? (' (' + bookmarkCount + ')') : ''}
+      </button>
+    </div>
+  );
+}
+
+// 레벨 하나(N5 등) 안에서: 코스 단계(가로 스크롤) + 개별 학습(단어/문법/한자/작문 등) 진입
+function CourseLevelRow({ mode, level, allStages, completed, onSelectStage }) {
+  const [confirmStage, setConfirmStage] = useState(null);
+  const stages = allStages.filter((s) => s.level === level);
+
+  function handleClick(st, isLocked) {
+    if (isLocked) setConfirmStage(st);
+    else onSelectStage(st);
+  }
+
+  return (
+    <div>
+      <div className="course-path-horizontal">
+        {stages.map((st) => {
+          const globalIdx = allStages.indexOf(st);
+          const prevStage = allStages[globalIdx - 1];
+          const isDone = completed.includes(st.stageId);
+          const isLocked = globalIdx > 0 && prevStage && !completed.includes(prevStage.stageId);
+          return (
+            <button
+              key={st.stageId}
+              className={'course-node' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '')}
+              onClick={() => handleClick(st, isLocked)}
+            >
+              <span className="course-node-circle">{isDone ? '⭐' : isLocked ? '🔒' : st.stageNum}</span>
+              <span className="course-node-label">{st.stageNum}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {confirmStage && (
+        <div className="modal-backdrop" onClick={() => setConfirmStage(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <p>{mode === 'ja'
+              ? (confirmStage.level + '-' + confirmStage.stageNum + ' 단계는 아직 잠겨있어요. 이전 단계를 안 깼는데, 그래도 시작할까요?')
+              : (confirmStage.level + '-' + confirmStage.stageNum + ' はまだロックされています。前の段階をクリアしていませんが、それでも始めますか？')}</p>
+            <div className="action-row">
+              <button className="secondary-btn" onClick={() => setConfirmStage(null)}>{mode === 'ja' ? '취소' : 'キャンセル'}</button>
+              <button className="primary-btn" onClick={() => { onSelectStage(confirmStage); setConfirmStage(null); }}>{mode === 'ja' ? '시작하기' : '始める'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LevelHomeScreen({ mode, level, allStages, completed, onSelectStage, onBack, deckLabels, onOpenDeck }) {
+  return (
+    <div>
+      <button className="focus-back-btn" onClick={onBack}>← {mode === 'ja' ? '레벨 목록으로' : 'レベル一覧へ'}</button>
+      <div className="course-level-header" style={{ margin: '4px 4px 10px' }}>{level}</div>
+      <CourseLevelRow mode={mode} level={level} allStages={allStages} completed={completed} onSelectStage={onSelectStage} />
+
+      <div className="secondary-decks-label" style={{ marginTop: 22 }}>
+        {mode === 'ja' ? level + ' 개별 항목으로 자유롭게 학습하기' : level + ' の項目を自由に学習する'}
+      </div>
+      <div className="level-deck-pills-row">
+        {Object.entries(deckLabels).map(([key, label]) => (
+          <button key={key} className="level-deck-pill" onClick={() => onOpenDeck(key)}>{label}</button>
+        ))}
+      </div>
     </div>
   );
 }
 
 function JaSection({ user, onActivity, onFocusChange }) {
-  const [deckType, setDeckType] = useState('course');
+  const [screen, setScreen] = useState('home'); // 'home' | 'level' | 'deck'
+  const [homeLevel, setHomeLevel] = useState(null);
+  const [deckType, setDeckType] = useState(null); // words|grammar|kanji|travel|sentence|review|ai_chat (screen==='deck'일 때만 의미있음)
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [studyAll, setStudyAll] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [showRetry, setShowRetry] = useState(false);
+
+  const JA_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   const wordDeck = useSrsDeck(user, 'words', 'ja_words', VOCAB_JA, retryKey);
   const grammarDeck = useSrsDeck(user, 'grammar', 'ja_grammar', GRAMMAR_JA, retryKey);
@@ -11298,8 +11358,7 @@ function JaSection({ user, onActivity, onFocusChange }) {
 
   const isReview = deckType === 'review';
   const isAiChat = deckType === 'ai_chat';
-  const isCourse = deckType === 'course';
-  const activeDeck = (isReview || isAiChat || isCourse) ? null : decks[deckType];
+  const activeDeck = (isReview || isAiChat || !deckType) ? null : decks[deckType];
   const unscopedItems = isReview ? bookmarkedItems : (activeDeck ? activeDeck.items : []);
   const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
   const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
@@ -11307,38 +11366,86 @@ function JaSection({ user, onActivity, onFocusChange }) {
   const scopedStats = useMemo(() => ({ total: scopedItems.length, due: scopedDueItems.length, mastered: scopedItems.filter((i) => i.status === 'mastered').length }), [scopedItems, scopedDueItems]);
   const levelCounts = useMemo(() => { const c = {}; unscopedItems.forEach((i) => { c[i.level] = (c[i.level] || 0) + 1; }); return c; }, [unscopedItems]);
 
-  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); setStudyAll(false); }
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
-  const isFocused = tab === 'study' || isAiChat || isCourse;
+  // ---- 코스(레벨 안 10단계) ----
+  const courseProgress = useCourseProgress(user, 'ja');
+  const allStages = useMemo(() => {
+    let result = [];
+    JA_LEVELS.forEach((lv) => { result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, 10)); });
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length]);
+  const [activeStage, setActiveStage] = useState(null);
+  const [courseSteps, setCourseSteps] = useState(null);
+  const [justCompletedStage, setJustCompletedStage] = useState(null);
+
+  function startStage(stage) {
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences);
+    if (generated.length === 0) return;
+    setCourseSteps(generated);
+    setActiveStage(stage);
+    setJustCompletedStage(null);
+  }
+  function finishStage() {
+    courseProgress.markComplete(activeStage.stageId);
+    setJustCompletedStage(activeStage);
+    setCourseSteps(null);
+  }
+  function exitStageToLevel() {
+    setCourseSteps(null);
+    setActiveStage(null);
+    setJustCompletedStage(null);
+  }
+
+  // ---- 내비게이션 ----
+  function goHome() { setScreen('home'); setHomeLevel(null); setDeckType(null); exitStageToLevel(); }
+  function goLevel(level) { setScreen('level'); setHomeLevel(level); setDeckType(null); exitStageToLevel(); }
+  function openDeckAtLevel(deckKey) { setScreen('deck'); setDeckType(deckKey); setSelectedLevel(homeLevel); setTab('dashboard'); setStudyAll(false); }
+  function openAiChat() { setScreen('deck'); setDeckType('ai_chat'); }
+  function openReview() { setScreen('deck'); setDeckType('review'); setSelectedLevel(null); setTab('dashboard'); setStudyAll(false); }
+  function exitDeck() { setDeckType(null); if (homeLevel) setScreen('level'); else setScreen('home'); }
+
+  const isFocused = screen === 'deck' && (tab === 'study' || isAiChat);
   useEffect(() => {
-    if (onFocusChange) onFocusChange(isFocused);
-  }, [isFocused]);
+    if (onFocusChange) onFocusChange(isFocused || screen === 'level');
+  }, [isFocused, screen]);
+
+  const coursePool = activeStage ? { words: activeStage.words, grammar: activeStage.grammar } : { words: [], grammar: [] };
+  const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
+
+  if (screen === 'home') {
+    return <HomeScreen mode="ja" levels={JA_LEVELS} onSelectLevel={goLevel} onOpenAiChat={openAiChat} onOpenReview={openReview} bookmarkCount={bookmarkedItems.length} />;
+  }
+
+  if (screen === 'level') {
+    if (courseSteps) {
+      return <CourseSession mode="ja" level={activeStage.level + '-' + activeStage.stageNum} steps={courseSteps} pool={coursePool} decks={courseDecks} onFinish={finishStage} onExit={exitStageToLevel} />;
+    }
+    if (justCompletedStage) {
+      return <CourseCompleteScreen mode="ja" level={justCompletedStage.level + '-' + justCompletedStage.stageNum} onBack={() => setJustCompletedStage(null)} />;
+    }
+    return <LevelHomeScreen mode="ja" level={homeLevel} allStages={allStages} completed={courseProgress.completed} onSelectStage={startStage} onBack={goHome} deckLabels={JA_DECK_LABELS} onOpenDeck={openDeckAtLevel} />;
+  }
+
+  // screen === 'deck'
+  const topBackLabel = isAiChat
+    ? 'AI 회화에서 나가기'
+    : tab === 'study'
+      ? (JA_DECK_LABELS[deckType] + '에서 나가기')
+      : (homeLevel ? homeLevel + '로 돌아가기' : '홈으로');
+  function handleTopBack() {
+    if (isAiChat) { exitDeck(); return; }
+    if (tab === 'study') { setTab('dashboard'); return; }
+    exitDeck();
+  }
 
   return (
     <React.Fragment>
-      {!isFocused && (
-        <React.Fragment>
-          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 코스로 배우기 (추천)</button>
-          <div className="quick-actions-row">
-            <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
-            <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
-          </div>
-          <div className="secondary-decks-label">개별 항목별로 자유롭게 학습하기</div>
-          <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
-        </React.Fragment>
-      )}
-      {tab === 'study' && (
-        <button className="focus-back-btn" onClick={() => setTab('dashboard')}>← {JA_DECK_LABELS[deckType]}에서 나가기</button>
-      )}
-      {isAiChat && (
-        <button className="focus-back-btn" onClick={() => switchDeck('words')}>← AI 회화에서 나가기</button>
-      )}
+      <button className="focus-back-btn" onClick={handleTopBack}>← {topBackLabel}</button>
 
-      {isCourse ? (
-        <CourseTab mode="ja" user={user} wordDeck={wordDeck} grammarDeck={grammarDeck} sentenceDeck={sentenceDeck} levels={['N5', 'N4', 'N3', 'N2', 'N1']} />
-      ) : isAiChat ? (
+      {isAiChat ? (
         <AiChatSection mode="ja" />
       ) : anyLoading ? (
         <div className="empty-state">
@@ -11356,7 +11463,7 @@ function JaSection({ user, onActivity, onFocusChange }) {
         <JaLevelPicker levelCounts={levelCounts} onSelect={(lv) => { setSelectedLevel(lv); setTab('dashboard'); }} />
       ) : (
         <React.Fragment>
-          {selectedLevel && !isFocused && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 급수 다시 선택 ({selectedLevel})</button>}
+          {selectedLevel && !isReview && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 급수 다시 선택 ({selectedLevel})</button>}
           {tab === 'dashboard' && <JaDashboard stats={scopedStats} onStartStudy={(all) => { setStudyAll(!!all); setTab('study'); }} emptyMessage={isReview ? <React.Fragment>복습노트가 비어 있습니다.<br/>학습 중 "☆ 복습에 추가" 버튼을 눌러보세요.</React.Fragment> : undefined} />}
           {tab === 'study' && <JaStudySession dueItems={studyAll ? scopedItems : scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} onActivity={onActivity} />}
           {tab === 'list' && <JaListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
@@ -11666,12 +11773,16 @@ function KrListView({ deckType, items, onRemove }) {
 }
 
 function KrSection({ user, onActivity, onFocusChange }) {
-  const [deckType, setDeckType] = useState('course');
+  const [screen, setScreen] = useState('home'); // 'home' | 'level' | 'deck'
+  const [homeLevel, setHomeLevel] = useState(null);
+  const [deckType, setDeckType] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [studyAll, setStudyAll] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [showRetry, setShowRetry] = useState(false);
+
+  const KR_LEVELS = ['1급', '2급', '3급', '4급', '5급', '6급'];
 
   const wordDeck = useSrsDeck(user, 'words', 'kr_words', VOCAB_KR, retryKey);
   const grammarDeck = useSrsDeck(user, 'grammar', 'kr_grammar', GRAMMAR_KR, retryKey);
@@ -11694,8 +11805,7 @@ function KrSection({ user, onActivity, onFocusChange }) {
 
   const isReview = deckType === 'review';
   const isAiChat = deckType === 'ai_chat';
-  const isCourse = deckType === 'course';
-  const activeDeck = (isReview || isAiChat || isCourse) ? null : decks[deckType];
+  const activeDeck = (isReview || isAiChat || !deckType) ? null : decks[deckType];
   const unscopedItems = isReview ? bookmarkedItems : (activeDeck ? activeDeck.items : []);
   const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
   const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
@@ -11703,38 +11813,86 @@ function KrSection({ user, onActivity, onFocusChange }) {
   const scopedStats = useMemo(() => ({ total: scopedItems.length, due: scopedDueItems.length, mastered: scopedItems.filter((i) => i.status === 'mastered').length }), [scopedItems, scopedDueItems]);
   const levelCounts = useMemo(() => { const c = {}; unscopedItems.forEach((i) => { c[i.level] = (c[i.level] || 0) + 1; }); return c; }, [unscopedItems]);
 
-  function switchDeck(next) { setDeckType(next); setSelectedLevel(null); setTab('dashboard'); setStudyAll(false); }
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
-  const isFocused = tab === 'study' || isAiChat || isCourse;
+  // ---- 코스(레벨 안 10단계) ----
+  const courseProgress = useCourseProgress(user, 'kr');
+  const allStages = useMemo(() => {
+    let result = [];
+    KR_LEVELS.forEach((lv) => { result = result.concat(buildLevelStages(lv, wordDeck.items, grammarDeck.items, sentenceDeck.items, 10)); });
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wordDeck.items.length, grammarDeck.items.length, sentenceDeck.items.length]);
+  const [activeStage, setActiveStage] = useState(null);
+  const [courseSteps, setCourseSteps] = useState(null);
+  const [justCompletedStage, setJustCompletedStage] = useState(null);
+
+  function startStage(stage) {
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences);
+    if (generated.length === 0) return;
+    setCourseSteps(generated);
+    setActiveStage(stage);
+    setJustCompletedStage(null);
+  }
+  function finishStage() {
+    courseProgress.markComplete(activeStage.stageId);
+    setJustCompletedStage(activeStage);
+    setCourseSteps(null);
+  }
+  function exitStageToLevel() {
+    setCourseSteps(null);
+    setActiveStage(null);
+    setJustCompletedStage(null);
+  }
+
+  // ---- 내비게이션 ----
+  function goHome() { setScreen('home'); setHomeLevel(null); setDeckType(null); exitStageToLevel(); }
+  function goLevel(level) { setScreen('level'); setHomeLevel(level); setDeckType(null); exitStageToLevel(); }
+  function openDeckAtLevel(deckKey) { setScreen('deck'); setDeckType(deckKey); setSelectedLevel(homeLevel); setTab('dashboard'); setStudyAll(false); }
+  function openAiChat() { setScreen('deck'); setDeckType('ai_chat'); }
+  function openReview() { setScreen('deck'); setDeckType('review'); setSelectedLevel(null); setTab('dashboard'); setStudyAll(false); }
+  function exitDeck() { setDeckType(null); if (homeLevel) setScreen('level'); else setScreen('home'); }
+
+  const isFocused = screen === 'deck' && (tab === 'study' || isAiChat);
   useEffect(() => {
-    if (onFocusChange) onFocusChange(isFocused);
-  }, [isFocused]);
+    if (onFocusChange) onFocusChange(isFocused || screen === 'level');
+  }, [isFocused, screen]);
+
+  const coursePool = activeStage ? { words: activeStage.words, grammar: activeStage.grammar } : { words: [], grammar: [] };
+  const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
+
+  if (screen === 'home') {
+    return <HomeScreen mode="kr" levels={KR_LEVELS} onSelectLevel={goLevel} onOpenAiChat={openAiChat} onOpenReview={openReview} bookmarkCount={bookmarkedItems.length} />;
+  }
+
+  if (screen === 'level') {
+    if (courseSteps) {
+      return <CourseSession mode="kr" level={activeStage.level + '-' + activeStage.stageNum} steps={courseSteps} pool={coursePool} decks={courseDecks} onFinish={finishStage} onExit={exitStageToLevel} />;
+    }
+    if (justCompletedStage) {
+      return <CourseCompleteScreen mode="kr" level={justCompletedStage.level + '-' + justCompletedStage.stageNum} onBack={() => setJustCompletedStage(null)} />;
+    }
+    return <LevelHomeScreen mode="kr" level={homeLevel} allStages={allStages} completed={courseProgress.completed} onSelectStage={startStage} onBack={goHome} deckLabels={KR_DECK_LABELS} onOpenDeck={openDeckAtLevel} />;
+  }
+
+  // screen === 'deck'
+  const topBackLabel = isAiChat
+    ? 'AI会話を終了'
+    : tab === 'study'
+      ? (KR_DECK_LABELS[deckType] + 'を終了')
+      : (homeLevel ? homeLevel + 'に戻る' : 'ホームへ');
+  function handleTopBack() {
+    if (isAiChat) { exitDeck(); return; }
+    if (tab === 'study') { setTab('dashboard'); return; }
+    exitDeck();
+  }
 
   return (
     <React.Fragment>
-      {!isFocused && (
-        <React.Fragment>
-          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 コースで学ぶ（おすすめ）</button>
-          <div className="quick-actions-row">
-            <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
-            <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
-          </div>
-          <div className="secondary-decks-label">項目ごとに自由に学習する</div>
-          <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
-        </React.Fragment>
-      )}
-      {tab === 'study' && (
-        <button className="focus-back-btn" onClick={() => setTab('dashboard')}>← {KR_DECK_LABELS[deckType]}を終了</button>
-      )}
-      {isAiChat && (
-        <button className="focus-back-btn" onClick={() => switchDeck('words')}>← AI会話を終了</button>
-      )}
+      <button className="focus-back-btn" onClick={handleTopBack}>← {topBackLabel}</button>
 
-      {isCourse ? (
-        <CourseTab mode="kr" user={user} wordDeck={wordDeck} grammarDeck={grammarDeck} sentenceDeck={sentenceDeck} levels={['1급', '2급', '3급', '4급', '5급', '6급']} />
-      ) : isAiChat ? (
+      {isAiChat ? (
         <AiChatSection mode="kr" />
       ) : anyLoading ? (
         <div className="empty-state">
@@ -11752,7 +11910,7 @@ function KrSection({ user, onActivity, onFocusChange }) {
         <KrLevelPicker levelCounts={levelCounts} onSelect={(lv) => { setSelectedLevel(lv); setTab('dashboard'); }} />
       ) : (
         <React.Fragment>
-          {selectedLevel && !isFocused && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 級を選び直す ({selectedLevel})</button>}
+          {selectedLevel && !isReview && <button className="change-level-link" onClick={() => setSelectedLevel(null)}>← 級を選び直す ({selectedLevel})</button>}
           {tab === 'dashboard' && <KrDashboard stats={scopedStats} onStartStudy={(all) => { setStudyAll(!!all); setTab('study'); }} emptyMessage={isReview ? <React.Fragment>復習ノートが空です。<br/>学習中に「☆ 復習に追加」ボタンを押してみましょう。</React.Fragment> : undefined} />}
           {tab === 'study' && <KrStudySession dueItems={studyAll ? scopedItems : scopedDueItems} pool={scopedItems} submitReview={handleSubmitReview} onToggleBookmark={handleToggleBookmark} onFinish={() => setTab('dashboard')} onActivity={onActivity} />}
           {tab === 'list' && <KrListView deckType={deckType} items={scopedItems} onRemove={(item) => handleToggleBookmark(item, false)} />}
