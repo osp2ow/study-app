@@ -9874,7 +9874,7 @@ const JA_ANSWER_GETTERS = {
 };
 function jaSplitChars(text) { return Array.from(text || ''); }
 function jaSpeechText(deckType, item) {
-  if (deckType === 'words') return item.exampleReading || item.example;
+  if (deckType === 'words') return item.reading || item.word;
   if (deckType === 'grammar') return item.exampleReading || item.example;
   if (deckType === 'travel') return item.reading || item.japanese;
   if (deckType === 'kanji') return (item.examples && item.examples[0] && item.examples[0].reading) || item.char;
@@ -9925,7 +9925,7 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
 
   useEffect(() => cancelSpeech, []);
   useEffect(() => {
-    if (deckType === 'travel' && speechText) {
+    if ((deckType === 'travel' || deckType === 'words') && speechText) {
       const t = setTimeout(() => speakJapanese(speechText), 500);
       return () => clearTimeout(t);
     }
@@ -10383,6 +10383,20 @@ function AiChatSection({ mode }) {
   const baseTranscriptRef = useRef(''); // 이전 인식 세션들에서 확정된 텍스트
   const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
+  // AI 회화 화면을 벗어날 때(다른 덱으로 이동 등) 마이크가 계속 켜진 채로 남아있지 않도록 정리
+  useEffect(() => {
+    return () => {
+      recordingRef.current = false;
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        try { recognitionRef.current.abort(); } catch (e) {}
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
   function attachRecognitionHandlers(recognition) {
     recognition.onresult = (event) => {
       // 매번 이번 세션의 전체 결과를 처음부터 다시 계산 - resultIndex 누락/중복 버그 방지
@@ -10423,6 +10437,16 @@ function AiChatSection({ mode }) {
 
   function startRecording() {
     if (!speechSupported || recordingRef.current || loading) return;
+    // 혹시 이전 세션이 완전히 정리되지 않고 남아있다면 먼저 강제 종료
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.abort();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
     finalTranscriptRef.current = '';
     baseTranscriptRef.current = '';
     setInput('');
@@ -10434,18 +10458,32 @@ function AiChatSection({ mode }) {
     recognition.interimResults = true;
     attachRecognitionHandlers(recognition);
     recognitionRef.current = recognition;
-    recordingRef.current = true;
-    setRecording(true);
-    recognition.start();
+    try {
+      recognition.start();
+      recordingRef.current = true;
+      setRecording(true);
+    } catch (e) {
+      // 이전 세션이 아직 마이크를 놓지 않은 경우 등 - 실패하면 상태를 원위치하고 잠시 후 재시도
+      console.warn('[음성인식] 시작 실패, 잠시 후 재시도:', e);
+      recordingRef.current = false;
+      setRecording(false);
+      setTimeout(() => {
+        try { recognition.start(); recordingRef.current = true; setRecording(true); } catch (e2) { console.warn('[음성인식] 재시도도 실패:', e2); }
+      }, 300);
+    }
   }
   function stopRecording() {
     recordingRef.current = false;
     setRecording(false);
     if (recognitionRef.current) {
-      // stop() 이후에도 늦게 도착하는 이벤트가 입력창을 다시 채우는 것을 방지
+      // 이후 들어오는 이벤트가 입력창을 다시 채우거나 자동 재시작하지 않도록 핸들러부터 제거
       recognitionRef.current.onresult = null;
       recognitionRef.current.onend = null;
-      recognitionRef.current.stop();
+      recognitionRef.current.onerror = null;
+      // stop()은 마무리 결과를 기다리며 마이크를 비동기로 늦게 놓아줄 수 있어서,
+      // abort()로 즉시 끊어 다음 시작 시도가 충돌하지 않게 함
+      try { recognitionRef.current.abort(); } catch (e) {}
+      recognitionRef.current = null;
     }
     const text = (finalTranscriptRef.current || input).trim();
     setInput('');
@@ -10686,7 +10724,7 @@ const KR_ANSWER_GETTERS = {
 };
 function krSplitChars(text) { return Array.from(text || ''); }
 function krSpeechText(deckType, item) {
-  if (deckType === 'words') return item.example || item.word;
+  if (deckType === 'words') return item.word;
   if (deckType === 'grammar') return item.example;
   if (deckType === 'travel') return item.korean;
   return null;
@@ -10723,7 +10761,7 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
 
   useEffect(() => cancelSpeech, []);
   useEffect(() => {
-    if (deckType === 'travel' && speechText) {
+    if ((deckType === 'travel' || deckType === 'words') && speechText) {
       const t = setTimeout(() => speakKorean(speechText), 500);
       return () => clearTimeout(t);
     }
