@@ -214,6 +214,28 @@ body {
   margin-bottom: 4px;
 }
 
+.inline-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--indigo-soft);
+  color: var(--indigo);
+  font-size: 12px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.inline-play-btn-light {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
 .meaning {
   font-size: 18px;
   font-weight: 700;
@@ -903,11 +925,10 @@ body {
 }
 
 .course-path-horizontal {
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px 10px;
   padding: 10px 4px 20px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .home-ai-btn {
@@ -959,22 +980,21 @@ body {
 }
 
 .level-deck-pills-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 0 4px 8px;
-  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 10px;
+  padding: 0 2px 8px;
 }
 
 .level-deck-pill {
-  flex: 0 0 auto;
-  padding: 10px 18px;
+  padding: 16px 8px;
   border: none;
-  border-radius: var(--radius-pill);
-  background: var(--surface-alt);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
   color: var(--indigo);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -10139,26 +10159,41 @@ function jaSpeechText(deckType, item) {
   if (deckType === 'kanji') return (item.examples && item.examples[0] && item.examples[0].reading) || item.char;
   return null;
 }
-function jaRenderQuestion(deckType, item) {
+function jaRenderQuestion(deckType, item, onPlayWord) {
   if (deckType === 'words') {
     return (<React.Fragment>
       <div className="genkou-row">{jaSplitChars(item.word).map((ch, i) => (<div className="genkou-cell" key={i}><span className="char">{ch}</span></div>))}</div>
-      <div className="reading">{item.reading}</div>
+      <div className="reading">
+        {item.reading}
+        {onPlayWord && <button className="inline-play-btn" onClick={onPlayWord}>🔊</button>}
+      </div>
     </React.Fragment>);
   }
   if (deckType === 'kanji') return <div className="genkou-square"><span className="char">{item.char}</span></div>;
-  if (deckType === 'grammar') return <div className="pattern-plate"><div className="pattern jp-text">{item.pattern}</div></div>;
+  if (deckType === 'grammar') return (
+    <div className="pattern-plate">
+      <div className="pattern jp-text">{item.pattern}{onPlayWord && <button className="inline-play-btn inline-play-btn-light" onClick={onPlayWord}>🔊</button>}</div>
+    </div>
+  );
   return (<div className="pattern-plate">
     <div className="scene-tag">{item.scene}</div>
     <div className="pattern jp-text" style={{ fontSize: 19 }}>{item.japanese}</div>
     <div className="meaning-hint">{item.reading}</div>
   </div>);
 }
-function jaRenderDetail(deckType, item) {
-  if (deckType === 'words') return <div className="example">{item.example}<br/>({item.exampleReading})<br/>{item.exampleMeaning}</div>;
+function jaRenderDetail(deckType, item, onPlayExample) {
+  if (deckType === 'words') return (
+    <div className="example">
+      {item.example}{onPlayExample && <button className="inline-play-btn" onClick={onPlayExample}>🔊</button>}
+      <br/>({item.exampleReading})<br/>{item.exampleMeaning}
+    </div>
+  );
   if (deckType === 'grammar') return (<React.Fragment>
     <div className="connection-note"><strong>접속</strong> · {item.connection}</div>
-    <div className="example">{item.example}<br/>({item.exampleReading})<br/>{item.exampleMeaning}</div>
+    <div className="example">
+      {item.example}{onPlayExample && <button className="inline-play-btn" onClick={onPlayExample}>🔊</button>}
+      <br/>({item.exampleReading})<br/>{item.exampleMeaning}
+    </div>
     <div className="korean-contrast"><strong>한국인 학습자 노트</strong><br/>{item.koreanNote}</div>
   </React.Fragment>);
   if (deckType === 'kanji') return (<React.Fragment>
@@ -10196,7 +10231,10 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
     const correct = opt === correctText;
     setSelected(opt);
     if (correct) playCorrectSound(); else playWrongSound();
-    if (speechText) setTimeout(() => speakJapanese(speechText), 500);
+    if (correct) {
+      const exampleAudio = (deckType === 'words' || deckType === 'grammar') ? (item.exampleReading || item.example) : speechText;
+      if (exampleAudio) setTimeout(() => speakJapanese(exampleAudio), 500);
+    }
   }
   function handleNext() { onResult(item.id, isCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck); }
   function handleToggleBookmark() {
@@ -10204,13 +10242,15 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
     setBookmarkedState(next);
     onToggleBookmark(item, next);
   }
+  const inlineWordAudio = (deckType === 'words' || deckType === 'grammar') && speechText ? () => speakJapanese(speechText) : null;
+  const inlineExampleAudio = (deckType === 'words' || deckType === 'grammar') ? () => speakJapanese(item.exampleReading || item.example || speechText) : null;
 
   return (
     <div className="genkou-card">
       <span className="hanko">{item.level}</span>
       <div style={{ marginTop: 8 }}>
-        {jaRenderQuestion(deckType, item)}
-        {speechText && !answered && (
+        {jaRenderQuestion(deckType, item, inlineWordAudio)}
+        {speechText && !answered && deckType !== 'words' && deckType !== 'grammar' && (
           <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>
         )}
         <div className="option-list">
@@ -10222,10 +10262,9 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
         </div>
         {answered && (<React.Fragment>
           <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '정답입니다!' : ('오답입니다. 정답: ' + correctText)}</div>
-          {jaRenderDetail(deckType, item)}
-          {speechText && <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>}
-          {deckType === 'words' && (item.exampleReading || item.example) && (
-            <button className="replay-btn" onClick={() => speakJapanese(item.exampleReading || item.example)}>🔊 예문 듣기</button>
+          {jaRenderDetail(deckType, item, inlineExampleAudio)}
+          {speechText && deckType !== 'words' && deckType !== 'grammar' && (
+            <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>
           )}
           <div className="action-row quiz-sticky-actions">
             <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 복습노트에 있음' : '☆ 복습에 추가'}</button>
@@ -11129,7 +11168,16 @@ function ReviewCheckpoint({ mode, items, pool, onNext }) {
               else if (opt === selected) cls += ' option-wrong';
             }
             return (
-              <button key={opt} className={cls} onClick={() => !selected && setSelected(opt)} disabled={!!selected}>
+              <button
+                key={opt}
+                className={cls}
+                onClick={() => {
+                  if (selected) return;
+                  setSelected(opt);
+                  if (opt === correctMeaning) playCorrectSound(); else playWrongSound();
+                }}
+                disabled={!!selected}
+              >
                 {opt}
               </button>
             );
@@ -11412,7 +11460,7 @@ function JaSection({ user, onActivity, onFocusChange }) {
     if (onFocusChange) onFocusChange(isFocused || screen === 'level');
   }, [isFocused, screen]);
 
-  const coursePool = activeStage ? { words: activeStage.words, grammar: activeStage.grammar } : { words: [], grammar: [] };
+  const coursePool = activeStage ? { words: wordDeck.items.filter((i) => i.level === activeStage.level), grammar: grammarDeck.items.filter((i) => i.level === activeStage.level) } : { words: [], grammar: [] };
   const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
 
   if (screen === 'home') {
@@ -11493,20 +11541,37 @@ function krSpeechText(deckType, item) {
   if (deckType === 'travel') return item.korean;
   return null;
 }
-function krRenderQuestion(deckType, item) {
-  if (deckType === 'words') return <div className="genkou-row">{krSplitChars(item.word).map((ch, i) => (<div className="genkou-cell" key={i}><span className="char">{ch}</span></div>))}</div>;
-  if (deckType === 'grammar') return <div className="pattern-plate"><div className="pattern jp-text">{item.pattern}</div></div>;
+function krRenderQuestion(deckType, item, onPlayWord) {
+  if (deckType === 'words') return (
+    <React.Fragment>
+      <div className="genkou-row">{krSplitChars(item.word).map((ch, i) => (<div className="genkou-cell" key={i}><span className="char">{ch}</span></div>))}</div>
+      {onPlayWord && <button className="inline-play-btn" onClick={onPlayWord}>🔊</button>}
+    </React.Fragment>
+  );
+  if (deckType === 'grammar') return (
+    <div className="pattern-plate">
+      <div className="pattern jp-text">{item.pattern}{onPlayWord && <button className="inline-play-btn inline-play-btn-light" onClick={onPlayWord}>🔊</button>}</div>
+    </div>
+  );
   return (<div className="pattern-plate">
     <div className="scene-tag">{item.scene}</div>
     <div className="pattern jp-text" style={{ fontSize: 19 }}>{item.korean}</div>
     <div className="meaning-hint">{item.pronunciation}</div>
   </div>);
 }
-function krRenderDetail(deckType, item) {
-  if (deckType === 'words') return <div className="example">{item.example}<br/>({item.examplePronunciation})<br/>{item.exampleMeaningJp}</div>;
+function krRenderDetail(deckType, item, onPlayExample) {
+  if (deckType === 'words') return (
+    <div className="example">
+      {item.example}{onPlayExample && <button className="inline-play-btn" onClick={onPlayExample}>🔊</button>}
+      <br/>({item.examplePronunciation})<br/>{item.exampleMeaningJp}
+    </div>
+  );
   if (deckType === 'grammar') return (<React.Fragment>
     <div className="connection-note"><strong>接続</strong> · {item.connection}</div>
-    <div className="example">{item.example}<br/>{item.exampleMeaningJp}</div>
+    <div className="example">
+      {item.example}{onPlayExample && <button className="inline-play-btn" onClick={onPlayExample}>🔊</button>}
+      <br/>{item.exampleMeaningJp}
+    </div>
     <div className="korean-contrast"><strong>日本語話者向けノート</strong><br/>{item.japaneseNote}</div>
   </React.Fragment>);
   return <div className="connection-note">{item.note}</div>;
@@ -11537,7 +11602,10 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
     const correct = opt === correctText;
     setSelected(opt);
     if (correct) playCorrectSound(); else playWrongSound();
-    if (speechText) setTimeout(() => speakKorean(speechText), 500);
+    if (correct) {
+      const exampleAudio = (deckType === 'words' || deckType === 'grammar') ? item.example : speechText;
+      if (exampleAudio) setTimeout(() => speakKorean(exampleAudio), 500);
+    }
   }
   function handleNext() { onResult(item.id, isCorrect ? RATING.GOOD : RATING.AGAIN, item.sourceDeck); }
   function handleToggleBookmark() {
@@ -11545,13 +11613,15 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
     setBookmarkedState(next);
     onToggleBookmark(item, next);
   }
+  const inlineWordAudio = (deckType === 'words' || deckType === 'grammar') && speechText ? () => speakKorean(speechText) : null;
+  const inlineExampleAudio = (deckType === 'words' || deckType === 'grammar') ? () => speakKorean(item.example || speechText) : null;
 
   return (
     <div className="genkou-card">
       <span className="hanko">{item.level}</span>
       <div style={{ marginTop: 8 }}>
-        {krRenderQuestion(deckType, item)}
-        {speechText && !answered && (
+        {krRenderQuestion(deckType, item, inlineWordAudio)}
+        {speechText && !answered && deckType !== 'words' && deckType !== 'grammar' && (
           <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>
         )}
         <div className="option-list">
@@ -11563,10 +11633,9 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
         </div>
         {answered && (<React.Fragment>
           <div className={'feedback ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong')}>{isCorrect ? '正解です!' : ('不正解です。正解: ' + correctText)}</div>
-          {krRenderDetail(deckType, item)}
-          {speechText && <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>}
-          {deckType === 'words' && item.example && (
-            <button className="replay-btn" onClick={() => speakKorean(item.example)}>🔊 例文を聞く</button>
+          {krRenderDetail(deckType, item, inlineExampleAudio)}
+          {speechText && deckType !== 'words' && deckType !== 'grammar' && (
+            <button className="replay-btn" onClick={() => speakKorean(speechText)}>🔊 もう一度聞く</button>
           )}
           <div className="action-row quiz-sticky-actions">
             <button className={'secondary-btn ' + (bookmarked ? 'active' : '')} onClick={handleToggleBookmark}>{bookmarked ? '★ 復習ノートに追加済み' : '☆ 復習に追加'}</button>
@@ -11859,7 +11928,7 @@ function KrSection({ user, onActivity, onFocusChange }) {
     if (onFocusChange) onFocusChange(isFocused || screen === 'level');
   }, [isFocused, screen]);
 
-  const coursePool = activeStage ? { words: activeStage.words, grammar: activeStage.grammar } : { words: [], grammar: [] };
+  const coursePool = activeStage ? { words: wordDeck.items.filter((i) => i.level === activeStage.level), grammar: grammarDeck.items.filter((i) => i.level === activeStage.level) } : { words: [], grammar: [] };
   const courseDecks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
 
   if (screen === 'home') {
