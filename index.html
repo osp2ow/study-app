@@ -236,6 +236,16 @@ body {
   color: #fff;
 }
 
+.kanji-hint {
+  background: var(--gold-soft);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  font-size: 13px;
+  color: var(--ink);
+  margin: 10px 0;
+}
+
 .meaning {
   font-size: 18px;
   font-weight: 700;
@@ -1591,6 +1601,17 @@ function playWrongSound() {
   const now = ctx.currentTime;
   playNote(ctx, 300, now, 0.15, 'sawtooth', 0.14);
   playNote(ctx, 175, now + 0.13, 0.2, 'sawtooth', 0.14);
+}
+function playFanfareSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // 상승하는 아르페지오 + 마지막 화음으로 "짜잔~" 팡파레 느낌
+  playNote(ctx, 523.25, now, 0.16, 'triangle', 0.2); // C5
+  playNote(ctx, 659.25, now + 0.14, 0.16, 'triangle', 0.2); // E5
+  playNote(ctx, 783.99, now + 0.28, 0.16, 'triangle', 0.2); // G5
+  playNote(ctx, 1046.50, now + 0.42, 0.55, 'triangle', 0.26); // C6
+  playNote(ctx, 1318.51, now + 0.42, 0.55, 'triangle', 0.16); // E6 (화음)
 }
 function cancelSpeech() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -10318,7 +10339,7 @@ function jaRenderDetail(deckType, item, onPlayExample) {
   return <div className="connection-note">{item.note}</div>;
 }
 
-function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
+function JaQuizCard({ item, pool, onResult, onToggleBookmark, isRetry }) {
   const deckType = item.sourceDeck;
   const [selected, setSelected] = useState(null);
   const [bookmarked, setBookmarkedState] = useState(!!(item.srs && item.srs.bookmarked));
@@ -10354,7 +10375,7 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
     setBookmarkedState(next);
     onToggleBookmark(item, next);
   }
-  const inlineWordAudio = (deckType === 'words' || deckType === 'grammar') && speechText ? () => speakJapanese(speechText) : null;
+  const inlineWordAudio = deckType === 'words' && speechText ? () => speakJapanese(speechText) : deckType === 'grammar' ? () => speakJapanese(item.pattern) : null;
   const inlineExampleAudio = (deckType === 'words' || deckType === 'grammar') ? () => speakJapanese(item.exampleReading || item.example || speechText) : null;
 
   return (
@@ -10362,6 +10383,9 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark }) {
       <span className="hanko">{item.level}</span>
       <div style={{ marginTop: 8 }}>
         {jaRenderQuestion(deckType, item, inlineWordAudio)}
+        {deckType === 'kanji' && isRetry && !answered && (
+          <div className="kanji-hint">💡 힌트: 음독 {item.onyomi} · 훈독 {item.kunyomi}</div>
+        )}
         {speechText && !answered && deckType !== 'words' && deckType !== 'grammar' && (
           <button className="replay-btn" onClick={() => speakJapanese(speechText)}>🔊 다시 듣기</button>
         )}
@@ -10446,7 +10470,7 @@ function JaStudySession({ dueItems, pool, submitReview, onToggleBookmark, onFini
       {isRetry && <div className="retry-badge">🔄 재도전! 아까 틀렸던 문제예요</div>}
       {current.sourceDeck === 'sentence'
         ? <JaSentenceCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} onResult={handleResult} onToggleBookmark={onToggleBookmark} />
-        : <JaQuizCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} />}
+        : <JaQuizCard key={current.id + current.sourceDeck + '-' + attemptSeq} item={current} pool={pool} onResult={handleResult} onToggleBookmark={onToggleBookmark} isRetry={isRetry} />}
     </div>
   );
 }
@@ -11055,8 +11079,8 @@ function buildCourseSteps(words, grammars, sentences) {
   const matchItems = [w[5], w[6], w[7], w[8]].filter(Boolean);
   if (matchItems.length >= 3) steps.push({ type: 'match', items: matchItems });
   if (s[1]) steps.push({ type: 'sentence', item: s[1] });
-  const reviewItems = [w[0], w[1], g[0]].filter(Boolean);
-  if (reviewItems.length > 0) steps.push({ type: 'review', items: reviewItems });
+  const fallbackReviewItems = [w[0], w[1], g[0]].filter(Boolean);
+  steps.push({ type: 'review', fallbackItems: fallbackReviewItems });
   return steps;
 }
 
@@ -11240,9 +11264,16 @@ function MatchingCard({ mode, items, onNext }) {
   );
 }
 
-function ReviewCheckpoint({ mode, items, pool, onNext }) {
+function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    if (!items || items.length === 0) onNext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  if (!items || items.length === 0) return null;
+
   const item = items[idx];
   const label = item.word || item.pattern || item.char;
   const getMeaning = (i) => i.meaning || i.meaningJp || i.title || i.titleJp;
@@ -11264,10 +11295,14 @@ function ReviewCheckpoint({ mode, items, pool, onNext }) {
 
   return (
     <div className="genkou-card">
-      <span className="hanko" style={{ background: 'var(--purple)' }}>{mode === 'ja' ? '복습' : '復習'}</span>
+      <span className="hanko" style={{ background: wasWrongReview ? 'var(--vermillion)' : 'var(--purple)' }}>
+        {wasWrongReview ? (mode === 'ja' ? '오답 복습' : '間違い復習') : (mode === 'ja' ? '복습' : '復習')}
+      </span>
       <div style={{ marginTop: 12 }}>
         <div className="meaning-hint" style={{ marginBottom: 10, color: 'var(--ink-soft)' }}>
-          {mode === 'ja' ? '아까 배운 내용, 기억나세요? 뜻을 골라보세요' : 'さっき習った内容、覚えていますか？意味を選んでください'}
+          {wasWrongReview
+            ? (mode === 'ja' ? '아까 틀렸던 문제예요. 다시 한번 풀어볼까요?' : 'さっき間違えた問題です。もう一度解いてみましょう')
+            : (mode === 'ja' ? '아까 배운 내용, 기억나세요? 뜻을 골라보세요' : 'さっき習った内容、覚えていますか？意味を選んでください')}
         </div>
         <div className="pattern-plate">
           <div className="pattern jp-text">{label}</div>
@@ -11343,6 +11378,7 @@ function useCourseProgress(user, mode) {
 
 function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
   const [idx, setIdx] = useState(0);
+  const [wrongItems, setWrongItems] = useState([]);
   const step = steps[idx];
 
   function next() {
@@ -11351,6 +11387,9 @@ function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
   }
   function handleQuizResult(itemId, quality, sourceDeck) {
     if (decks[sourceDeck]) decks[sourceDeck].submitReview(itemId, quality);
+    if (quality === RATING.AGAIN && (step.type === 'words' || step.type === 'grammar')) {
+      setWrongItems((prev) => (prev.some((w) => w.id === step.item.id) ? prev : [...prev, { ...step.item, sourceDeck: step.type }]));
+    }
     next();
   }
   function handleToggleBookmark(item, nextValue) {
@@ -11376,12 +11415,24 @@ function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
       )}
       {step.type === 'repeat' && <RepeatCard key={idx} mode={mode} item={step.item} onNext={next} />}
       {step.type === 'match' && <MatchingCard key={idx} mode={mode} items={step.items} onNext={next} />}
-      {step.type === 'review' && <ReviewCheckpoint key={idx} mode={mode} items={step.items} pool={[...(pool.words || []), ...(pool.grammar || [])]} onNext={next} />}
+      {step.type === 'review' && (
+        <ReviewCheckpoint
+          key={idx}
+          mode={mode}
+          items={wrongItems.length > 0 ? wrongItems : step.fallbackItems}
+          wasWrongReview={wrongItems.length > 0}
+          pool={[...(pool.words || []), ...(pool.grammar || [])]}
+          onNext={next}
+        />
+      )}
     </div>
   );
 }
 
 function CourseCompleteScreen({ mode, level, onBack }) {
+  useEffect(() => {
+    playFanfareSound();
+  }, []);
   return (
     <div className="genkou-card">
       <div style={{ fontSize: 48, marginBottom: 10 }}>🎉</div>
@@ -11725,7 +11776,7 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
     setBookmarkedState(next);
     onToggleBookmark(item, next);
   }
-  const inlineWordAudio = (deckType === 'words' || deckType === 'grammar') && speechText ? () => speakKorean(speechText) : null;
+  const inlineWordAudio = deckType === 'words' && speechText ? () => speakKorean(speechText) : deckType === 'grammar' ? () => speakKorean(item.pattern) : null;
   const inlineExampleAudio = (deckType === 'words' || deckType === 'grammar') ? () => speakKorean(item.example || speechText) : null;
 
   return (
