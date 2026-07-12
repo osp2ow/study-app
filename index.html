@@ -10485,7 +10485,9 @@ function AiChatSection({ mode }) {
       try { recognitionRef.current.abort(); } catch (e) {}
       recognitionRef.current = null;
     }
-    const text = (finalTranscriptRef.current || input).trim();
+    // 화면에 보이는 input은 '확정된 텍스트 + 아직 확정 안 된 마지막 부분'이 합쳐진 최신 상태.
+    // finalTranscriptRef만 쓰면 마지막에 말한 부분이 미확정 상태일 때 화면엔 보여도 전송에서 빠지는 문제가 있었음.
+    const text = input.trim();
     setInput('');
     if (text) sendMessage(text);
   }
