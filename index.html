@@ -867,6 +867,102 @@ body {
   box-shadow: 0 0 0 3px var(--indigo-soft) inset;
 }
 
+.course-bar {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--purple);
+  color: #fff;
+  font-family: 'Baloo 2', 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #7c3fd4;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.course-bar:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #7c3fd4;
+}
+
+.course-bar.active {
+  background: #7c3fd4;
+  box-shadow: 0 0 0 3px var(--purple-soft) inset;
+}
+
+.course-path {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 20px;
+}
+
+.course-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.course-node-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--purple);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Baloo 2', 'Noto Sans KR', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 4px 0 #7c3fd4;
+}
+
+.course-node.done .course-node-circle {
+  background: var(--gold);
+  box-shadow: 0 4px 0 var(--gold-dark);
+  font-size: 26px;
+}
+
+.course-node.locked .course-node-circle {
+  background: var(--border);
+  color: var(--ink-soft);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.course-node-label {
+  font-family: 'Baloo 2', 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.course-progress-bar {
+  height: 10px;
+  background: var(--surface-alt);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.course-progress-fill {
+  height: 100%;
+  background: var(--purple);
+  border-radius: var(--radius-pill);
+  transition: width 0.25s ease;
+}
+
 .deck-tag {
   display: inline-block;
   font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
@@ -10621,6 +10717,303 @@ function AiChatSection({ mode }) {
   );
 }
 
+// ==================== 코스(듀오링고 스타일 레벨 경로) ====================
+
+function buildCourseSteps(level, words, grammars, sentences) {
+  function pick(arr, n) {
+    return shuffle(arr.filter((i) => i.level === level)).slice(0, n);
+  }
+  const w = pick(words, 5);
+  const g = pick(grammars, 2);
+  const s = pick(sentences, 1);
+  const steps = [];
+  if (w[0]) steps.push({ type: 'words', item: w[0] });
+  if (w[1]) steps.push({ type: 'words', item: w[1] });
+  if (g[0]) steps.push({ type: 'grammar', item: g[0] });
+  if (w[2]) steps.push({ type: 'repeat', item: w[2] });
+  if (w[3]) steps.push({ type: 'words', item: w[3] });
+  if (g[1]) steps.push({ type: 'grammar', item: g[1] });
+  if (s[0]) steps.push({ type: 'sentence', item: s[0] });
+  if (w[4]) steps.push({ type: 'repeat', item: w[4] });
+  const reviewItems = [w[0], w[1], g[0]].filter(Boolean);
+  if (reviewItems.length > 0) steps.push({ type: 'review', items: reviewItems });
+  return steps;
+}
+
+// 유저가 마이크로 따라 말한 내용을 목표 텍스트와 대략 비교(완벽한 발음 평가는 아님)
+function roughlyMatches(said, target) {
+  function norm(s) { return (s || '').replace(/[。、！？.,!?\s]/g, ''); }
+  const a = norm(said);
+  const b = norm(target);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const shortLen = Math.max(2, Math.floor(Math.min(a.length, b.length) * 0.6));
+  return a.includes(b.slice(0, shortLen)) || b.includes(a.slice(0, shortLen));
+}
+
+function RepeatCard({ mode, item, onNext }) {
+  const speak = mode === 'ja' ? speakJapanese : speakKorean;
+  const targetText = mode === 'ja' ? (item.reading || item.word) : item.word;
+  const displayText = item.word;
+  const [recording, setRecording] = useState(false);
+  const [result, setResult] = useState(null);
+  const [heard, setHeard] = useState('');
+  const speechSupported = typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  useEffect(() => {
+    const t = setTimeout(() => speak(targetText), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function startRecording() {
+    if (!speechSupported || recording) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const r = new SR();
+    r.lang = mode === 'ja' ? 'ja-JP' : 'ko-KR';
+    r.interimResults = false;
+    r.onresult = (e) => {
+      const said = e.results[0][0].transcript;
+      setHeard(said);
+      const correct = roughlyMatches(said, targetText);
+      setResult(correct ? 'correct' : 'wrong');
+      if (correct) playCorrectSound(); else playWrongSound();
+    };
+    r.onerror = () => setRecording(false);
+    r.onend = () => setRecording(false);
+    setRecording(true);
+    try { r.start(); } catch (e) { setRecording(false); }
+  }
+
+  return (
+    <div className="genkou-card">
+      <div className="pattern-plate">
+        <div className="meaning-hint">{mode === 'ja' ? '들리는 문장을 마이크로 따라 말해보세요' : '聞こえてくる文をマイクで繰り返してください'}</div>
+        <div className="pattern jp-text">{displayText}</div>
+      </div>
+      <button className="replay-btn" onClick={() => speak(targetText)}>🔊 {mode === 'ja' ? '다시 듣기' : 'もう一度聞く'}</button>
+
+      {!speechSupported ? (
+        <React.Fragment>
+          <div className="empty-state" style={{ padding: '14px 0' }}>{mode === 'ja' ? '이 브라우저는 음성인식을 지원하지 않아요. 듣기만 연습해봐도 좋아요! (Chrome 권장)' : 'このブラウザは音声認識に対応していません。聞くだけでも練習になります！（Chrome推奨）'}</div>
+          <button className="primary-btn" onClick={onNext}>{mode === 'ja' ? '다음' : '次へ'}</button>
+        </React.Fragment>
+      ) : !result ? (
+        <button
+          className={'mic-btn' + (recording ? ' recording' : '')}
+          style={{ width: 64, height: 64, fontSize: 26, margin: '18px auto 0' }}
+          onClick={startRecording}
+          disabled={recording}
+        >
+          🎤
+        </button>
+      ) : (
+        <React.Fragment>
+          <div className={'feedback ' + (result === 'correct' ? 'feedback-correct' : 'feedback-wrong')}>
+            {result === 'correct' ? (mode === 'ja' ? '아주 좋아요!' : 'よくできました！') : (mode === 'ja' ? '다시 도전해봐요' : 'もう一度挑戦しましょう')}
+          </div>
+          <div className="example">{mode === 'ja' ? '내가 말한 내용: ' : 'あなたの発話: '}{heard}</div>
+          <div className="action-row">
+            <button className="primary-btn" onClick={onNext}>{mode === 'ja' ? '다음' : '次へ'}</button>
+          </div>
+        </React.Fragment>
+      )}
+    </div>
+  );
+}
+
+function ReviewCheckpoint({ mode, items, onNext }) {
+  const [idx, setIdx] = useState(0);
+  const [checked, setChecked] = useState(false);
+  const item = items[idx];
+  const label = item.word || item.pattern || item.char;
+  const meaning = item.meaning || item.meaningJp || item.title || item.titleJp;
+
+  function next() {
+    setChecked(false);
+    if (idx + 1 >= items.length) onNext();
+    else setIdx(idx + 1);
+  }
+
+  return (
+    <div className="genkou-card">
+      <span className="hanko" style={{ background: 'var(--purple)' }}>{mode === 'ja' ? '복습' : '復習'}</span>
+      <div style={{ marginTop: 12 }}>
+        <div className="meaning-hint" style={{ marginBottom: 10, color: 'var(--ink-soft)' }}>
+          {mode === 'ja' ? '아까 배운 내용, 기억나세요?' : 'さっき習った内容、覚えていますか？'}
+        </div>
+        <div className="pattern-plate">
+          <div className="pattern jp-text">{label}</div>
+        </div>
+        {!checked ? (
+          <button className="primary-btn" onClick={() => setChecked(true)}>{mode === 'ja' ? '뜻 확인하기' : '意味を確認する'}</button>
+        ) : (
+          <React.Fragment>
+            <div className="example" style={{ textAlign: 'center' }}>{meaning}</div>
+            <button className="primary-btn" style={{ marginTop: 14 }} onClick={next}>{mode === 'ja' ? '다음' : '次へ'}</button>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function useCourseProgress(user, mode) {
+  const [completed, setCompleted] = useState([]);
+  const uid = user ? user.uid : null;
+  const fieldKey = 'courseCompleted_' + mode;
+
+  useEffect(() => {
+    if (!uid) { setCompleted([]); return; }
+    const ref = db.collection('users').doc(uid);
+    const unsub = ref.onSnapshot(
+      (snap) => {
+        const data = snap.data() || {};
+        setCompleted(data[fieldKey] || []);
+      },
+      (err) => console.error('코스 진행상황 구독 오류:', err.code, err.message)
+    );
+    return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, mode]);
+
+  const markComplete = useCallback((level) => {
+    if (!uid) return;
+    setCompleted((prev) => {
+      if (prev.includes(level)) return prev;
+      const next = [...prev, level];
+      db.collection('users').doc(uid).set({ [fieldKey]: next }, { merge: true });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, mode]);
+
+  return { completed, markComplete };
+}
+
+function CourseLevelPath({ mode, levels, completed, onSelectLevel }) {
+  return (
+    <div className="course-path">
+      {levels.map((lv, i) => {
+        const isDone = completed.includes(lv);
+        const isLocked = i > 0 && !completed.includes(levels[i - 1]);
+        return (
+          <button
+            key={lv}
+            className={'course-node' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '')}
+            disabled={isLocked}
+            onClick={() => onSelectLevel(lv)}
+          >
+            <span className="course-node-circle">{isDone ? '⭐' : isLocked ? '🔒' : (i + 1)}</span>
+            <span className="course-node-label">{lv}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
+  const [idx, setIdx] = useState(0);
+  const step = steps[idx];
+
+  function next() {
+    if (idx + 1 >= steps.length) onFinish();
+    else setIdx(idx + 1);
+  }
+  function handleQuizResult(itemId, quality, sourceDeck) {
+    if (decks[sourceDeck]) decks[sourceDeck].submitReview(itemId, quality);
+    next();
+  }
+  function handleToggleBookmark(item, nextValue) {
+    if (decks[item.sourceDeck]) decks[item.sourceDeck].toggleBookmark(item.id, nextValue);
+  }
+
+  const progressPct = Math.round((idx / steps.length) * 100);
+
+  return (
+    <div>
+      <button className="focus-back-btn" onClick={onExit}>← {mode === 'ja' ? '코스에서 나가기' : 'コースから出る'}</button>
+      <div className="course-progress-bar"><div className="course-progress-fill" style={{ width: progressPct + '%' }} /></div>
+
+      {(step.type === 'words' || step.type === 'grammar') && (
+        mode === 'ja'
+          ? <JaQuizCard key={idx} item={{ ...step.item, sourceDeck: step.type }} pool={pool[step.type] || [step.item]} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
+          : <KrQuizCard key={idx} item={{ ...step.item, sourceDeck: step.type }} pool={pool[step.type] || [step.item]} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
+      )}
+      {step.type === 'sentence' && (
+        mode === 'ja'
+          ? <JaSentenceCard key={idx} item={{ ...step.item, sourceDeck: 'sentence' }} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
+          : <KrSentenceCard key={idx} item={{ ...step.item, sourceDeck: 'sentence' }} onResult={handleQuizResult} onToggleBookmark={handleToggleBookmark} />
+      )}
+      {step.type === 'repeat' && <RepeatCard key={idx} mode={mode} item={step.item} onNext={next} />}
+      {step.type === 'review' && <ReviewCheckpoint key={idx} mode={mode} items={step.items} onNext={next} />}
+    </div>
+  );
+}
+
+function CourseCompleteScreen({ mode, level, onBack }) {
+  return (
+    <div className="genkou-card">
+      <div style={{ fontSize: 48, marginBottom: 10 }}>🎉</div>
+      <div className="feedback feedback-correct" style={{ fontSize: 18 }}>
+        {mode === 'ja' ? level + ' 완료!' : level + ' 完了！'}
+      </div>
+      <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginTop: 8 }}>
+        {mode === 'ja' ? '다음 레벨이 열렸어요.' : '次のレベルが解放されました。'}
+      </p>
+      <button className="primary-btn" style={{ marginTop: 16 }} onClick={onBack}>{mode === 'ja' ? '코스로 돌아가기' : 'コースに戻る'}</button>
+    </div>
+  );
+}
+
+function CourseTab({ mode, user, wordDeck, grammarDeck, sentenceDeck, levels }) {
+  const courseProgress = useCourseProgress(user, mode);
+  const [activeLevel, setActiveLevel] = useState(null);
+  const [steps, setSteps] = useState(null);
+  const [justCompleted, setJustCompleted] = useState(null);
+
+  const decks = { words: wordDeck, grammar: grammarDeck, sentence: sentenceDeck };
+
+  function startLevel(level) {
+    const generated = buildCourseSteps(level, wordDeck.items, grammarDeck.items, sentenceDeck.items);
+    if (generated.length === 0) return;
+    setSteps(generated);
+    setActiveLevel(level);
+    setJustCompleted(null);
+  }
+  function finishLevel() {
+    courseProgress.markComplete(activeLevel);
+    setJustCompleted(activeLevel);
+    setSteps(null);
+  }
+  function exitLevel() {
+    setSteps(null);
+    setActiveLevel(null);
+    setJustCompleted(null);
+  }
+
+  const pool = {
+    words: wordDeck.items.filter((i) => i.level === activeLevel),
+    grammar: grammarDeck.items.filter((i) => i.level === activeLevel),
+  };
+
+  if (steps) {
+    return <CourseSession mode={mode} level={activeLevel} steps={steps} pool={pool} decks={decks} onFinish={finishLevel} onExit={exitLevel} />;
+  }
+  if (justCompleted) {
+    return <CourseCompleteScreen mode={mode} level={justCompleted} onBack={() => setJustCompleted(null)} />;
+  }
+  return (
+    <div>
+      <div className="empty-state" style={{ padding: '4px 4px 16px' }}>
+        {mode === 'ja' ? '레벨을 순서대로 완료하며 단어·문법·작문·말하기를 골고루 연습해요.' : 'レベルを順番にクリアしながら、単語・文法・作文・スピーキングをまんべんなく練習しましょう。'}
+      </div>
+      <CourseLevelPath mode={mode} levels={levels} completed={courseProgress.completed} onSelectLevel={startLevel} />
+    </div>
+  );
+}
+
 function JaSection({ user, onActivity, onFocusChange }) {
   const [deckType, setDeckType] = useState('words');
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -10651,7 +11044,8 @@ function JaSection({ user, onActivity, onFocusChange }) {
 
   const isReview = deckType === 'review';
   const isAiChat = deckType === 'ai_chat';
-  const activeDeck = (isReview || isAiChat) ? null : decks[deckType];
+  const isCourse = deckType === 'course';
+  const activeDeck = (isReview || isAiChat || isCourse) ? null : decks[deckType];
   const unscopedItems = isReview ? bookmarkedItems : (activeDeck ? activeDeck.items : []);
   const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
   const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
@@ -10663,7 +11057,7 @@ function JaSection({ user, onActivity, onFocusChange }) {
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
-  const isFocused = tab === 'study' || isAiChat;
+  const isFocused = tab === 'study' || isAiChat || isCourse;
   useEffect(() => {
     if (onFocusChange) onFocusChange(isFocused);
   }, [isFocused]);
@@ -10673,17 +11067,23 @@ function JaSection({ user, onActivity, onFocusChange }) {
       {!isFocused && (
         <React.Fragment>
           <div className="deck-switch">{Object.entries(JA_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
+          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 코스로 배우기</button>
           <div className="quick-actions-row">
             <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 복습노트{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
             <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI 회화</button>
           </div>
         </React.Fragment>
       )}
-      {isFocused && (
-        <button className="focus-back-btn" onClick={() => { if (isAiChat) switchDeck('words'); else setTab('dashboard'); }}>← {JA_DECK_LABELS[deckType] || 'AI 회화'}에서 나가기</button>
+      {tab === 'study' && (
+        <button className="focus-back-btn" onClick={() => setTab('dashboard')}>← {JA_DECK_LABELS[deckType]}에서 나가기</button>
+      )}
+      {isAiChat && (
+        <button className="focus-back-btn" onClick={() => switchDeck('words')}>← AI 회화에서 나가기</button>
       )}
 
-      {isAiChat ? (
+      {isCourse ? (
+        <CourseTab mode="ja" user={user} wordDeck={wordDeck} grammarDeck={grammarDeck} sentenceDeck={sentenceDeck} levels={['N5', 'N4', 'N3', 'N2', 'N1']} />
+      ) : isAiChat ? (
         <AiChatSection mode="ja" />
       ) : anyLoading ? (
         <div className="empty-state">
@@ -11036,7 +11436,8 @@ function KrSection({ user, onActivity, onFocusChange }) {
 
   const isReview = deckType === 'review';
   const isAiChat = deckType === 'ai_chat';
-  const activeDeck = (isReview || isAiChat) ? null : decks[deckType];
+  const isCourse = deckType === 'course';
+  const activeDeck = (isReview || isAiChat || isCourse) ? null : decks[deckType];
   const unscopedItems = isReview ? bookmarkedItems : (activeDeck ? activeDeck.items : []);
   const needsLevelPick = !selectedLevel && unscopedItems.length > 0;
   const scopedItems = useMemo(() => (!selectedLevel ? unscopedItems : unscopedItems.filter((i) => i.level === selectedLevel)), [unscopedItems, selectedLevel]);
@@ -11048,7 +11449,7 @@ function KrSection({ user, onActivity, onFocusChange }) {
   function handleSubmitReview(itemId, quality, sourceDeck) { decks[sourceDeck] && decks[sourceDeck].submitReview(itemId, quality); }
   function handleToggleBookmark(item, nextValue) { decks[item.sourceDeck] && decks[item.sourceDeck].toggleBookmark(item.id, nextValue); }
 
-  const isFocused = tab === 'study' || isAiChat;
+  const isFocused = tab === 'study' || isAiChat || isCourse;
   useEffect(() => {
     if (onFocusChange) onFocusChange(isFocused);
   }, [isFocused]);
@@ -11058,17 +11459,23 @@ function KrSection({ user, onActivity, onFocusChange }) {
       {!isFocused && (
         <React.Fragment>
           <div className="deck-switch">{Object.entries(KR_DECK_LABELS).map(([key, label]) => (<button key={key} className={deckType === key ? 'active' : ''} onClick={() => switchDeck(key)}>{label}</button>))}</div>
+          <button className={'course-bar ' + (isCourse ? 'active' : '')} onClick={() => switchDeck('course')}>🏆 コースで学ぶ</button>
           <div className="quick-actions-row">
             <button className={'review-bar ' + (isReview ? 'active' : '')} onClick={() => switchDeck('review')}>★ 復習ノート{bookmarkedItems.length > 0 ? (' (' + bookmarkedItems.length + ')') : ''}</button>
             <button className={'ai-chat-bar ' + (isAiChat ? 'active' : '')} onClick={() => switchDeck('ai_chat')}>🤖 AI会話</button>
           </div>
         </React.Fragment>
       )}
-      {isFocused && (
-        <button className="focus-back-btn" onClick={() => { if (isAiChat) switchDeck('words'); else setTab('dashboard'); }}>← {KR_DECK_LABELS[deckType] || 'AI会話'}を終了</button>
+      {tab === 'study' && (
+        <button className="focus-back-btn" onClick={() => setTab('dashboard')}>← {KR_DECK_LABELS[deckType]}を終了</button>
+      )}
+      {isAiChat && (
+        <button className="focus-back-btn" onClick={() => switchDeck('words')}>← AI会話を終了</button>
       )}
 
-      {isAiChat ? (
+      {isCourse ? (
+        <CourseTab mode="kr" user={user} wordDeck={wordDeck} grammarDeck={grammarDeck} sentenceDeck={sentenceDeck} levels={['1급', '2급', '3급', '4급', '5급', '6급']} />
+      ) : isAiChat ? (
         <AiChatSection mode="kr" />
       ) : anyLoading ? (
         <div className="empty-state">
