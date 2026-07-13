@@ -246,6 +246,35 @@ body {
   margin: 10px 0;
 }
 
+.tile-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tile-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+}
+
+.tile-breakdown-row .jp-text {
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 44px;
+}
+
+.tile-breakdown-meaning {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
 .meaning {
   font-size: 18px;
   font-weight: 700;
@@ -1582,8 +1611,33 @@ function getAudioCtx() {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return null;
   if (!sharedCtx) sharedCtx = new AudioCtx();
-  if (sharedCtx.state === 'suspended') sharedCtx.resume();
+  if (sharedCtx.state === 'suspended') sharedCtx.resume().catch(() => {});
   return sharedCtx;
+}
+// 브라우저(특히 Safari/iOS)는 사용자가 직접 상호작용하기 전까지 오디오 재생을 막아둠.
+// 앱에서 첫 클릭/터치가 일어나는 순간 무음 버퍼를 한 번 재생해서 미리 "잠금 해제"해두면,
+// 나중에 정답/오답 효과음이 나와야 할 때 조용히 씹히는 문제를 방지할 수 있음.
+if (typeof document !== 'undefined') {
+  const unlockAudioOnce = () => {
+    const ctx = getAudioCtx();
+    if (ctx) {
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      } catch (e) {}
+    }
+    document.removeEventListener('pointerdown', unlockAudioOnce);
+    document.removeEventListener('touchstart', unlockAudioOnce);
+    document.removeEventListener('click', unlockAudioOnce);
+    document.removeEventListener('keydown', unlockAudioOnce);
+  };
+  document.addEventListener('pointerdown', unlockAudioOnce);
+  document.addEventListener('touchstart', unlockAudioOnce);
+  document.addEventListener('click', unlockAudioOnce);
+  document.addEventListener('keydown', unlockAudioOnce);
 }
 function playNote(ctx, freq, startTime, duration, type, volume) {
   const osc = ctx.createOscillator();
@@ -8926,7 +8980,7 @@ const GRAMMAR_KR = [
   {
     "id": "g-001",
     "level": "1급",
-    "pattern": "은/는",
+    "pattern": "~은/는",
     "titleJp": "主題を表す助詞(は)",
     "connection": "名詞(パッチム有:은／パッチム無:는)",
     "example": "저는 학생입니다.",
@@ -8937,7 +8991,7 @@ const GRAMMAR_KR = [
   {
     "id": "g-002",
     "level": "1급",
-    "pattern": "이/가",
+    "pattern": "~이/가",
     "titleJp": "主格助詞(が)",
     "connection": "名詞(パッチム有:이／パッチム無:가)",
     "example": "친구가 옵니다.",
@@ -8948,7 +9002,7 @@ const GRAMMAR_KR = [
   {
     "id": "g-003",
     "level": "1급",
-    "pattern": "을/를",
+    "pattern": "~을/를",
     "titleJp": "目的格助詞(を)",
     "connection": "名詞(パッチム有:을／パッチム無:를)",
     "example": "밥을 먹습니다.",
@@ -11073,7 +11127,7 @@ function AiChatSection({ mode }) {
 
 // ==================== 코스(듀오링고 스타일 레벨 경로) ====================
 
-function buildCourseSteps(words, grammars, sentences, kanjiList, travelList) {
+function buildCourseSteps(words, grammars, sentences, kanjiList, travelList, fullWordPool, fullGrammarPool) {
   function pick(arr, n) {
     return shuffle(arr).slice(0, n);
   }
@@ -11090,14 +11144,27 @@ function buildCourseSteps(words, grammars, sentences, kanjiList, travelList) {
   if (w[2]) steps.push({ type: 'repeat', item: w[2], repeatKind: 'word' });
   if (w[3]) steps.push({ type: 'words', item: w[3] });
   if (tv[0]) steps.push({ type: 'travel', item: tv[0] });
-  if (s[0]) steps.push({ type: 'sentence', item: s[0] });
+
+  // 작문 문제 전에, 그 문장에 쓰인 단어/조사들을 미리 가르쳐주는 스텝 + 짝맞추기로 한번 더 확인
+  if (s[0]) {
+    const resolved0 = resolveTileGlosses(s[0].tiles, fullWordPool, fullGrammarPool);
+    if (resolved0.length >= 2) steps.push({ type: 'sentence_preview', sentenceItem: s[0], resolvedTiles: resolved0 });
+    if (resolved0.length >= 3) steps.push({ type: 'match', items: resolved0.slice(0, 4).map((t) => ({ word: t.text, meaning: t.meaning })) });
+    steps.push({ type: 'sentence', item: s[0] });
+  }
+
   if (g[1]) steps.push({ type: 'grammar', item: g[1] });
   if (k[1]) steps.push({ type: 'kanji', item: k[1] });
   if (w[4]) steps.push({ type: 'repeat', item: w[4], repeatKind: 'word' });
   if (tv[1]) steps.push({ type: 'travel', item: tv[1] });
   const matchItems = [w[5], w[6], w[7], w[8]].filter(Boolean);
   if (matchItems.length >= 3) steps.push({ type: 'match', items: matchItems });
-  if (s[1]) steps.push({ type: 'sentence', item: s[1] });
+
+  if (s[1]) {
+    const resolved1 = resolveTileGlosses(s[1].tiles, fullWordPool, fullGrammarPool);
+    if (resolved1.length >= 2) steps.push({ type: 'sentence_preview', sentenceItem: s[1], resolvedTiles: resolved1 });
+    steps.push({ type: 'sentence', item: s[1] });
+  }
   if (s[2]) steps.push({ type: 'repeat', item: s[2], repeatKind: 'sentence' });
   const fallbackReviewItems = [w[0], w[1], g[0]].filter(Boolean);
   steps.push({ type: 'review', fallbackItems: fallbackReviewItems });
@@ -11145,6 +11212,64 @@ function roughlyMatches(said, target) {
   if (a === b) return true;
   const shortLen = Math.max(2, Math.floor(Math.min(a.length, b.length) * 0.6));
   return a.includes(b.slice(0, shortLen)) || b.includes(a.slice(0, shortLen));
+}
+
+// 작문 문장의 조각(tile)들을 단어 덱/문법 덱과 대조해서 뜻을 자동으로 찾아줌.
+// 새로 데이터를 만들 필요 없이 이미 있는 단어/문법 뜻을 재활용하는 방식.
+function resolveTileGlosses(tiles, wordPool, grammarPool) {
+  const seen = new Set();
+  const out = [];
+  (tiles || []).forEach((t) => {
+    if (seen.has(t.text)) return;
+    const w = (wordPool || []).find((x) => x.word === t.text);
+    if (w) {
+      out.push({ text: t.text, reading: t.reading, meaning: w.meaning || w.meaningJp });
+      seen.add(t.text);
+      return;
+    }
+    const g = (grammarPool || []).find((x) => x.pattern === t.text || (x.pattern || '').replace(/^~/, '') === t.text);
+    if (g) {
+      out.push({ text: t.text, reading: t.reading, meaning: g.meaning });
+      seen.add(t.text);
+    }
+  });
+  return out;
+}
+
+function SentenceBreakdownCard({ mode, sentenceItem, resolvedTiles, onNext }) {
+  const speak = mode === 'ja' ? speakJapanese : speakKorean;
+  const fullText = sentenceItem.tiles ? sentenceItem.tiles.map((t) => t.text).join('') : '';
+  const fullReading = sentenceItem.reading || fullText;
+
+  useEffect(() => {
+    const t = setTimeout(() => speak(fullReading), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="genkou-card">
+      <div className="meaning-hint" style={{ marginBottom: 10, color: 'var(--ink-soft)' }}>
+        {mode === 'ja' ? '이 문장에 쓰인 단어들을 먼저 알아볼까요?' : 'この文で使われる単語を先に見てみましょう'}
+      </div>
+      <div className="pattern-plate">
+        <div className="pattern jp-text" style={{ fontSize: 20 }}>
+          {fullText}<button className="inline-play-btn inline-play-btn-light" onClick={() => speak(fullReading)}>🔊</button>
+        </div>
+        <div className="meaning-hint" style={{ marginTop: 8 }}>{sentenceItem.meaning}</div>
+      </div>
+      <div className="tile-breakdown-list">
+        {resolvedTiles.map((t, i) => (
+          <div key={i} className="tile-breakdown-row">
+            <span className="jp-text">{t.text}</span>
+            <button className="inline-play-btn" onClick={() => speak(t.reading || t.text)}>🔊</button>
+            <span className="tile-breakdown-meaning">{t.meaning}</span>
+          </div>
+        ))}
+      </div>
+      <button className="primary-btn" style={{ marginTop: 16 }} onClick={onNext}>{mode === 'ja' ? '다음' : '次へ'}</button>
+    </div>
+  );
 }
 
 function RepeatCard({ mode, item, repeatKind, onNext }) {
@@ -11301,6 +11426,7 @@ function MatchingCard({ mode, items, onNext }) {
 function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState(null);
+  const speak = mode === 'ja' ? speakJapanese : speakKorean;
 
   useEffect(() => {
     if (!items || items.length === 0) onNext();
@@ -11312,6 +11438,9 @@ function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
   const label = item.word || item.pattern || item.char;
   const getMeaning = (i) => i.meaning || i.meaningJp || i.title || i.titleJp;
   const correctMeaning = getMeaning(item);
+  // 항목 유형에 따라 읽어줄 발음/예문 텍스트 결정
+  const speakText = item.word ? (mode === 'ja' ? (item.reading || item.word) : item.word) : (item.pattern || item.char);
+  const exampleText = item.exampleReading || item.example || null;
 
   const options = useMemo(() => {
     const distractors = shuffle((pool || []).filter((i) => i !== item && getMeaning(i) && getMeaning(i) !== correctMeaning))
@@ -11320,6 +11449,19 @@ function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
     return shuffle([correctMeaning, ...distractors]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx]);
+
+  useEffect(() => {
+    const t = setTimeout(() => speak(speakText), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx]);
+
+  function handleSelectOption(opt) {
+    if (selected) return;
+    setSelected(opt);
+    if (opt === correctMeaning) playCorrectSound(); else playWrongSound();
+    if (exampleText) setTimeout(() => speak(exampleText), opt === correctMeaning ? 500 : 900);
+  }
 
   function next() {
     setSelected(null);
@@ -11339,7 +11481,7 @@ function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
             : (mode === 'ja' ? '아까 배운 내용, 기억나세요? 뜻을 골라보세요' : 'さっき習った内容、覚えていますか？意味を選んでください')}
         </div>
         <div className="pattern-plate">
-          <div className="pattern jp-text">{label}</div>
+          <div className="pattern jp-text">{label}<button className="inline-play-btn inline-play-btn-light" onClick={() => speak(speakText)}>🔊</button></div>
         </div>
         <div className="option-list">
           {options.map((opt) => {
@@ -11352,11 +11494,7 @@ function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
               <button
                 key={opt}
                 className={cls}
-                onClick={() => {
-                  if (selected) return;
-                  setSelected(opt);
-                  if (opt === correctMeaning) playCorrectSound(); else playWrongSound();
-                }}
+                onClick={() => handleSelectOption(opt)}
                 disabled={!!selected}
               >
                 {opt}
@@ -11369,6 +11507,7 @@ function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
             <div className={'feedback ' + (selected === correctMeaning ? 'feedback-correct' : 'feedback-wrong')}>
               {selected === correctMeaning ? (mode === 'ja' ? '정답입니다!' : '正解です！') : (mode === 'ja' ? '정답: ' + correctMeaning : '正解: ' + correctMeaning)}
             </div>
+            {item.example && <div className="example">{item.example}{exampleText && <button className="inline-play-btn" onClick={() => speak(exampleText)}>🔊</button>}<br/>{item.exampleMeaning || item.exampleMeaningJp}</div>}
             <button className="primary-btn" style={{ marginTop: 14 }} onClick={next}>{mode === 'ja' ? '다음' : '次へ'}</button>
           </React.Fragment>
         )}
@@ -11449,6 +11588,7 @@ function CourseSession({ mode, level, steps, pool, decks, onFinish, onExit }) {
       )}
       {step.type === 'repeat' && <RepeatCard key={idx} mode={mode} item={step.item} repeatKind={step.repeatKind} onNext={next} />}
       {step.type === 'match' && <MatchingCard key={idx} mode={mode} items={step.items} onNext={next} />}
+      {step.type === 'sentence_preview' && <SentenceBreakdownCard key={idx} mode={mode} sentenceItem={step.sentenceItem} resolvedTiles={step.resolvedTiles} onNext={next} />}
       {step.type === 'review' && (
         <ReviewCheckpoint
           key={idx}
@@ -11627,7 +11767,9 @@ function JaSection({ user, onActivity, onFocusChange }) {
   const [justCompletedStage, setJustCompletedStage] = useState(null);
 
   function startStage(stage) {
-    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, stage.kanji, stage.travel);
+    const fullLevelWords = wordDeck.items.filter((i) => i.level === stage.level);
+    const fullLevelGrammar = grammarDeck.items.filter((i) => i.level === stage.level);
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, stage.kanji, stage.travel, fullLevelWords, fullLevelGrammar);
     if (generated.length === 0) return;
     setCourseSteps(generated);
     setActiveStage(stage);
@@ -12095,7 +12237,9 @@ function KrSection({ user, onActivity, onFocusChange }) {
   const [justCompletedStage, setJustCompletedStage] = useState(null);
 
   function startStage(stage) {
-    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, null, stage.travel);
+    const fullLevelWords = wordDeck.items.filter((i) => i.level === stage.level);
+    const fullLevelGrammar = grammarDeck.items.filter((i) => i.level === stage.level);
+    const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, null, stage.travel, fullLevelWords, fullLevelGrammar);
     if (generated.length === 0) return;
     setCourseSteps(generated);
     setActiveStage(stage);
