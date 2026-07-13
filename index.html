@@ -1681,6 +1681,16 @@ function playFanfareSound() {
 function cancelSpeech() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
 }
+// 문법 패턴(예: "~아요/어요", "~이/가")을 TTS로 읽을 때 "~"나 "/" 기호 때문에
+// 아예 안 읽히거나 이상하게 읽히는 문제가 있어서, 기호를 제거하고 각 형태를 쉼표로 끊어 읽게 함
+function cleanPatternForSpeech(pattern) {
+  return (pattern || '')
+    .replace(/~/g, '')
+    .split('/')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .join(', ');
+}
 
 // ==================== 일본어 TTS ====================
 let cachedVoiceJa = null;
@@ -8985,6 +8995,17 @@ const VOCAB_KR = [
     "example": "조금만 기다려 주세요.",
     "examplePronunciation": "조금만 기다려 주세요.",
     "exampleMeaningJp": "もう少し待ってください。"
+  },
+  {
+    "id": "w-147",
+    "word": "좋아요",
+    "pronunciation": "조아요",
+    "meaningJp": "いいです（「좋다」の丁寧形）",
+    "level": "1급",
+    "tag": "일상",
+    "example": "이 카페 정말 좋아요.",
+    "examplePronunciation": "이 카페 정말 조아요.",
+    "exampleMeaningJp": "このカフェ、本当にいいです。"
   }
 ];
 const GRAMMAR_KR = [
@@ -10449,7 +10470,7 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark, isRetry }) {
     setBookmarkedState(next);
     onToggleBookmark(item, next);
   }
-  const inlineWordAudio = deckType === 'words' && speechText ? () => speakJapanese(speechText) : deckType === 'grammar' ? () => speakJapanese(item.pattern) : null;
+  const inlineWordAudio = deckType === 'words' && speechText ? () => speakJapanese(speechText) : deckType === 'grammar' ? () => speakJapanese(cleanPatternForSpeech(item.pattern)) : null;
   const inlineExampleAudio = (deckType === 'words' || deckType === 'grammar') ? () => speakJapanese(item.exampleReading || item.example || speechText) : null;
 
   return (
@@ -11159,8 +11180,8 @@ function buildCourseSteps(words, grammars, sentences, kanjiList, travelList, ful
   // 작문 문제 전에, 그 문장에 쓰인 단어/조사들을 미리 가르쳐주는 스텝 + 짝맞추기로 한번 더 확인
   if (s[0]) {
     const resolved0 = resolveTileGlosses(s[0].tiles, fullWordPool, fullGrammarPool);
-    if (resolved0.length >= 2) steps.push({ type: 'sentence_preview', sentenceItem: s[0], resolvedTiles: resolved0 });
-    if (resolved0.length >= 3) steps.push({ type: 'match', items: resolved0.slice(0, 4).map((t) => ({ word: t.text, meaning: t.meaning })) });
+    if (resolved0.length >= 1) steps.push({ type: 'sentence_preview', sentenceItem: s[0], resolvedTiles: resolved0 });
+    if (resolved0.length >= 2) steps.push({ type: 'match', items: resolved0.slice(0, 4).map((t) => ({ word: t.text, meaning: t.meaning })) });
     steps.push({ type: 'sentence', item: s[0] });
   }
 
@@ -11173,7 +11194,7 @@ function buildCourseSteps(words, grammars, sentences, kanjiList, travelList, ful
 
   if (s[1]) {
     const resolved1 = resolveTileGlosses(s[1].tiles, fullWordPool, fullGrammarPool);
-    if (resolved1.length >= 2) steps.push({ type: 'sentence_preview', sentenceItem: s[1], resolvedTiles: resolved1 });
+    if (resolved1.length >= 1) steps.push({ type: 'sentence_preview', sentenceItem: s[1], resolvedTiles: resolved1 });
     steps.push({ type: 'sentence', item: s[1] });
   }
   if (s[2]) steps.push({ type: 'repeat', item: s[2], repeatKind: 'sentence' });
@@ -11230,18 +11251,26 @@ function roughlyMatches(said, target) {
 function resolveTileGlosses(tiles, wordPool, grammarPool) {
   const seen = new Set();
   const out = [];
-  (tiles || []).forEach((t) => {
-    if (seen.has(t.text)) return;
-    const w = (wordPool || []).find((x) => x.word === t.text);
+  (tiles || []).forEach((raw) => {
+    // JA는 타일이 {text, reading} 객체, KR은 타일이 그냥 문자열이라 둘 다 지원
+    const text = typeof raw === 'string' ? raw : raw.text;
+    const reading = typeof raw === 'string' ? null : raw.reading;
+    if (!text || seen.has(text)) return;
+    const w = (wordPool || []).find((x) => x.word === text);
     if (w) {
-      out.push({ text: t.text, reading: t.reading, meaning: w.meaning || w.meaningJp });
-      seen.add(t.text);
+      out.push({ text: text, reading: reading, meaning: w.meaning || w.meaningJp });
+      seen.add(text);
       return;
     }
-    const g = (grammarPool || []).find((x) => x.pattern === t.text || (x.pattern || '').replace(/^~/, '') === t.text);
+    const g = (grammarPool || []).find((x) => {
+      const pat = (x.pattern || '').replace(/^~/, '');
+      if (pat === text) return true;
+      // "이/가", "은/는" 같은 결합형 조사 패턴은 그 중 한쪽 형태(예: "가")만 나와도 매칭되게 함
+      return pat.split('/').map((p) => p.trim()).includes(text);
+    });
     if (g) {
-      out.push({ text: t.text, reading: t.reading, meaning: g.meaning });
-      seen.add(t.text);
+      out.push({ text: text, reading: reading, meaning: g.meaning });
+      seen.add(text);
     }
   });
   return out;
@@ -11249,7 +11278,9 @@ function resolveTileGlosses(tiles, wordPool, grammarPool) {
 
 function SentenceBreakdownCard({ mode, sentenceItem, resolvedTiles, onNext }) {
   const speak = mode === 'ja' ? speakJapanese : speakKorean;
-  const fullText = sentenceItem.tiles ? sentenceItem.tiles.map((t) => t.text).join('') : '';
+  const fullText = sentenceItem.tiles
+    ? sentenceItem.tiles.map((t) => (typeof t === 'string' ? t : t.text)).join(mode === 'ja' ? '' : ' ')
+    : '';
   const fullReading = sentenceItem.reading || fullText;
 
   useEffect(() => {
@@ -11450,7 +11481,7 @@ function ReviewCheckpoint({ mode, items, pool, wasWrongReview, onNext }) {
   const getMeaning = (i) => i.meaning || i.meaningJp || i.title || i.titleJp;
   const correctMeaning = getMeaning(item);
   // 항목 유형에 따라 읽어줄 발음/예문 텍스트 결정
-  const speakText = item.word ? (mode === 'ja' ? (item.reading || item.word) : item.word) : (item.pattern || item.char);
+  const speakText = item.word ? (mode === 'ja' ? (item.reading || item.word) : item.word) : (item.pattern ? cleanPatternForSpeech(item.pattern) : item.char);
   const exampleText = item.exampleReading || item.example || null;
 
   const options = useMemo(() => {
@@ -11778,8 +11809,9 @@ function JaSection({ user, onActivity, onFocusChange }) {
   const [justCompletedStage, setJustCompletedStage] = useState(null);
 
   function startStage(stage) {
-    const fullLevelWords = wordDeck.items.filter((i) => i.level === stage.level);
-    const fullLevelGrammar = grammarDeck.items.filter((i) => i.level === stage.level);
+    // 문장 조각 뜻 찾기는 레벨 제한 없이 전체 단어/문법에서 검색 (문장과 단어의 레벨 태그가 살짝 어긋나 있어도 뜻을 찾을 수 있도록)
+    const fullLevelWords = wordDeck.items;
+    const fullLevelGrammar = grammarDeck.items;
     const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, stage.kanji, stage.travel, fullLevelWords, fullLevelGrammar);
     if (generated.length === 0) return;
     setCourseSteps(generated);
@@ -11960,7 +11992,7 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
     setBookmarkedState(next);
     onToggleBookmark(item, next);
   }
-  const inlineWordAudio = deckType === 'words' && speechText ? () => speakKorean(speechText) : deckType === 'grammar' ? () => speakKorean(item.pattern) : null;
+  const inlineWordAudio = deckType === 'words' && speechText ? () => speakKorean(speechText) : deckType === 'grammar' ? () => speakKorean(cleanPatternForSpeech(item.pattern)) : null;
   const inlineExampleAudio = (deckType === 'words' || deckType === 'grammar') ? () => speakKorean(item.example || speechText) : null;
 
   return (
@@ -12248,8 +12280,9 @@ function KrSection({ user, onActivity, onFocusChange }) {
   const [justCompletedStage, setJustCompletedStage] = useState(null);
 
   function startStage(stage) {
-    const fullLevelWords = wordDeck.items.filter((i) => i.level === stage.level);
-    const fullLevelGrammar = grammarDeck.items.filter((i) => i.level === stage.level);
+    // 문장 조각 뜻 찾기는 레벨 제한 없이 전체 단어/문법에서 검색 (문장과 단어의 레벨 태그가 살짝 어긋나 있어도 뜻을 찾을 수 있도록)
+    const fullLevelWords = wordDeck.items;
+    const fullLevelGrammar = grammarDeck.items;
     const generated = buildCourseSteps(stage.words, stage.grammar, stage.sentences, null, stage.travel, fullLevelWords, fullLevelGrammar);
     if (generated.length === 0) return;
     setCourseSteps(generated);
