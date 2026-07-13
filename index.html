@@ -1611,16 +1611,29 @@ function getAudioCtx() {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return null;
   if (!sharedCtx) sharedCtx = new AudioCtx();
-  if (sharedCtx.state === 'suspended') sharedCtx.resume().catch(() => {});
   return sharedCtx;
 }
+// iOS/모바일 Safari는 TTS(speechSynthesis)와 Web Audio API가 오디오 자원을 서로 차지하려고 하면서
+// 한 번 풀어놨던 AudioContext가 다시 suspended 상태로 돌아가는 경우가 흔함.
+// ctx.state 값을 신뢰하지 않고, 재생할 때마다 매번 resume()을 호출해서 완료될 때까지 기다린 뒤에만
+// 소리를 스케줄링하도록 함 (resume()은 이미 실행 중인 컨텍스트에서는 즉시 끝나는 가벼운 호출이라 매번 불러도 괜찮음).
+async function ensureAudioRunning() {
+  const ctx = getAudioCtx();
+  if (!ctx) return null;
+  if (ctx.state !== 'running') {
+    try { await ctx.resume(); } catch (e) {}
+    // resume() 직후 브라우저가 오디오 그래프를 완전히 안정시키는 데 아주 짧은 시간이 더 필요할 때가 있어서,
+    // 상태 전환이 실제로 일어난 경우에만(=아직 안정 안 됐던 경우에만) 살짝 여유를 줌
+    await new Promise((r) => setTimeout(r, 70));
+  }
+  return ctx;
+}
 // 브라우저(특히 Safari/iOS)는 사용자가 직접 상호작용하기 전까지 오디오 재생을 막아둠.
-// 앱에서 첫 클릭/터치가 일어나는 순간 무음 버퍼를 한 번 재생해서 미리 "잠금 해제"해두면,
-// 나중에 정답/오답 효과음이 나와야 할 때 조용히 씹히는 문제를 방지할 수 있음.
+// 앱에서 첫 클릭/터치가 일어나는 순간 무음 버퍼를 한 번 재생해서 미리 "잠금 해제"해두면 도움이 됨.
 if (typeof document !== 'undefined') {
   const unlockAudioOnce = () => {
-    const ctx = getAudioCtx();
-    if (ctx) {
+    ensureAudioRunning().then((ctx) => {
+      if (!ctx) return;
       try {
         const buffer = ctx.createBuffer(1, 1, 22050);
         const source = ctx.createBufferSource();
@@ -1628,7 +1641,7 @@ if (typeof document !== 'undefined') {
         source.connect(ctx.destination);
         source.start(0);
       } catch (e) {}
-    }
+    });
     document.removeEventListener('pointerdown', unlockAudioOnce);
     document.removeEventListener('touchstart', unlockAudioOnce);
     document.removeEventListener('click', unlockAudioOnce);
@@ -1652,23 +1665,23 @@ function playNote(ctx, freq, startTime, duration, type, volume) {
   osc.start(startTime);
   osc.stop(startTime + duration + 0.02);
 }
-function playCorrectSound() {
-  const ctx = getAudioCtx();
+async function playCorrectSound() {
+  const ctx = await ensureAudioRunning();
   if (!ctx) return;
   const now = ctx.currentTime;
   // "띵동" 초인종 벨소리 - 높은음(띵) 다음 낮은음(동), 살짝 겹치며 은은하게 울리는 느낌
   playNote(ctx, 1318.51, now, 0.35, 'sine', 0.24); // 띵 (E6)
   playNote(ctx, 1046.50, now + 0.16, 0.45, 'sine', 0.24); // 동 (C6)
 }
-function playWrongSound() {
-  const ctx = getAudioCtx();
+async function playWrongSound() {
+  const ctx = await ensureAudioRunning();
   if (!ctx) return;
   const now = ctx.currentTime;
   playNote(ctx, 300, now, 0.15, 'sawtooth', 0.14);
   playNote(ctx, 175, now + 0.13, 0.2, 'sawtooth', 0.14);
 }
-function playFanfareSound() {
-  const ctx = getAudioCtx();
+async function playFanfareSound() {
+  const ctx = await ensureAudioRunning();
   if (!ctx) return;
   const now = ctx.currentTime;
   // 상승하는 아르페지오 + 마지막 화음으로 "짜잔~" 팡파레 느낌
@@ -10531,6 +10544,10 @@ function JaQuizCard({ item, pool, onResult, onToggleBookmark, isRetry }) {
       const t = setTimeout(() => speakJapanese(speechText), 500);
       return () => clearTimeout(t);
     }
+    if (deckType === 'grammar' && item.pattern) {
+      const t = setTimeout(() => speakJapanese(cleanPatternForSpeech(item.pattern)), 500);
+      return () => clearTimeout(t);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -12052,6 +12069,10 @@ function KrQuizCard({ item, pool, onResult, onToggleBookmark }) {
     if ((deckType === 'travel' || deckType === 'words') && speechText) {
       const t = setTimeout(() => speakKorean(speechText), 500);
       return () => clearTimeout(t);
+    }
+    if (deckType === 'grammar' && item.pattern) {
+      const t2 = setTimeout(() => speakKorean(cleanPatternForSpeech(item.pattern)), 500);
+      return () => clearTimeout(t2);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
